@@ -1,0 +1,6 @@
+strawberry-graphql
+sqlalchemy
+starlette
+psycopg2-binary
+uvicorn
+python-dotenv
