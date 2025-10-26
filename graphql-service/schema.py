@@ -5,6 +5,8 @@ from graphtypes.vehiculos_type import VehiculoType
 from services.vehiculo_services import get_all_vehiculos
 from services.clientesdiarios_services import filtrar_tickets_por_fecha, get_todos_tickets
 from graphtypes.clientesdiarios_type import ClientesDiariosType
+from graphtypes.espacios_type import EspacioType, EstadoEspacioType
+from services.espacios_services import filtrar_espacios_por_seccion_y_estado
 
 @strawberry.type
 class Query:
@@ -29,4 +31,24 @@ class Query:
             )
             for t in tickets_filtrados
         ]
+    
+    @strawberry.field
+    def estado_de_espacios(self, seccion: str, estado: bool) -> EstadoEspacioType:
+        espacios_filtrados = filtrar_espacios_por_seccion_y_estado(seccion, estado)
+        
+        espacios_lista = [
+            EspacioType(
+                id=e["id"],
+                numero=e["numero"],
+                _estado=e["estado"]
+            )
+            for e in espacios_filtrados
+        ]
+        
+        return EstadoEspacioType(
+            letraSeccion=seccion,
+            espacios=espacios_lista,
+            total=len(espacios_lista)
+        )
+
 schema = strawberry.Schema(Query)
