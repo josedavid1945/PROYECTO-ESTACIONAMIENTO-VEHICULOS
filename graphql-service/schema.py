@@ -18,13 +18,14 @@ class Query:
     def clientes_por_dia(self, fecha: str) -> List[ClientesDiariosType]:
         vehiculos_map = {v["id"]: v for v in get_all_vehiculos()}
         tickets_filtrados = filtrar_tickets_por_fecha(get_todos_tickets(), fecha, vehiculos_map)
-        
+        total_tickets = len(tickets_filtrados)
         return [
             ClientesDiariosType(
                 id=t["id"],
                 fechaIngreso=datetime.fromisoformat(t["fechaIngreso"]),
                 fechaSalida=datetime.fromisoformat(t["fechaSalida"]) if t.get("fechaSalida") else None,
-                vehiculo=VehiculoType(**vehiculos_map[t["vehiculoId"]])
+                vehiculo=VehiculoType(**vehiculos_map[t["vehiculoId"]]),
+                total=total_tickets
             )
             for t in tickets_filtrados
         ]

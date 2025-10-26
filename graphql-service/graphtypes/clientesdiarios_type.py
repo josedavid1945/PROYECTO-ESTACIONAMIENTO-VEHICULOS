@@ -9,3 +9,4 @@ class ClientesDiariosType:
     fechaIngreso: datetime
     fechaSalida: datetime | None
     vehiculo: VehiculoType
+    total: int = 0
