@@ -1,0 +1,14 @@
+<section class="m-auto flex-grow flex flex-col min-h-screen">
+    <app-information-bar/>
+    <app-nav-bar
+    [isExpanded]="isNavBarExpanded" 
+    (isExpandedChange)="onNavBarToggle($event)"/>
+    <div class="px-30 py-5 ">
+        <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+            <app-search-input/>
+            <app-selected-bar/>
+        </div>
+        <app-list-item [elements]="clienteArray()"/>
+    </div>
+
+</section>
