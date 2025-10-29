@@ -1,0 +1,33 @@
+<section class="mt-5">
+    <table class=" table table-md mt-2 w-full ">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Cliente</th>
+                <th>Telefono</th>
+                <th>email</th>
+                <th>Mas  detalle</th>
+            </tr>
+        </thead>
+        <tbody>
+             @for (cliente of elements(); track cliente.id; let index =$index) {
+                <tr>
+                    <td>{{index+1}}</td>
+                    <td>
+                        {{cliente.nombre}}
+                    </td>
+                    <td>{{cliente.email}}</td>
+                    <td>
+                        {{cliente.telefono}}
+                    </td>
+                    <td>
+                        <a 
+                        class="link-primary cursor-pointer">Mas informacion
+                            
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>

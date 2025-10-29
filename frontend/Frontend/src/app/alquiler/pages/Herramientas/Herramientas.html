@@ -1,0 +1,9 @@
+<section class="m-auto flex-grow flex flex-col min-h-screen">
+    <app-information-bar/>
+    <app-nav-bar 
+    [isExpanded]="isNavBarExpanded" 
+    (isExpandedChange)="onNavBarToggle($event)"/>
+    <div class="px-30 py-10">
+        <span>hERRAMIENTAS</span>
+    </div>
+</section>
