@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test Interactivo - Estacionamiento</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .btn-full {
+            grid-column: 1 / -1;
+        }
+
+        .log-panel {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .log-entry {
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .log-entry.success {
+            background: rgba(67, 233, 123, 0.2);
+            color: #43e97b;
+        }
+
+        .log-entry.error {
+            background: rgba(245, 87, 108, 0.2);
+            color: #f5576c;
+        }
+
+        .log-entry.info {
+            background: rgba(79, 172, 254, 0.2);
+            color: #4facfe;
+        }
+
+        .log-entry.warning {
+            background: rgba(254, 225, 64, 0.2);
+            color: #fee140;
+        }
+
+        .timestamp {
+            opacity: 0.7;
+            font-size: 0.85em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #43e97b;
+        }
+
+        .status-indicator.disconnected {
+            background: #f5576c;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .dashboard-iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .test-config {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .config-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .config-item label {
+            flex: 1;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .config-item input,
+        .config-item select {
+            flex: 2;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .config-item input:focus,
+        .config-item select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Test Interactivo - Sistema de Estacionamiento</h1>
+            <p>Observa los cambios en tiempo real mientras realizas las pruebas</p>
+        </div>
+
+        <div class="main-grid">
+            <!-- Panel de Control -->
+            <div class="panel">
+                <h2>🎮 Panel de Control</h2>
+                
+                <div class="connection-status">
+                    <div class="status-indicator" id="wsStatus"></div>
+                    <span id="wsStatusText">Conectando...</span>
+                </div>
+
+                <div class="test-config">
+                    <h3 style="margin-bottom: 15px; color: #667eea;">⚙️ Configuración del Test</h3>
+                    
+                    <div class="config-item">
+                        <label>Cantidad de Vehículos:</label>
+                        <input type="number" id="numVehicles" value="5" min="1" max="20">
+                    </div>
+
+                    <div class="config-item">
+                        <label>Intervalo de Ingreso (seg):</label>
+                        <input type="number" id="ingresoInterval" value="3" min="1" max="10">
+                    </div>
+
+                    <div class="config-item">
+                        <label>Tiempo de Salida (seg):</label>
+                        <input type="number" id="salidaDelay" value="10" min="5" max="30">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-danger btn-full" onclick="limpiarDatos()">
+                        🗑️ Limpiar Todos los Datos
+                    </button>
+                    <button class="btn btn-primary" onclick="crearVehiculos()">
+                        🚗 Crear Vehículos
+                    </button>
+                    <button class="btn btn-success" onclick="simularIngresos()">
+                        ⬇️ Simular Ingresos
+                    </button>
+                    <button class="btn btn-warning" onclick="simularSalidas()">
+                        ⬆️ Simular Salidas
+                    </button>
+                    <button class="btn btn-primary btn-full" onclick="testCompleto()">
+                        🎯 Test Completo Automático
+                    </button>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="vehiculosCreados">0</h3>
+                        <p>Vehículos Creados</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="ticketsCreados">0</h3>
+                        <p>Tickets Creados</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="ticketsCerrados">0</h3>
+                        <p>Tickets Cerrados</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="erroresCount">0</h3>
+                        <p>Errores</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressBar" style="width: 0%">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Logs -->
+            <div class="panel">
+                <h2>📋 Registro de Actividad</h2>
+                <div class="log-panel" id="logPanel"></div>
+            </div>
+        </div>
+
+        <!-- Dashboard en Tiempo Real -->
+        <div class="panel">
+            <h2>📊 Dashboard en Tiempo Real</h2>
+            <iframe src="dashboard.html" class="dashboard-iframe"></iframe>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        const WS_URL = 'ws://localhost:8081/ws';
+        
+        let ws = null;
+        let vehiculosCreados = 0;
+        let ticketsCreados = 0;
+        let ticketsCerrados = 0;
+        let erroresCount = 0;
+        let vehiculosIds = [];
+        let ticketsIds = [];
+        let clientesIds = [];
+        let tiposVehiculo = [];
+        let espaciosDisponibles = [];
+        let testEnProgreso = false;
+
+        // Conectar WebSocket
+        function conectarWebSocket() {
+            ws = new WebSocket(WS_URL);
+            
+            ws.onopen = () => {
+                addLog('success', 'WebSocket conectado correctamente');
+                updateConnectionStatus(true);
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                addLog('info', `Dashboard actualizado: ${data.espaciosDisponibles} espacios disponibles`);
+            };
+
+            ws.onerror = (error) => {
+                addLog('error', 'Error en WebSocket');
+                updateConnectionStatus(false);
+            };
+
+            ws.onclose = () => {
+                addLog('warning', 'WebSocket desconectado. Reconectando en 3s...');
+                updateConnectionStatus(false);
+                setTimeout(conectarWebSocket, 3000);
+            };
+        }
+
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('wsStatus');
+            const text = document.getElementById('wsStatusText');
+            
+            if (connected) {
+                indicator.className = 'status-indicator connected';
+                text.textContent = '✅ Conectado al servidor WebSocket';
+            } else {
+                indicator.className = 'status-indicator disconnected';
+                text.textContent = '❌ Desconectado del servidor';
+            }
+        }
+
+        function addLog(type, message) {
+            const logPanel = document.getElementById('logPanel');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `
+                <span class="timestamp">[${timestamp}]</span>
+                <span>${message}</span>
+            `;
+            
+            logPanel.insertBefore(logEntry, logPanel.firstChild);
+            
+            // Limitar a 100 entradas
+            if (logPanel.children.length > 100) {
+                logPanel.removeChild(logPanel.lastChild);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('vehiculosCreados').textContent = vehiculosCreados;
+            document.getElementById('ticketsCreados').textContent = ticketsCreados;
+            document.getElementById('ticketsCerrados').textContent = ticketsCerrados;
+            document.getElementById('erroresCount').textContent = erroresCount;
+        }
+
+        function updateProgress(current, total) {
+            const percentage = Math.round((current / total) * 100);
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = percentage + '%';
+            progressBar.textContent = percentage + '%';
+        }
+
+        async function limpiarDatos() {
+            if (!confirm('⚠️ ¿Estás seguro de que deseas eliminar TODOS los datos? Esta acción no se puede deshacer.')) {
+                return;
+            }
+
+            addLog('warning', '🗑️ Iniciando limpieza de datos...');
+            updateProgress(0, 100);
+
+            try {
+                // Limpiar tickets
+                addLog('info', 'Eliminando tickets...');
+                const ticketsRes = await fetch(`${API_URL}/tickets`);
+                const tickets = await ticketsRes.json();
+                
+                let totalItems = tickets.length;
+                for (let i = 0; i < tickets.length; i++) {
+                    await fetch(`${API_URL}/tickets/${tickets[i].id}`, { method: 'DELETE' });
+                    updateProgress((i + 1) * 25 / tickets.length, 100);
+                }
+                addLog('success', `✅ ${tickets.length} tickets eliminados`);
+
+                // Limpiar vehículos
+                addLog('info', 'Eliminando vehículos...');
+                const vehiculosRes = await fetch(`${API_URL}/vehiculos`);
+                const vehiculos = await vehiculosRes.json();
+                
+                for (let i = 0; i < vehiculos.length; i++) {
+                    await fetch(`${API_URL}/vehiculos/${vehiculos[i].id}`, { method: 'DELETE' });
+                    updateProgress(25 + (i + 1) * 25 / vehiculos.length, 100);
+                }
+                addLog('success', `✅ ${vehiculos.length} vehículos eliminados`);
+
+                // Limpiar clientes
+                addLog('info', 'Eliminando clientes...');
+                const clientesRes = await fetch(`${API_URL}/clientes`);
+                const clientes = await clientesRes.json();
+                
+                for (let i = 0; i < clientes.length; i++) {
+                    await fetch(`${API_URL}/clientes/${clientes[i].id}`, { method: 'DELETE' });
+                    updateProgress(50 + (i + 1) * 50 / clientes.length, 100);
+                }
+                addLog('success', `✅ ${clientes.length} clientes eliminados`);
+
+                // Resetear contadores
+                vehiculosCreados = 0;
+                ticketsCreados = 0;
+                ticketsCerrados = 0;
+                erroresCount = 0;
+                vehiculosIds = [];
+                ticketsIds = [];
+                clientesIds = [];
+                
+                updateStats();
+                updateProgress(100, 100);
+                addLog('success', '🎉 ¡Limpieza completada exitosamente!');
+
+                setTimeout(() => updateProgress(0, 100), 2000);
+
+            } catch (error) {
+                addLog('error', `❌ Error en limpieza: ${error.message}`);
+                erroresCount++;
+                updateStats();
+            }
+        }
+
+        async function cargarDatosIniciales() {
+            try {
+                addLog('info', '⏳ Cargando datos iniciales...');
+                
+                // Cargar tipos de vehículo
+                const tiposRes = await fetch(`${API_URL}/tipo-vehiculo`);
+                if (!tiposRes.ok) {
+                    throw new Error(`HTTP ${tiposRes.status}: ${tiposRes.statusText}`);
+                }
+                tiposVehiculo = await tiposRes.json();
+                addLog('success', `✅ ${tiposVehiculo.length} tipos de vehículo cargados`);
+
+                // Cargar espacios disponibles
+                const espaciosRes = await fetch(`${API_URL}/espacios`);
+                if (!espaciosRes.ok) {
+                    throw new Error(`HTTP ${espaciosRes.status}: ${espaciosRes.statusText}`);
+                }
+                const espacios = await espaciosRes.json();
+                espaciosDisponibles = espacios.filter(e => e.estado === true);
+                addLog('success', `✅ ${espaciosDisponibles.length} espacios disponibles`);
+
+            } catch (error) {
+                addLog('error', `❌ Error cargando datos: ${error.message}`);
+                erroresCount++;
+                updateStats();
+                console.error('Error detallado:', error);
+            }
+        }
+
+        async function crearVehiculos() {
+            const numVehicles = parseInt(document.getElementById('numVehicles').value);
+            
+            addLog('info', `🚗 Creando ${numVehicles} vehículos...`);
+            updateProgress(0, 100);
+
+            if (tiposVehiculo.length === 0) {
+                addLog('error', '❌ No hay tipos de vehículo disponibles. Cargando datos...');
+                await cargarDatosIniciales();
+                if (tiposVehiculo.length === 0) {
+                    addLog('error', '❌ No se pudieron cargar los tipos de vehículo');
+                    erroresCount++;
+                    updateStats();
+                    return;
+                }
+            }
+
+            // Primero crear clientes
+            addLog('info', '👤 Creando clientes para los vehículos...');
+            for (let i = 0; i < numVehicles; i++) {
+                try {
+                    const nombreCliente = `Cliente Test ${i + 1}`;
+                    const response = await fetch(`${API_URL}/clientes`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            nombre: nombreCliente,
+                            email: `test${i + 1}@test.com`,
+                            telefono: `555-000${i}`
+                        })
+                    });
+
+                    if (response.ok) {
+                        const cliente = await response.json();
+                        clientesIds.push(cliente.id);
+                        addLog('success', `✅ Cliente creado: ${nombreCliente}`);
+                    } else {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+                } catch (error) {
+                    addLog('error', `❌ Error creando cliente ${i + 1}: ${error.message}`);
+                    erroresCount++;
+                }
+                await delay(100);
+            }
+
+            // Luego crear vehículos
+            for (let i = 0; i < numVehicles; i++) {
+                try {
+                    const tipo = tiposVehiculo[Math.floor(Math.random() * tiposVehiculo.length)];
+                    const placa = `TEST-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+                    
+                    addLog('info', `📝 Creando vehículo ${i + 1}/${numVehicles}: ${placa}`);
+                    
+                    const response = await fetch(`${API_URL}/vehiculos`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            placa: placa,
+                            marca: 'Toyota',
+                            modelo: 'Modelo ' + (i + 1),
+                            clienteId: clientesIds[i],
+                            tipoVehiculoId: tipo.id
+                        })
+                    });
+
+                    if (response.ok) {
+                        const vehiculo = await response.json();
+                        vehiculosIds.push(vehiculo.id);
+                        vehiculosCreados++;
+                        addLog('success', `✅ Vehículo creado: ${placa}`);
+                    } else {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+
+                } catch (error) {
+                    addLog('error', `❌ Error creando vehículo ${i + 1}: ${error.message}`);
+                    erroresCount++;
+                    console.error('Error detallado:', error);
+                }
+
+                updateProgress(i + 1, numVehicles);
+                updateStats();
+                await delay(200);
+            }
+
+            addLog('success', `🎉 ${vehiculosCreados} vehículos creados exitosamente`);
+        }
+
+        async function simularIngresos() {
+            const intervalo = parseInt(document.getElementById('ingresoInterval').value) * 1000;
+            
+            if (vehiculosIds.length === 0) {
+                addLog('error', '❌ No hay vehículos. Crea vehículos primero.');
+                return;
+            }
+
+            if (espaciosDisponibles.length === 0) {
+                addLog('info', '🔄 Recargando espacios disponibles...');
+                await cargarDatosIniciales();
+            }
+
+            addLog('info', `⬇️ Simulando ingresos cada ${intervalo/1000}s...`);
+            addLog('info', `📊 ${vehiculosIds.length} vehículos, ${espaciosDisponibles.length} espacios disponibles`);
+            testEnProgreso = true;
+
+            for (let i = 0; i < vehiculosIds.length && testEnProgreso; i++) {
+                if (espaciosDisponibles.length === 0) {
+                    addLog('warning', '⚠️ No hay espacios disponibles');
+                    break;
+                }
+
+                try {
+                    const espacio = espaciosDisponibles.shift();
+                    
+                    addLog('info', `🎫 Creando ticket para vehículo ${i+1} en espacio ${espacio.numero}`);
+                    
+                    const requestBody = {
+                        fechaIngreso: new Date().toISOString(),
+                        vehiculoId: vehiculosIds[i],
+                        espacioId: espacio.id
+                    };
+                    
+                    console.log('Request body:', requestBody);
+                    
+                    const response = await fetch(`${API_URL}/tickets`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    if (response.ok) {
+                        const ticket = await response.json();
+                        ticketsIds.push(ticket.id);
+                        ticketsCreados++;
+                        addLog('success', `✅ Ingreso registrado en espacio ${espacio.numero}`);
+                    } else {
+                        const errorText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
+                    }
+
+                } catch (error) {
+                    addLog('error', `❌ Error en ingreso: ${error.message}`);
+                    erroresCount++;
+                    console.error('Error detallado:', error);
+                }
+
+                updateProgress(i + 1, vehiculosIds.length);
+                updateStats();
+                
+                if (i < vehiculosIds.length - 1) {
+                    await delay(intervalo);
+                }
+            }
+
+            testEnProgreso = false;
+            addLog('success', `🎉 ${ticketsCreados} ingresos completados`);
+        }
+
+        async function simularSalidas() {
+            const salidaDelay = parseInt(document.getElementById('salidaDelay').value) * 1000;
+            
+            if (ticketsIds.length === 0) {
+                addLog('error', '❌ No hay tickets activos');
+                return;
+            }
+
+            addLog('info', `⬆️ Procesando salidas después de ${salidaDelay/1000}s...`);
+            
+            await delay(salidaDelay);
+
+            for (let i = 0; i < ticketsIds.length; i++) {
+                try {
+                    const response = await fetch(`${API_URL}/tickets/${ticketsIds[i]}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            fechaSalida: new Date().toISOString()
+                        })
+                    });
+
+                    if (response.ok) {
+                        ticketsCerrados++;
+                        addLog('success', `✅ Salida procesada - Ticket cerrado`);
+                    } else {
+                        throw new Error('Error en salida');
+                    }
+
+                } catch (error) {
+                    addLog('error', `❌ Error en salida: ${error.message}`);
+                    erroresCount++;
+                }
+
+                updateProgress(i + 1, ticketsIds.length);
+                updateStats();
+                await delay(2000);
+            }
+
+            ticketsIds = [];
+            addLog('success', `🎉 ${ticketsCerrados} salidas completadas`);
+            await cargarDatosIniciales(); // Recargar espacios
+        }
+
+        async function testCompleto() {
+            if (testEnProgreso) {
+                addLog('warning', '⚠️ Ya hay un test en progreso');
+                return;
+            }
+
+            addLog('info', '🎯 Iniciando test completo automático...');
+            
+            await cargarDatosIniciales();
+            await crearVehiculos();
+            await delay(2000);
+            await simularIngresos();
+            await delay(3000);
+            await simularSalidas();
+            
+            addLog('success', '🎉 ¡Test completo finalizado!');
+        }
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Inicializar
+        window.onload = async () => {
+            addLog('info', '🚀 Iniciando sistema de pruebas...');
+            addLog('info', `📡 REST API: ${API_URL}`);
+            addLog('info', `🔌 WebSocket: ${WS_URL}`);
+            
+            // Probar conexión al API
+            try {
+                addLog('info', '🔍 Probando conexión al REST API...');
+                const response = await fetch(`${API_URL}/dashboard/health`);
+                if (response.ok) {
+                    addLog('success', '✅ REST API accesible');
+                } else {
+                    addLog('error', `❌ REST API responde con error: ${response.status}`);
+                }
+            } catch (error) {
+                addLog('error', `❌ No se puede conectar al REST API: ${error.message}`);
+                addLog('warning', '⚠️ Verifica que el servidor NestJS esté corriendo en puerto 3000');
+            }
+            
+            conectarWebSocket();
+            await cargarDatosIniciales();
+            addLog('success', '✅ Sistema listo para pruebas');
+        };
+    </script>
+</body>
+</html>

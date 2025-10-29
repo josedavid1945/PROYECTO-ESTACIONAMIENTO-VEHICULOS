@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Insertar Datos de Prueba</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #45a049;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+        }
+
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #e68900;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .data-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+
+        .data-item {
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .data-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .dashboard-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .dashboard-link:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status-active {
+            background: #4caf50;
+            color: white;
+        }
+
+        .status-inactive {
+            background: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔧 Panel de Administración</h1>
+            <p class="subtitle">Insertar datos de prueba para el sistema de estacionamiento</p>
+        </header>
+
+        <div id="messageContainer"></div>
+
+        <div class="main-grid">
+            <!-- Crear Cliente -->
+            <div class="section">
+                <h2>👤 Crear Cliente</h2>
+                <form id="formCliente">
+                    <div class="form-group">
+                        <label>Nombre:</label>
+                        <input type="text" id="clienteNombre" required placeholder="Ej: Juan">
+                    </div>
+                    <div class="form-group">
+                        <label>Apellido:</label>
+                        <input type="text" id="clienteApellido" required placeholder="Ej: Pérez">
+                    </div>
+                    <div class="form-group">
+                        <label>Documento:</label>
+                        <input type="text" id="clienteDocumento" required placeholder="Ej: 12345678">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono:</label>
+                        <input type="text" id="clienteTelefono" placeholder="Ej: 555-1234">
+                    </div>
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" id="clienteEmail" placeholder="Ej: juan@example.com">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Crear Cliente</button>
+                </form>
+            </div>
+
+            <!-- Crear Vehículo -->
+            <div class="section">
+                <h2>🚗 Crear Vehículo</h2>
+                <form id="formVehiculo">
+                    <div class="form-group">
+                        <label>Placa:</label>
+                        <input type="text" id="vehiculoPlaca" required placeholder="Ej: ABC-123">
+                    </div>
+                    <div class="form-group">
+                        <label>Marca:</label>
+                        <input type="text" id="vehiculoMarca" required placeholder="Ej: Toyota">
+                    </div>
+                    <div class="form-group">
+                        <label>Modelo:</label>
+                        <input type="text" id="vehiculoModelo" required placeholder="Ej: Corolla">
+                    </div>
+                    <div class="form-group">
+                        <label>Cliente:</label>
+                        <select id="vehiculoCliente" required>
+                            <option value="">Seleccione un cliente</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Vehículo:</label>
+                        <select id="vehiculoTipo" required>
+                            <option value="">Seleccione tipo</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Crear Vehículo</button>
+                </form>
+            </div>
+
+            <!-- Crear Ticket (Ingreso) -->
+            <div class="section">
+                <h2>🎫 Registrar Ingreso</h2>
+                <form id="formTicket">
+                    <div class="form-group">
+                        <label>Vehículo:</label>
+                        <select id="ticketVehiculo" required>
+                            <option value="">Seleccione vehículo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Espacio Disponible:</label>
+                        <select id="ticketEspacio" required>
+                            <option value="">Seleccione espacio</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">Registrar Ingreso</button>
+                </form>
+                <div id="ticketsActivos" class="data-list" style="margin-top: 20px;">
+                    <p style="text-align: center; color: #999;">No hay tickets activos</p>
+                </div>
+            </div>
+
+            <!-- Registrar Salida -->
+            <div class="section">
+                <h2>💰 Registrar Salida y Pago</h2>
+                <form id="formSalida">
+                    <div class="form-group">
+                        <label>Ticket Activo:</label>
+                        <select id="salidaTicket" required>
+                            <option value="">Seleccione ticket</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Método de Pago:</label>
+                        <select id="salidaMetodo" required>
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Tarjeta">Tarjeta</option>
+                            <option value="Transferencia">Transferencia</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Monto Total:</label>
+                        <input type="number" id="salidaMonto" step="0.01" required placeholder="Ej: 45.50">
+                    </div>
+                    <button type="submit" class="btn btn-warning">Registrar Salida</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="section">
+            <h2>⚡ Acciones Rápidas</h2>
+            <div class="quick-actions">
+                <button class="btn btn-primary" onclick="cargarDatosIniciales()">🔄 Cargar Datos Iniciales</button>
+                <button class="btn btn-success" onclick="generarDatosAleatorios()">🎲 Generar Datos Aleatorios</button>
+                <button class="btn btn-warning" onclick="actualizarListas()">📋 Actualizar Listas</button>
+                <button class="btn btn-danger" onclick="window.open('dashboard.html', '_blank')">📊 Abrir Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <a href="dashboard.html" target="_blank" class="dashboard-link">📊 Ver Dashboard</a>
+
+    <script>
+        // Configuración según entorno
+        const isProduction = window.location.protocol === 'https:';
+        const API_BASE = isProduction 
+            ? 'https://tu-rest-api.vercel.app/api'
+            : 'http://localhost:3000/api';
+
+        console.log('🔧 API Base:', API_BASE);
+
+        // Mostrar mensajes
+        function showMessage(message, type = 'success') {
+            const container = document.getElementById('messageContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // Cargar clientes
+        async function cargarClientes() {
+            try {
+                const response = await fetch(`${API_BASE}/cliente`);
+                const clientes = await response.json();
+                
+                const select = document.getElementById('vehiculoCliente');
+                select.innerHTML = '<option value="">Seleccione un cliente</option>';
+                
+                clientes.forEach(cliente => {
+                    const option = document.createElement('option');
+                    option.value = cliente.id;
+                    option.textContent = `${cliente.nombre} ${cliente.apellido} - ${cliente.documento}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error cargando clientes:', error);
+            }
+        }
+
+        // Cargar tipos de vehículo
+        async function cargarTiposVehiculo() {
+            try {
+                const response = await fetch(`${API_BASE}/tipo-vehiculo`);
+                const tipos = await response.json();
+                
+                const select = document.getElementById('vehiculoTipo');
+                select.innerHTML = '<option value="">Seleccione tipo</option>';
+                
+                tipos.forEach(tipo => {
+                    const option = document.createElement('option');
+                    option.value = tipo.id;
+                    option.textContent = `${tipo.nombre} - ${tipo.descripcion}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error cargando tipos:', error);
+            }
+        }
+
+        // Cargar vehículos
+        async function cargarVehiculos() {
+            try {
+                const response = await fetch(`${API_BASE}/vehicle`);
+                const vehiculos = await response.json();
+                
+                const select = document.getElementById('ticketVehiculo');
+                select.innerHTML = '<option value="">Seleccione vehículo</option>';
+                
+                vehiculos.forEach(vehiculo => {
+                    const option = document.createElement('option');
+                    option.value = vehiculo.id;
+                    option.textContent = `${vehiculo.placa} - ${vehiculo.marca} ${vehiculo.modelo}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error cargando vehículos:', error);
+            }
+        }
+
+        // Cargar espacios disponibles
+        async function cargarEspaciosDisponibles() {
+            try {
+                const response = await fetch(`${API_BASE}/dashboard/espacios/disponibles`);
+                const espacios = await response.json();
+                
+                const select = document.getElementById('ticketEspacio');
+                select.innerHTML = '<option value="">Seleccione espacio</option>';
+                
+                espacios.forEach(espacio => {
+                    const option = document.createElement('option');
+                    option.value = espacio.id;
+                    option.textContent = `${espacio.numero} - Sección ${espacio.seccion || 'N/A'}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error cargando espacios:', error);
+            }
+        }
+
+        // Cargar tickets activos
+        async function cargarTicketsActivos() {
+            try {
+                const response = await fetch(`${API_BASE}/dashboard/tickets/activos`);
+                const tickets = await response.json();
+                
+                const selectSalida = document.getElementById('salidaTicket');
+                selectSalida.innerHTML = '<option value="">Seleccione ticket</option>';
+                
+                const container = document.getElementById('ticketsActivos');
+                
+                if (tickets.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #999;">No hay tickets activos</p>';
+                } else {
+                    container.innerHTML = tickets.map(ticket => `
+                        <div class="data-item">
+                            <strong>Placa:</strong> ${ticket.vehiculo_placa || 'N/A'}<br>
+                            <strong>Espacio:</strong> ${ticket.espacio_numero || 'N/A'}<br>
+                            <strong>Ingreso:</strong> ${new Date(ticket.fecha_ingreso).toLocaleString('es-MX')}
+                        </div>
+                    `).join('');
+                    
+                    tickets.forEach(ticket => {
+                        const option = document.createElement('option');
+                        option.value = ticket.id;
+                        option.textContent = `${ticket.vehiculo_placa} - ${ticket.espacio_numero}`;
+                        selectSalida.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error cargando tickets:', error);
+            }
+        }
+
+        // Actualizar todas las listas
+        async function actualizarListas() {
+            showMessage('Actualizando datos...', 'info');
+            await Promise.all([
+                cargarClientes(),
+                cargarTiposVehiculo(),
+                cargarVehiculos(),
+                cargarEspaciosDisponibles(),
+                cargarTicketsActivos()
+            ]);
+            showMessage('Datos actualizados correctamente', 'success');
+        }
+
+        // Form: Crear Cliente
+        document.getElementById('formCliente').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                nombre: document.getElementById('clienteNombre').value,
+                apellido: document.getElementById('clienteApellido').value,
+                documento: document.getElementById('clienteDocumento').value,
+                telefono: document.getElementById('clienteTelefono').value || null,
+                email: document.getElementById('clienteEmail').value || null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/cliente`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showMessage('✅ Cliente creado exitosamente', 'success');
+                    e.target.reset();
+                    await cargarClientes();
+                } else {
+                    const error = await response.json();
+                    showMessage(`❌ Error: ${error.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            }
+        });
+
+        // Form: Crear Vehículo
+        document.getElementById('formVehiculo').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                placa: document.getElementById('vehiculoPlaca').value,
+                marca: document.getElementById('vehiculoMarca').value,
+                modelo: document.getElementById('vehiculoModelo').value,
+                clienteId: document.getElementById('vehiculoCliente').value,
+                tipoVehiculoId: document.getElementById('vehiculoTipo').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/vehicle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showMessage('✅ Vehículo creado exitosamente', 'success');
+                    e.target.reset();
+                    await cargarVehiculos();
+                } else {
+                    const error = await response.json();
+                    showMessage(`❌ Error: ${error.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            }
+        });
+
+        // Form: Crear Ticket
+        document.getElementById('formTicket').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                vehiculoId: document.getElementById('ticketVehiculo').value,
+                espacioId: document.getElementById('ticketEspacio').value,
+                fechaIngreso: new Date().toISOString()
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/tickets`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showMessage('✅ Ingreso registrado exitosamente', 'success');
+                    e.target.reset();
+                    await Promise.all([
+                        cargarEspaciosDisponibles(),
+                        cargarTicketsActivos()
+                    ]);
+                } else {
+                    const error = await response.json();
+                    showMessage(`❌ Error: ${error.message || JSON.stringify(error)}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            }
+        });
+
+        // Form: Registrar Salida
+        document.getElementById('formSalida').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const ticketId = document.getElementById('salidaTicket').value;
+            const monto = parseFloat(document.getElementById('salidaMonto').value);
+            const metodo = document.getElementById('salidaMetodo').value;
+
+            try {
+                // 0. Obtener primera tarifa disponible
+                const tarifasResponse = await fetch(`${API_BASE}/tipo-tarifa`);
+                const tarifas = await tarifasResponse.json();
+                const tarifaId = tarifas.length > 0 ? tarifas[0].id : null;
+                
+                if (!tarifaId) {
+                    showMessage('⚠️ No hay tarifas configuradas en el sistema', 'error');
+                    return;
+                }
+
+                // 1. Crear pago
+                const pagoResponse = await fetch(`${API_BASE}/pagos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        monto: monto,
+                        tipoTarifaId: tarifaId
+                    })
+                });
+
+                if (!pagoResponse.ok) {
+                    const error = await pagoResponse.json();
+                    throw new Error(`Error creando pago: ${error.message || JSON.stringify(error)}`);
+                }
+                const pago = await pagoResponse.json();
+
+                // 2. Crear detalle de pago
+                const detalleResponse = await fetch(`${API_BASE}/detalle-pago`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        metodo: metodo,
+                        fechaPago: new Date().toISOString(),
+                        pagoTotal: monto,
+                        ticketId: ticketId,
+                        pagoId: pago.id
+                    })
+                });
+
+                if (!detalleResponse.ok) throw new Error('Error creando detalle de pago');
+                const detalle = await detalleResponse.json();
+
+                // 3. Actualizar ticket con salida
+                const ticketResponse = await fetch(`${API_BASE}/tickets/${ticketId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fechaSalida: new Date().toISOString(),
+                        detallePagoId: detalle.id
+                    })
+                });
+
+                if (ticketResponse.ok) {
+                    showMessage('✅ Salida registrada y pago procesado exitosamente', 'success');
+                    e.target.reset();
+                    await Promise.all([
+                        cargarEspaciosDisponibles(),
+                        cargarTicketsActivos()
+                    ]);
+                } else {
+                    const error = await ticketResponse.json();
+                    showMessage(`❌ Error: ${error.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            }
+        });
+
+        // Cargar datos iniciales
+        async function cargarDatosIniciales() {
+            showMessage('Cargando datos iniciales...', 'info');
+            
+            try {
+                let insertados = 0;
+
+                // 1. Crear tipos de vehículo
+                const tiposVehiculo = [
+                    { nombre: 'Auto', descripcion: 'Vehículo liviano de 4 ruedas' },
+                    { nombre: 'Moto', descripcion: 'Motocicleta de 2 ruedas' },
+                    { nombre: 'Camioneta', descripcion: 'Camioneta pickup o SUV' }
+                ];
+
+                for (const tipo of tiposVehiculo) {
+                    try {
+                        const response = await fetch(`${API_BASE}/tipo-vehiculo`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(tipo)
+                        });
+                        if (response.ok) insertados++;
+                    } catch (e) { console.log('Tipo ya existe:', tipo.nombre); }
+                }
+
+                // 2. Crear clientes de prueba
+                const clientes = [
+                    { nombre: 'Juan', apellido: 'Pérez', documento: 'DOC001', telefono: '555-1111', email: 'juan@test.com' },
+                    { nombre: 'María', apellido: 'García', documento: 'DOC002', telefono: '555-2222', email: 'maria@test.com' },
+                    { nombre: 'Carlos', apellido: 'Ramírez', documento: 'DOC003', telefono: '555-3333', email: 'carlos@test.com' }
+                ];
+
+                for (const cliente of clientes) {
+                    try {
+                        const response = await fetch(`${API_BASE}/cliente`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(cliente)
+                        });
+                        if (response.ok) insertados++;
+                    } catch (e) { console.log('Cliente ya existe:', cliente.documento); }
+                }
+
+                showMessage(`✅ Datos iniciales cargados: ${insertados} registros creados`, 'success');
+                await actualizarListas();
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Generar datos aleatorios
+        async function generarDatosAleatorios() {
+            const marcas = ['Toyota', 'Honda', 'Nissan', 'Ford', 'Chevrolet', 'Mazda', 'Volkswagen'];
+            const modelos = ['Sedan', 'SUV', 'Hatchback', 'Pickup', 'Coupe'];
+            
+            try {
+                // Obtener clientes y tipos
+                const clientesResponse = await fetch(`${API_BASE}/cliente`);
+                const clientes = await clientesResponse.json();
+                
+                const tiposResponse = await fetch(`${API_BASE}/tipo-vehiculo`);
+                const tipos = await tiposResponse.json();
+
+                if (clientes.length === 0 || tipos.length === 0) {
+                    showMessage('⚠️ Primero carga datos iniciales', 'error');
+                    return;
+                }
+
+                const randomCliente = clientes[Math.floor(Math.random() * clientes.length)];
+                const randomTipo = tipos[Math.floor(Math.random() * tipos.length)];
+                const randomMarca = marcas[Math.floor(Math.random() * marcas.length)];
+                const randomModelo = modelos[Math.floor(Math.random() * modelos.length)];
+                const randomPlaca = `${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}-${Math.floor(Math.random() * 900 + 100)}`;
+
+                const vehiculo = {
+                    placa: randomPlaca,
+                    marca: randomMarca,
+                    modelo: randomModelo,
+                    clienteId: randomCliente.id,
+                    tipoVehiculoId: randomTipo.id
+                };
+
+                const response = await fetch(`${API_BASE}/vehicle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(vehiculo)
+                });
+
+                if (response.ok) {
+                    showMessage(`✅ Vehículo generado: ${randomPlaca}`, 'success');
+                    await cargarVehiculos();
+                } else {
+                    const error = await response.json();
+                    showMessage(`❌ Error: ${error.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Inicializar al cargar
+        window.addEventListener('load', () => {
+            console.log('🚀 Panel de administración iniciado');
+            actualizarListas();
+        });
+    </script>
+</body>
+</html>
