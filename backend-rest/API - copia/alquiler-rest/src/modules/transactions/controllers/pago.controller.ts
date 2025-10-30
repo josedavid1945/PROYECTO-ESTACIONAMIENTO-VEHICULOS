@@ -16,6 +16,7 @@ export class PagoController {
     return this.pagoService.create(createPagoDto);
   }
 
+
   @Get()
   @ApiOperation({ summary: 'Obtener todos los pagos' })
   @ApiResponse({ status: 200, description: 'Lista de pagos' })

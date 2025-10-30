@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Cliente } from '../../interfaces/cliente.interface';
+import { Ticket, TicketFull } from '../../interfaces/search.interface';
 
 @Component({
   selector: 'app-list-item',
@@ -9,7 +9,7 @@ import { Cliente } from '../../interfaces/cliente.interface';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ListItem {
-  elements = input.required<Cliente[]>()
+  elements = input.required<TicketFull[]>()
   errorMessage = input<string|unknown|null>();
   isLoading = input<boolean>(false);
   isEmpty = input<boolean>(false);

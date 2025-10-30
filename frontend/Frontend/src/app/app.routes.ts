@@ -7,8 +7,8 @@ export const routes: Routes = [
         component: HomePage,
     },
     {
-        path:'alquiler',
-        loadChildren: () => import('../app/alquiler/alquiler.route').then(m => m.alquilerRoute)
+        path:'estacionamiento',
+        loadChildren: () => import('./alquiler/estacionamiento.route').then(m => m.alquilerRoute)
 
     }
 ];

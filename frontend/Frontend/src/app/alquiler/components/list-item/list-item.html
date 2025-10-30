@@ -3,23 +3,24 @@
         <thead>
             <tr>
                 <th>#</th>
-                <th>Cliente</th>
-                <th>Telefono</th>
-                <th>email</th>
+                <th>Vehiculo Placa</th>
+                <th>Espacio</th>
+                <th>Fecha de ingreso</th>
                 <th>Mas  detalle</th>
             </tr>
         </thead>
         <tbody>
-             @for (cliente of elements(); track cliente.id; let index =$index) {
+             @for (ticket of elements(); track ticket.id; let index =$index) {
                 <tr>
                     <td>{{index+1}}</td>
                     <td>
-                        {{cliente.nombre}}
+                        {{ticket.vehiculoPlaca}}
                     </td>
-                    <td>{{cliente.email}}</td>
+                    <td>{{ticket.espacioNumero}}</td>
                     <td>
-                        {{cliente.telefono}}
+                        {{ticket.fechaIngreso}}
                     </td>
+                        {{ticket.estadoTicket}}
                     <td>
                         <a 
                         class="link-primary cursor-pointer">Mas informacion

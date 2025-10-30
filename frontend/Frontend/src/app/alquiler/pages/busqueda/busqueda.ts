@@ -4,8 +4,9 @@ import { NavBar } from '../../components/navBar/navBar';
 import { SearchInput } from '../../components/search-input/search-input';
 import { ListItem } from "../../components/list-item/list-item";
 import { SelectedBar } from "../../components/Selected-bar/Selected-bar";
-import { ClienteService } from '../../services/Cliente.service';
 import {toSignal} from '@angular/core/rxjs-interop';
+import { TicketService } from '../../services/busqueda-avanzada.service';
+import { TicketFull } from '../../interfaces/search.interface';
 @Component({
   selector: 'app-busqueda',
   imports: [InformationBar, NavBar, SearchInput, ListItem, SelectedBar],
@@ -14,13 +15,32 @@ import {toSignal} from '@angular/core/rxjs-interop';
 })
 export class Busqueda { 
   isNavBarExpanded = false;
-  clienteService= inject(ClienteService)
   onNavBarToggle(newState: boolean) {
     this.isNavBarExpanded = newState;
   }
-  clienteArray = toSignal(this.clienteService.showClientes(),{
-    initialValue: []
-  })
+  private ticketService = inject(TicketService);
+  
+  tickets = signal<TicketFull[]>([]);
+  cargando = signal(true);
+
+  ngOnInit() {
+    this.cargarTickets();
+  }
+
+  cargarTickets() {
+    this.cargando.set(true);
+    
+    this.ticketService.getTicketsCompletos().subscribe({
+      next: (tickets) => {
+        this.tickets.set(tickets);
+        this.cargando.set(false);
+      },
+      error: (error) => {
+        console.error('Error cargando tickets:', error);
+        this.cargando.set(false);
+      }
+    });
+  }
   
   
 }
