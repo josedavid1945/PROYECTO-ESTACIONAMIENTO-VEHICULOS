@@ -1,0 +1,11 @@
+# Instalar en la carpeta "graphql-service"
+strawberry-graphql
+sqlalchemy
+starlette
+psycopg2-binary
+uvicorn
+python-dotenv
+requests
+
+# Crear un archivo ".env" en la carpeta "graphql-service"
+# donde se pondrá la url de la apirest
