@@ -8,7 +8,7 @@ import "reflect-metadata";
  * ARCHIVO PRINCIPAL DE LA APLICACIÓN REST API
  * 
  * Configuraciones importantes:
- * 1. Prefijo global 'api' → Todas las rutas comienzan con /api
+ * 1. SIN prefijo global → Las rutas son directas (ej: /clientes)
  * 2. CORS habilitado → Permite peticiones desde el frontend y WebSocket
  * 3. Validación automática de DTOs → Valida datos de entrada
  * 4. Swagger → Documentación interactiva en /api
@@ -17,15 +17,15 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
   /**
-   * CONFIGURACIÓN 1: Prefijo Global
-   * Todas las rutas tendrán el prefijo /api
-   * Ejemplo: /tickets → /api/tickets
+   * ELIMINADO: Prefijo Global
+   * Las rutas ahora son directas sin /api
+   * Ejemplo: /clientes (en lugar de /api/clientes)
    */
-  app.setGlobalPrefix('api');
+  // app.setGlobalPrefix('api'); // REMOVIDO
   
   /**
-   * CONFIGURACIÓN 2: CORS (Cross-Origin Resource Sharing)
-   * MODIFICACIÓN: Configurado para permitir peticiones desde:
+   * CONFIGURACIÓN 1: CORS (Cross-Origin Resource Sharing)
+   * Configurado para permitir peticiones desde:
    * - Frontend (http://localhost:8080)
    * - WebSocket Server (localhost:8081)
    * - Navegadores en general
@@ -40,7 +40,7 @@ async function bootstrap() {
   });
   
   /**
-   * CONFIGURACIÓN 3: Validación Global de DTOs
+   * CONFIGURACIÓN 2: Validación Global de DTOs
    * Valida automáticamente todos los datos de entrada usando
    * los decoradores de class-validator en los DTOs
    */
@@ -53,7 +53,11 @@ async function bootstrap() {
     },
   }));
 
-  // Configuración de Swagger
+  /**
+   * CONFIGURACIÓN 3: Swagger - Documentación interactiva
+   * La documentación SI mantiene la ruta /api
+   * pero las rutas de la API son directas
+   */
   const config = new DocumentBuilder()
     .setTitle('API de Sistema de Estacionamiento')
     .setDescription('API REST para el sistema de gestión de estacionamiento')
@@ -72,6 +76,9 @@ async function bootstrap() {
   
   console.log(`🚀 Aplicación ejecutándose en: http://localhost:${port}`);
   console.log(`📚 Documentación Swagger en: http://localhost:${port}/api`);
+  console.log(`👥 Endpoint de clientes: http://localhost:${port}/clientes`);
+  console.log(`🎫 Endpoint de tickets: http://localhost:${port}/tickets`);
+  console.log(`💳 Endpoint de transacciones: http://localhost:${port}/transacciones`);
 }
 
 bootstrap();

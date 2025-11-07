@@ -1,6 +1,5 @@
-<select class="select select-ghost">
-  <option disabled selected>Pick a font</option>
-  @for (item of opciones; track item) {
-    <option>{{item}}</option>
-  }
+<select class="select select-ghost" (change)="onSelectChange($event)">
+    <option disabled selected>Escoje una opcion</option>
+    <option value="vehiculos">Vehículos</option>
+    <option value="fechas">Tickets por fecha</option>
 </select>

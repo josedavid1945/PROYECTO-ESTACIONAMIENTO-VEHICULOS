@@ -15,7 +15,7 @@ export const alquilerRoute: Routes =
             children: [
                 {
                     path: 'busqueda',
-                    component: Busqueda,
+                    loadChildren: () => import('./pages/busqueda/busqueda.routes').then(m => m.BusquedaRoutes),
                 },
                 {   
                     path: 'registro',
@@ -30,6 +30,10 @@ export const alquilerRoute: Routes =
                     path: 'herramientas',
                     component: Herramientas,
                 },
+                {
+                    path: 'herramientas',
+                    loadChildren: () => import('./pages/Herramientas/config-registers/config.routes').then(m => m.HerramientasRoutes),
+                }
 
             ]
         }

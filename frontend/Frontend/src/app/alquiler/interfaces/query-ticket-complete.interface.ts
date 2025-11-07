@@ -1,18 +1,10 @@
-export interface QueryParamsTicket {
-  data: Data;
-}
-
-export interface Data {
-  tickets: Ticket[];
-}
-
-export interface Ticket {
+export interface Restticketresponse {
   id:           string;
   fechaIngreso: Date;
   fechaSalida:  Date;
   vehiculo:     Vehiculo;
   espacio:      Espacio;
-  detallePago:  null | string;
+  detallePago:  null;
 }
 
 export interface Espacio {
