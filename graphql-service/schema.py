@@ -1,15 +1,19 @@
 import strawberry
 from typing import List
 from datetime import datetime
-from graphtypes.vehiculos_type import VehiculoType
-from services.vehiculo_services import get_all_vehiculos
+from graphtypes.vehiculos_type import VehiculoType, TipoVehiculoType, VehiculocompletoType
+from services.vehiculo_services import get_all_vehiculos, get_all_tipo_vehiculos
 from services.clientesdiarios_services import filtrar_tickets_por_fecha, get_todos_tickets
 from graphtypes.clientesdiarios_type import ClientesDiariosType
 from services.detallepago_services import get_todos_detallepago
 from graphtypes.ticket_type import TicketType
 from graphtypes.detallepago_type import DetallePagoType
 from graphtypes.espacios_type import EspacioType, EstadoEspacioType
+from graphtypes.cliente_type import clienteType
+from graphtypes.tipoTarifa_type import TipoTarifaType
 from services.espacios_services import filtrar_espacios_por_seccion_y_estado, get_todos_espacios
+from services.cliente_services import get_all_clientes
+from services.tipoTarifa_services import get_all_tipo_tarifas
 
 @strawberry.type
 class Query:
@@ -81,6 +85,30 @@ class Query:
                 detallePago=DetallePagoType(**pagos_map[t["detallePagoId"]]) if t.get("detallePagoId") and t["detallePagoId"] in pagos_map else None
             )
             for t in tickets
+        ]
+    
+    @strawberry.field
+    def vehiculos_completos(self) -> List[VehiculocompletoType]:
+        vehiculos = get_all_vehiculos()
+        clientes_map = {c["id"]: c for c in get_all_clientes()}
+        tipos_map = {t["id"]: t for t in get_all_tipo_vehiculos()}
+        tipos_tarifa_map = {t["id"]: t for t in get_all_tipo_tarifas()}
+
+        return [
+            VehiculocompletoType(
+                id=v["id"],
+                placa=v["placa"],
+                marca=v["marca"],
+                modelo=v["modelo"],
+                cliente=clienteType(**clientes_map[v["clienteId"]]),
+                tipoVehiculo=TipoVehiculoType(
+                    id=tipos_map[v["tipoVehiculoId"]]["id"],
+                    categoria=tipos_map[v["tipoVehiculoId"]]["categoria"],
+                    descripcion=tipos_map[v["tipoVehiculoId"]]["descripcion"],
+                    tipotarifa=TipoTarifaType(**tipos_tarifa_map[tipos_map[v["tipoVehiculoId"]]["tipoTarifaId"]])
+                )
+            )
+            for v in vehiculos
         ]
 
 schema = strawberry.Schema(Query)
