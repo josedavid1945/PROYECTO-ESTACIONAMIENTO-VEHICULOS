@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { TipoVehiculo } from '../../config/entities/tipoVehiculo.entity';
 
 @Entity('vehiculo')
 export class Vehicle {
@@ -23,7 +24,11 @@ export class Vehicle {
   @Column()
   clienteId: string;
 
-  @ApiProperty({ description: 'ID del tipo de vehículo', example: 'tipo-veh-001' })
-  @Column()
+  @ApiProperty({ description: 'ID del tipo de vehículo', example: 'tipo-veh-001', required: false })
+  @Column({ nullable: true })
   tipoVehiculoId: string;
+
+  @ManyToOne(() => TipoVehiculo, { nullable: true })
+  @JoinColumn({ name: 'tipoVehiculoId' })
+  tipoVehiculo: TipoVehiculo;
 }

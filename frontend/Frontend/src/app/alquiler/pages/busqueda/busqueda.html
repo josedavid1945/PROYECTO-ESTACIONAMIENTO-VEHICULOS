@@ -1,31 +1,12 @@
-<section class="m-auto flex-grow flex flex-col min-h-screen">
-    <app-information-bar/>
-    <app-nav-bar
-        [isExpanded]="isNavBarExpanded()" 
-        (isExpandedChange)="onNavBarToggle($event)"/>
-    
-    <div class="px-4 py-5">
-        <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4 gap-4">
-            <app-search-input 
-                (value)="onSearchQueryChange($event)"
-                [placeholder]="'Buscar...'"/>
-            
-            <app-selected-bar
-                (sendDetector)="onSelectedOptionChange($event)"/>
-        </div>
+<section class="container mx-auto px-8 py-12">
+    <!-- Selector de tipo de búsqueda -->
+    <div class="max-w-screen-xl flex flex-wrap items-center justify-center mx-auto mb-8">
+        <app-selected-bar
+            (sendDetector)="onSelectedOptionChange($event)"/>
+    </div>
 
-        <!-- Lista de tickets siempre visible -->
-        <div class="mt-4">
-            <app-list-item 
-                [elements]="tickets()"
-                [isLoading]="cargando()"/>
-        </div>
-
-        <!-- Router outlet para mostrar el componente seleccionado -->
-        @if(selectedOption()){
-            <div class="mt-4">
-                <router-outlet/>
-            </div>
-        }
+    <!-- Vista con filtro específico: Router outlet -->
+    <div class="mt-4">
+        <router-outlet/>
     </div>
 </section>

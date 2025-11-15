@@ -26,32 +26,137 @@ func NewRestClient(baseURL string) *RestClient {
 	}
 }
 
-// GetDashboardData obtiene los datos del dashboard desde el REST API
+// GetDashboardData obtiene los datos del dashboard construyéndolos desde endpoints existentes
 func (c *RestClient) GetDashboardData() (*models.DashboardData, error) {
-	url := fmt.Sprintf("%s/api/dashboard", c.baseURL)
+	// Obtener espacios disponibles y ocupados
+	espaciosDisp, err := c.getEspaciosDisponiblesCount()
+	if err != nil {
+		return nil, fmt.Errorf("error obteniendo espacios disponibles: %w", err)
+	}
+
+	// Obtener total de espacios
+	totalEspacios, err := c.getTotalEspacios()
+	if err != nil {
+		return nil, fmt.Errorf("error obteniendo total espacios: %w", err)
+	}
+
+	// Calcular ocupados
+	espaciosOcup := totalEspacios - espaciosDisp
+
+	// Obtener tickets activos (vehículos en el estacionamiento)
+	vehiculosActivos, err := c.getVehiculosActivos()
+	if err != nil {
+		return nil, fmt.Errorf("error obteniendo vehículos activos: %w", err)
+	}
+
+	// Obtener dinero recaudado (si tienes endpoint de transacciones)
+	dineroHoy, dineroMes := c.getDineroRecaudado()
+
+	return &models.DashboardData{
+		EspaciosDisponibles: espaciosDisp,
+		EspaciosOcupados:    espaciosOcup,
+		TotalEspacios:       totalEspacios,
+		DineroRecaudadoHoy:  dineroHoy,
+		DineroRecaudadoMes:  dineroMes,
+		VehiculosActivos:    vehiculosActivos,
+		Timestamp:           time.Now(),
+	}, nil
+}
+
+// getEspaciosDisponiblesCount obtiene la cantidad de espacios disponibles
+func (c *RestClient) getEspaciosDisponiblesCount() (int, error) {
+	url := fmt.Sprintf("%s/espacios", c.baseURL)
 	
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("error al obtener dashboard del REST API: %w", err)
+		return 0, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("REST API respondió con status %d: %s", resp.StatusCode, string(body))
+		return 0, fmt.Errorf("status %d", resp.StatusCode)
 	}
 
-	var data models.DashboardData
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, fmt.Errorf("error al decodificar respuesta del dashboard: %w", err)
+	var espacios []map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&espacios); err != nil {
+		return 0, err
 	}
 
-	return &data, nil
+	// Contar solo espacios con estado = true (disponibles)
+	disponibles := 0
+	for _, espacio := range espacios {
+		if estado, ok := espacio["estado"].(bool); ok && estado {
+			disponibles++
+		}
+	}
+
+	return disponibles, nil
+}
+
+// getTotalEspacios obtiene el total de espacios en el estacionamiento
+func (c *RestClient) getTotalEspacios() (int, error) {
+	url := fmt.Sprintf("%s/espacios", c.baseURL)
+	
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("status %d", resp.StatusCode)
+	}
+
+	var espacios []map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&espacios); err != nil {
+		return 0, err
+	}
+
+	return len(espacios), nil
+}
+
+// getVehiculosActivos obtiene la cantidad de vehículos actualmente en el estacionamiento
+func (c *RestClient) getVehiculosActivos() (int, error) {
+	// Usar endpoint de tickets
+	url := fmt.Sprintf("%s/tickets", c.baseURL)
+	
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		// Si falla, retornar 0 en lugar de error
+		return 0, nil
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return 0, nil
+	}
+
+	var tickets []map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&tickets); err != nil {
+		return 0, nil
+	}
+
+	// Contar solo tickets sin fecha de salida
+	activos := 0
+	for _, ticket := range tickets {
+		if fechaSalida, ok := ticket["fechaSalida"]; !ok || fechaSalida == nil {
+			activos++
+		}
+	}
+
+	return activos, nil
+}
+
+// getDineroRecaudado obtiene el dinero recaudado (hoy y mes)
+func (c *RestClient) getDineroRecaudado() (float64, float64) {
+	// TODO: Si tienes endpoint de transacciones/pagos, usar aquí
+	// Por ahora retornar 0
+	return 0.0, 0.0
 }
 
 // GetEspaciosPorSeccion obtiene espacios agrupados por sección desde el REST API
 func (c *RestClient) GetEspaciosPorSeccion() ([]models.EspaciosPorSeccion, error) {
-	url := fmt.Sprintf("%s/api/espacios/por-seccion", c.baseURL)
+	url := fmt.Sprintf("%s/secciones/with-espacios", c.baseURL)
 	
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
@@ -74,7 +179,7 @@ func (c *RestClient) GetEspaciosPorSeccion() ([]models.EspaciosPorSeccion, error
 
 // GetTicketsActivos obtiene tickets activos desde el REST API
 func (c *RestClient) GetTicketsActivos() ([]models.Ticket, error) {
-	url := fmt.Sprintf("%s/api/tickets/activos", c.baseURL)
+	url := fmt.Sprintf("%s/tickets", c.baseURL)
 	
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
@@ -97,7 +202,7 @@ func (c *RestClient) GetTicketsActivos() ([]models.Ticket, error) {
 
 // GetEspaciosDisponibles obtiene espacios disponibles desde el REST API
 func (c *RestClient) GetEspaciosDisponibles() ([]models.EspacioDetalle, error) {
-	url := fmt.Sprintf("%s/api/espacios/disponibles", c.baseURL)
+	url := fmt.Sprintf("%s/espacios", c.baseURL)
 	
 	resp, err := c.httpClient.Get(url)
 	if err != nil {
@@ -120,7 +225,7 @@ func (c *RestClient) GetEspaciosDisponibles() ([]models.EspacioDetalle, error) {
 
 // HealthCheck verifica si el REST API está disponible
 func (c *RestClient) HealthCheck() error {
-	url := fmt.Sprintf("%s/api/health", c.baseURL)
+	url := fmt.Sprintf("%s/", c.baseURL)
 	
 	resp, err := c.httpClient.Get(url)
 	if err != nil {

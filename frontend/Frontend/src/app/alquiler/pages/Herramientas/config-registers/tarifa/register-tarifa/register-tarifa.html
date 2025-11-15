@@ -1,1 +1,122 @@
-<p>register-tarifa works!</p>,
+<section class="container mx-auto px-4 py-8 max-w-2xl">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Registrar Nueva Tarifa</h1>
+    <p class="text-gray-600">Completa el formulario para crear una nueva tarifa</p>
+  </div>
+
+  <!-- Success Alert -->
+  @if (success()) {
+    <div class="alert alert-success mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>¡Tarifa creada exitosamente! Redirigiendo...</span>
+    </div>
+  }
+
+  <!-- Error Alert -->
+  @if (error()) {
+    <div class="alert alert-error mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  <!-- Form -->
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body">
+      <form [formGroup]="tarifaForm" (ngSubmit)="onSubmit()">
+        
+        <!-- Tipo de Tarifa -->
+        <div class="form-control w-full mb-4">
+          <label class="label">
+            <span class="label-text font-semibold">Tipo de Tarifa *</span>
+          </label>
+          <input 
+            type="text" 
+            placeholder="Ej: Estándar, Premium, VIP" 
+            class="input input-bordered w-full" 
+            formControlName="tipoTarifa"
+            [class.input-error]="tarifaForm.get('tipoTarifa')?.invalid && tarifaForm.get('tipoTarifa')?.touched"
+          />
+          @if (getErrorMessage('tipoTarifa')) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('tipoTarifa') }}</span>
+            </label>
+          }
+        </div>
+
+        <!-- Precio por Hora -->
+        <div class="form-control w-full mb-4">
+          <label class="label">
+            <span class="label-text font-semibold">Precio por Hora ($) *</span>
+          </label>
+          <input 
+            type="number" 
+            step="0.01"
+            placeholder="0.00" 
+            class="input input-bordered w-full" 
+            formControlName="precioHora"
+            [class.input-error]="tarifaForm.get('precioHora')?.invalid && tarifaForm.get('precioHora')?.touched"
+          />
+          @if (getErrorMessage('precioHora')) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('precioHora') }}</span>
+            </label>
+          }
+        </div>
+
+        <!-- Precio por Día -->
+        <div class="form-control w-full mb-6">
+          <label class="label">
+            <span class="label-text font-semibold">Precio por Día ($) *</span>
+          </label>
+          <input 
+            type="number" 
+            step="0.01"
+            placeholder="0.00" 
+            class="input input-bordered w-full" 
+            formControlName="precioDia"
+            [class.input-error]="tarifaForm.get('precioDia')?.invalid && tarifaForm.get('precioDia')?.touched"
+          />
+          @if (getErrorMessage('precioDia')) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('precioDia') }}</span>
+            </label>
+          }
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-4">
+          <a routerLink="/estacionamiento/herramientas/config/tarifa" class="btn btn-ghost">
+            Cancelar
+          </a>
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="isSubmitting()"
+          >
+            @if (isSubmitting()) {
+              <span class="loading loading-spinner"></span>
+            }
+            {{ isSubmitting() ? 'Guardando...' : 'Guardar Tarifa' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Info Card -->
+  <div class="mt-8 alert alert-info">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <div>
+      <h3 class="font-bold">Información</h3>
+      <div class="text-xs">Las tarifas se aplicarán a los vehículos según su tipo y tiempo de estadía en el estacionamiento.</div>
+    </div>
+  </div>
+</section>

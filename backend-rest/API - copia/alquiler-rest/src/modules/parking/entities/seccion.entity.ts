@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { Espacio } from './espacio.entity';
 
 @Entity('seccion')
 export class Seccion {
@@ -10,4 +11,7 @@ export class Seccion {
   @ApiProperty({ description: 'Letra identificadora de la sección', example: 'A' })
   @Column({ name: 'letra_seccion' })
   letraSeccion: string;
+
+  @OneToMany(() => Espacio, (espacio) => espacio.seccion)
+  espacios: Espacio[];
 }

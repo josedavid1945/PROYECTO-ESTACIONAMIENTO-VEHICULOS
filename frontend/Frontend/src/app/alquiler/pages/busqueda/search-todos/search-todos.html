@@ -1,0 +1,20 @@
+<div class="container mx-auto px-4">
+    <!-- Barra de búsqueda específica para todos los tickets -->
+    <div class="mb-6">
+        <app-search-input 
+            (value)="onSearchChange($event)"
+            [placeholder]="'Buscar por placa, espacio o estado...'"/>
+    </div>
+
+    <!-- Tabla de tickets -->
+    <app-list-item 
+        [elements]="filteredTickets()"
+        [isLoading]="isLoading()"/>
+
+    <!-- Contador de resultados -->
+    @if(!isLoading() && filteredTickets().length > 0) {
+        <div class="mt-4 text-sm opacity-70 text-center">
+            Mostrando {{ filteredTickets().length }} de {{ allTickets().length }} tickets
+        </div>
+    }
+</div>

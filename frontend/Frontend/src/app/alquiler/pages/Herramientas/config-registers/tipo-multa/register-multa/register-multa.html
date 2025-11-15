@@ -1,1 +1,112 @@
-<p>register-multa works!</p>,
+<section class="container mx-auto px-4 py-8 max-w-2xl">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">Registrar Nueva Multa</h1>
+    <p class="text-gray-600">Completa el formulario para crear un nuevo tipo de multa</p>
+  </div>
+
+  <!-- Success Alert -->
+  @if (success()) {
+    <div class="alert alert-success mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>¡Multa creada exitosamente! Redirigiendo...</span>
+    </div>
+  }
+
+  <!-- Error Alert -->
+  @if (error()) {
+    <div class="alert alert-error mb-6">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  <!-- Form -->
+  <div class="card bg-white shadow-xl">
+    <div class="card-body">
+      <form [formGroup]="multaForm" (ngSubmit)="onSubmit()">
+        
+        <!-- Nombre de Multa -->
+        <div class="form-control w-full mb-4">
+          <label class="label">
+            <span class="label-text font-semibold text-gray-800">Nombre del Tipo de Multa *</span>
+          </label>
+          <input 
+            type="text" 
+            placeholder="Ej: Exceso de tiempo, Estacionamiento prohibido, Vehículo abandonado" 
+            class="input input-bordered w-full bg-white text-gray-800 placeholder:text-gray-400" 
+            formControlName="nombre"
+            [class.input-error]="multaForm.get('nombre')?.invalid && multaForm.get('nombre')?.touched"
+          />
+          @if (getErrorMessage('nombre')) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('nombre') }}</span>
+            </label>
+          }
+          <label class="label">
+            <span class="label-text-alt text-gray-600">Ingresa un nombre descriptivo para este tipo de multa</span>
+          </label>
+        </div>
+
+        <!-- Monto -->
+        <div class="form-control w-full mb-6">
+          <label class="label">
+            <span class="label-text font-semibold text-gray-800">Monto Base ($) *</span>
+          </label>
+          <div class="relative">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 font-semibold text-lg">$</span>
+            <input 
+              type="number" 
+              step="0.01"
+              min="0.01"
+              placeholder="0.00" 
+              class="input input-bordered w-full pl-9 bg-white text-gray-800 placeholder:text-gray-400 font-semibold" 
+              formControlName="monto"
+              [class.input-error]="multaForm.get('monto')?.invalid && multaForm.get('monto')?.touched"
+            />
+          </div>
+          @if (getErrorMessage('monto')) {
+            <label class="label">
+              <span class="label-text-alt text-error">{{ getErrorMessage('monto') }}</span>
+            </label>
+          }
+          <label class="label">
+            <span class="label-text-alt text-gray-600">Este será el monto que se aplicará cuando se genere esta multa</span>
+          </label>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-4">
+          <a routerLink="/estacionamiento/herramientas/config/multas" class="btn btn-ghost">
+            Cancelar
+          </a>
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="isSubmitting()"
+          >
+            @if (isSubmitting()) {
+              <span class="loading loading-spinner"></span>
+            }
+            {{ isSubmitting() ? 'Guardando...' : 'Guardar Multa' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Info Card -->
+  <div class="mt-8 alert alert-warning bg-yellow-50 border border-yellow-200">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6 text-yellow-700" fill="none" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+    <div>
+      <h3 class="font-bold text-gray-800">Atención</h3>
+      <div class="text-sm text-gray-700">Los tipos de multas configurados aquí se utilizarán para sancionar infracciones en el estacionamiento. El monto base será aplicado al momento de generar cada multa.</div>
+    </div>
+  </div>
+</section>

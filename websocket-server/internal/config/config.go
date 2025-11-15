@@ -53,8 +53,12 @@ func getEnv(key, defaultValue string) string {
 
 // Validate valida que la configuración sea correcta
 func (c *Config) Validate() error {
-	if c.DatabaseURL == "" {
-		log.Fatal("DATABASE_URL es requerido")
+	// Validar según el modo
+	if c.Mode == "database" && c.DatabaseURL == "" {
+		log.Fatal("DATABASE_URL es requerido cuando MODE=database")
+	}
+	if c.Mode == "rest" && c.RestAPIURL == "" {
+		log.Fatal("REST_API_URL es requerido cuando MODE=rest")
 	}
 	return nil
 }

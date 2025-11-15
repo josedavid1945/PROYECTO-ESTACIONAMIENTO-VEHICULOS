@@ -23,6 +23,13 @@ export class SeccionController {
     return this.seccionService.findAll();
   }
 
+  @Get('with-espacios')
+  @ApiOperation({ summary: 'Obtener todas las secciones con sus espacios' })
+  @ApiResponse({ status: 200, description: 'Lista de secciones con espacios' })
+  findAllWithEspacios() {
+    return this.seccionService.findAllWithEspacios();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Obtener sección por ID' })
   @ApiResponse({ status: 200, description: 'Sección encontrada' })

@@ -21,6 +21,18 @@ export class SeccionService {
     return await this.seccionRepository.find();
   }
 
+  async findAllWithEspacios(): Promise<Seccion[]> {
+    return await this.seccionRepository.find({
+      relations: ['espacios'],
+      order: {
+        letraSeccion: 'ASC',
+        espacios: {
+          numero: 'ASC',
+        },
+      },
+    });
+  }
+
   async findOne(id: string): Promise<Seccion> {
     const seccion = await this.seccionRepository.findOne({ where: { id } });
     if (!seccion) throw new NotFoundException(`Seccion ${id} no encontrada`);

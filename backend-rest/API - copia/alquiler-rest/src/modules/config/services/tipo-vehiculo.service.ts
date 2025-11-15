@@ -18,11 +18,16 @@ export class TipoVehiculoService {
   }
 
   async findAll(): Promise<TipoVehiculo[]> {
-    return await this.tipoVehiculoRepository.find();
+    return await this.tipoVehiculoRepository.find({
+      relations: ['tipotarifa']
+    });
   }
 
   async findOne(id: string): Promise<TipoVehiculo> {
-    const tipoVehiculo = await this.tipoVehiculoRepository.findOne({ where: { id } });
+    const tipoVehiculo = await this.tipoVehiculoRepository.findOne({ 
+      where: { id },
+      relations: ['tipotarifa']
+    });
     if (!tipoVehiculo) throw new NotFoundException(`TipoVehiculo ${id} no encontrado`);
     return tipoVehiculo;
   }

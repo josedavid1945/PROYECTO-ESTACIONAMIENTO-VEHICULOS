@@ -4,6 +4,7 @@ import { Busqueda } from "./busqueda";
 import { Herramientas } from "../Herramientas/Herramientas";
 import { SearchTicketsPorFecha } from "./search-ticketsPorFecha/search-ticketsPorFecha";
 import { SearchVehiculos } from "./search-vehiculos/search-vehiculos";
+import { SearchTodos } from "./search-todos/search-todos";
 
 export const BusquedaRoutes: Routes =
     [
@@ -11,7 +12,10 @@ export const BusquedaRoutes: Routes =
             path: '',
             component: Busqueda,
             children: [
-                
+                {
+                    path: '',
+                    component: SearchTodos,
+                },
                 {   
                     path: 'vehiculos',
                     component: SearchVehiculos,
@@ -20,7 +24,6 @@ export const BusquedaRoutes: Routes =
                     path: 'fechas',
                     component: SearchTicketsPorFecha,
                 },
-
             ]
         }
     ]

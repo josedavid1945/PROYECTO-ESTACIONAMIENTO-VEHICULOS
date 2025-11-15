@@ -1,9 +1,119 @@
-<section class="m-auto flex-grow flex flex-col min-h-screen">
-    <app-information-bar/>
-    <app-nav-bar 
-    [isExpanded]="isNavBarExpanded" 
-    (isExpandedChange)="onNavBarToggle($event)"/>
-    <div class="px-30 py-10">
-        <span>HOME</span>
+<section class="container mx-auto px-8 py-12">
+  <!-- Header -->
+  <div class="text-center mb-12">
+    <h1 class="text-5xl font-bold text-slate-800 mb-4">Panel de Control en Tiempo Real</h1>
+    <p class="text-xl text-slate-600 mb-4">Monitorea tu estacionamiento en vivo</p>
+    
+    <!-- Estado de conexión -->
+    <div class="flex justify-center items-center gap-3 mt-6">
+      @if (isConnected()) {
+        <div class="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+          </span>
+          <span class="text-sm font-semibold text-blue-700">Conectado en tiempo real</span>
+        </div>
+      } @else if (isReconnecting()) {
+        <div class="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+          <span class="loading loading-spinner loading-sm text-amber-600"></span>
+          <span class="text-sm font-semibold text-amber-700">Reconectando...</span>
+        </div>
+      } @else {
+        <div class="flex items-center gap-3 px-4 py-2 bg-red-50 border border-red-200 rounded-lg">
+          <span class="text-sm font-semibold text-red-700">Desconectado</span>
+          <button 
+            class="btn btn-xs bg-red-600 hover:bg-red-700 text-white border-none"
+            (click)="retryConnection()">
+            Reintentar
+          </button>
+        </div>
+      }
     </div>
+  </div>
+
+  <!-- Dashboard Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+    <!-- Espacios Disponibles -->
+    <div class="stat bg-white border-2 border-blue-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+      <div class="stat-figure text-blue-600">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2m-2 15l-5-5l1.41-1.41L10 14.17l7.59-7.59L19 8z"/>
+        </svg>
+      </div>
+      <div class="stat-title text-slate-600 font-semibold">Espacios Disponibles</div>
+      <div class="stat-value text-blue-600 text-5xl">{{ espaciosDisponibles() }}</div>
+      <div class="stat-desc text-slate-500">Listos para asignar</div>
+    </div>
+
+    <!-- Espacios Ocupados -->
+    <div class="stat bg-white border-2 border-slate-300 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+      <div class="stat-figure text-slate-600">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M19 21H5v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-9l2.417-4.029A2 2 0 0 1 6.132 8h11.736a2 2 0 0 1 1.715.971L22 13v9a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1zM4.332 13h15.336l-1.8-3H6.132zM6.5 18a1.5 1.5 0 1 0 0-3a1.5 1.5 0 0 0 0 3m11 0a1.5 1.5 0 1 0 0-3a1.5 1.5 0 0 0 0 3"/>
+        </svg>
+      </div>
+      <div class="stat-title text-slate-600 font-semibold">Espacios Ocupados</div>
+      <div class="stat-value text-slate-700 text-5xl">{{ espaciosOcupados() }}</div>
+      <div class="stat-desc text-slate-500">{{ porcentajeOcupacion() }}% de ocupación</div>
+    </div>
+
+    <!-- Total Espacios -->
+    <div class="stat bg-white border-2 border-slate-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+      <div class="stat-figure text-slate-700">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M3 13h8V3H3zm0 8h8v-6H3zm10 0h8V11h-8zm0-18v6h8V3z"/>
+        </svg>
+      </div>
+      <div class="stat-title text-slate-600 font-semibold">Total de Espacios</div>
+      <div class="stat-value text-slate-800 text-5xl">{{ totalEspacios() }}</div>
+      <div class="stat-desc text-slate-500">Capacidad del estacionamiento</div>
+    </div>
+
+    <!-- Dinero Hoy -->
+    <div classs="stat bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 col-span-1 md:col-span-2 lg:col-span-1">
+      <div class="stat-figure text-blue-100">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2m1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87c1.96 0 2.4-.98 2.4-1.59c0-.83-.44-1.61-2.67-2.14c-2.48-.6-4.18-1.62-4.18-3.67c0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87c-1.5 0-2.4.68-2.4 1.64c0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16"/>
+        </svg>
+      </div>
+      <div class="stat-title text-blue-100 font-semibold">Recaudado Hoy</div>
+      <div class="stat-value text-white text-4xl">{{ formatCurrency(dineroHoy()) }}</div>
+      <div class="stat-desc text-blue-100">Ingresos del día actual</div>
+    </div>
+
+    <!-- Dinero Mes -->
+    <div class="stat bg-gradient-to-br from-slate-700 to-slate-800 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 col-span-1 md:col-span-2 lg:col-span-1">
+      <div class="stat-figure text-slate-300">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M6 21h12V7H6zM4 6h16v16H4zm11-4h5v5h-2V4h-3zM9 2H4v5h2V4h3z"/>
+        </svg>
+      </div>
+      <div class="stat-title text-slate-300 font-semibold">Recaudado Este Mes</div>
+      <div class="stat-value text-white text-4xl">{{ formatCurrency(dineroMes()) }}</div>
+      <div class="stat-desc text-slate-300">Ingresos mensuales</div>
+    </div>
+
+    <!-- Vehículos Activos -->
+    <div class="stat bg-white border-2 border-blue-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 col-span-1 md:col-span-2 lg:col-span-1">
+      <div class="stat-figure text-blue-600">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M4 13v5h16v-5zm1.618-2h12.764a1 1 0 0 0 .894-1.447L18 7H6L4.724 9.553A1 1 0 0 0 5.618 11M22 13.5V21a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H5v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-7.5l-1.243-.31A1 1 0 0 1 0 12.22v-.72a.5.5 0 0 1 .5-.5H2l2.447-4.894A2 2 0 0 1 6.237 5H8V3h3v2h2V3h3v2h1.764a2 2 0 0 1 1.789 1.106L22 11h1.5a.5.5 0 0 1 .5.5v.72a1 1 0 0 1-.758.97zM5 14q3.476 0 4.686 2.264a.5.5 0 0 1-.441.736H6a1 1 0 0 1-1-1zm14 0v2a1 1 0 0 1-1 1h-3.245a.5.5 0 0 1-.44-.736Q15.524 14 19 14"/>
+        </svg>
+      </div>
+      <div class="stat-title text-slate-600 font-semibold">Vehículos Activos</div>
+      <div class="stat-value text-blue-600 text-5xl">{{ vehiculosActivos() }}</div>
+      <div class="stat-desc text-slate-500">En el estacionamiento ahora</div>
+    </div>
+  </div>
+
+  <!-- Mensaje de error si hay problemas de conexión -->
+  @if (connectionError()) {
+    <div class="alert alert-error mt-8 shadow-lg">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ connectionError() }}</span>
+    </div>
+  }
 </section>

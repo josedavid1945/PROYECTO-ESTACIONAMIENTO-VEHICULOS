@@ -1,3 +1,21 @@
-<router-outlet/>
+<div class="flex h-screen overflow-hidden bg-slate-50">
+  <!-- Navbar lateral -->
+  <app-nav-bar 
+    [isExpanded]="isExpanded()" 
+    (isExpandedChange)="toggleMenu($event)"
+  />
+
+  <!-- Contenedor principal -->
+  <div class="flex flex-col flex-1 transition-all duration-300 ease-in-out"
+       [ngClass]="{'ml-20': !isExpanded(), 'ml-72': isExpanded()}">
+    <!-- Barra de información superior -->
+    <app-information-bar />
+    
+    <!-- Contenido de las páginas -->
+    <main class="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 to-slate-100">
+      <router-outlet/>
+    </main>
+  </div>
+</div>
 
 

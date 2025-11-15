@@ -1,5 +1,8 @@
-<select class="select select-ghost" (change)="onSelectChange($event)">
-    <option disabled selected>Escoje una opcion</option>
-    <option value="vehiculos">Vehículos</option>
-    <option value="fechas">Tickets por fecha</option>
+<select 
+    class="select select-bordered select-primary w-full max-w-xs" 
+    (change)="onSelectChange($event)"
+    [value]="selectedOption()">
+    <option value="">🔍 Ver todos los tickets</option>
+    <option value="vehiculos">🚗 Buscar por vehículos</option>
+    <option value="fechas">📅 Filtrar por fechas</option>
 </select>

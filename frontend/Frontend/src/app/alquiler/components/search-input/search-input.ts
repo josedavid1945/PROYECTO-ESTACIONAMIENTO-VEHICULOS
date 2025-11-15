@@ -23,6 +23,7 @@ export class SearchInput {
 
   // Clear search input
   clearSearch(): void {
+    console.log('🧹 Limpiando búsqueda');
     this.inputValue.set('');
     this.value.emit('');
   }
@@ -30,9 +31,14 @@ export class SearchInput {
   // Debounce effect for search
   debounceEffect = effect((onCleanup) => {
     const value = this.inputValue();
+    console.log('⏱️ Debounce effect - input value:', value);
     const timeout = setTimeout(() => {
+      console.log('📤 Emitiendo valor después de debounce:', value);
       this.value.emit(value);
     }, this.debounceTime());
-    onCleanup(() => clearTimeout(timeout));
+    onCleanup(() => {
+      console.log('🧹 Limpiando timeout anterior');
+      clearTimeout(timeout);
+    });
   });
 }

@@ -1,1 +1,140 @@
-<p>search-ticketsPorFecha works!</p>,
+<div class="container mx-auto px-4">
+    <!-- Calendario -->
+    <div class="bg-base-200 p-6 rounded-lg mb-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold capitalize">📅 {{ currentMonthName() }}</h3>
+            <div class="flex gap-2">
+                <button class="btn btn-sm btn-circle btn-ghost" (click)="previousMonth()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <button class="btn btn-sm btn-primary" (click)="goToToday()">
+                    Hoy
+                </button>
+                <button class="btn btn-sm btn-circle btn-ghost" (click)="nextMonth()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Días de la semana -->
+        <div class="grid grid-cols-7 gap-2 mb-2">
+            @for (day of weekDays; track day) {
+                <div class="text-center font-semibold text-sm py-2">
+                    {{ day }}
+                </div>
+            }
+        </div>
+
+        <!-- Días del mes -->
+        <div class="grid grid-cols-7 gap-1">
+            @for (day of calendarDays(); track day.date.getTime()) {
+                <button 
+                    class="relative h-12 w-full rounded transition-all duration-150 hover:bg-base-300"
+                    [ngClass]="{
+                        'bg-base-300 text-base-content/40': !day.isCurrentMonth,
+                        'bg-base-100 hover:bg-base-200': day.isCurrentMonth && !day.isSelected && !day.isToday,
+                        'bg-primary text-primary-content hover:bg-primary': day.isSelected,
+                        'ring-2 ring-accent': day.isToday && !day.isSelected
+                    }"
+                    (click)="selectDay(day)">
+                    <div class="flex flex-col items-center justify-center h-full relative">
+                        <span class="text-xs font-medium">{{ day.day }}</span>
+                        @if(day.hasTickets) {
+                            <span class="absolute bottom-1 flex h-1 w-1">
+                                <span class="relative inline-flex rounded-full h-1 w-1 bg-success"></span>
+                            </span>
+                        }
+                    </div>
+                </button>
+            }
+        </div>
+
+        <!-- Leyenda compacta -->
+        <div class="flex flex-wrap gap-3 mt-4 text-xs opacity-70">
+            <div class="flex items-center gap-1">
+                <div class="w-3 h-3 rounded ring-2 ring-accent"></div>
+                <span>Hoy</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <div class="w-3 h-3 rounded bg-primary"></div>
+                <span>Seleccionado</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <div class="w-1 h-1 rounded-full bg-success"></div>
+                <span>Con tickets</span>
+            </div>
+        </div>
+
+        <!-- Info de selección -->
+        @if(selectedDate()) {
+            <div class="alert alert-info mt-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div class="flex-1">
+                    <span>
+                        Mostrando tickets del día: <strong>{{ selectedDate()! | date:'dd/MM/yyyy' }}</strong>
+                        ({{ filteredTickets().length }} ticket{{ filteredTickets().length !== 1 ? 's' : '' }})
+                    </span>
+                </div>
+                <button class="btn btn-sm btn-ghost" (click)="clearSelection()">
+                    Limpiar
+                </button>
+            </div>
+        }
+    </div>
+
+    <!-- Estado de carga con skeleton -->
+    @if(isLoading()) {
+        <section class="mt-5">
+            <table class="table table-md mt-2 w-full">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Vehiculo Placa</th>
+                        <th>Espacio</th>
+                        <th>Fecha de ingreso</th>
+                        <th>Mas detalle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (item of [1,2,3,4,5,6]; track item) {
+                        <tr>
+                            <td><div class="skeleton h-4 w-6"></div></td>
+                            <td><div class="skeleton h-4 w-24"></div></td>
+                            <td><div class="skeleton h-4 w-16"></div></td>
+                            <td><div class="skeleton h-4 w-32"></div></td>
+                            <td><div class="skeleton h-4 w-28"></div></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+    }
+
+    <!-- Sin resultados -->
+    @else if(filteredTickets().length === 0) {
+        <div class="alert alert-warning">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>No se encontraron tickets en el rango de fechas seleccionado.</span>
+        </div>
+    }
+
+    <!-- Lista de tickets -->
+    @else {
+        <app-list-item 
+            [elements]="filteredTickets()"
+            [isLoading]="isLoading()"/>
+        
+        <!-- Contador de resultados -->
+        <div class="mt-4 text-sm opacity-70 text-center">
+            Mostrando {{ filteredTickets().length }} de {{ allTickets().length }} tickets
+        </div>
+    }
+</div>

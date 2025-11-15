@@ -2,8 +2,14 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Ticket } from './entities/ticket.entity';
 import { Espacio } from '../parking/entities/espacio.entity';
+import { Cliente } from '../clients/entities/cliente.entity';
+import { Vehicle } from '../clients/entities/vehiculo.entity';
+import { Pago } from '../transactions/entities/pago.entity';
+import { DetallePago } from '../transactions/entities/detallePago.entity';
 import { TicketService } from './services/ticket.service';
+import { RegistroService } from './services/registro.service';
 import { TicketController } from './controllers/ticket.controller';
+import { RegistroController } from './controllers/registro.controller';
 import { ClientsModule } from '../clients/clients.module';
 import { ParkingModule } from '../parking/parking.module';
 import { ConfigModule } from '../config/config.module';
@@ -18,16 +24,13 @@ import { ConfigModule } from '../config/config.module';
  */
 @Module({
   imports: [
-    // MODIFICACIÓN: Se agregó Espacio para poder gestionar el estado de los espacios
-    // Ticket: Registros de ingreso/salida de vehículos
-    // Espacio: Para marcar como ocupado/disponible automáticamente
-    TypeOrmModule.forFeature([Ticket, Espacio]),
-    ClientsModule,    // Para VehicleService
-    ParkingModule,    // Para EspacioService  
-    ConfigModule,     // Para TipoTarifaService (solo lectura)
+    TypeOrmModule.forFeature([Ticket, Espacio, Cliente, Vehicle, Pago, DetallePago]),
+    ClientsModule,
+    ParkingModule,
+    ConfigModule,
   ],
-  controllers: [TicketController],
-  providers: [TicketService],
-  exports: [TicketService],
+  controllers: [TicketController, RegistroController],
+  providers: [TicketService, RegistroService],
+  exports: [TicketService, RegistroService],
 })
 export class OperationsModule {}

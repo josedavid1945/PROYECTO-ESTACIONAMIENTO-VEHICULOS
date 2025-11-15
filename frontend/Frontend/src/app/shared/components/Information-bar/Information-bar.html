@@ -1,29 +1,33 @@
-<div class="navbar bg-base-100 shadow-sm">
+<div class="navbar bg-white shadow-md border-b border-gray-200 sticky top-0 z-40">
   <div class="navbar-start">
-    
-    <a class="btn btn-ghost text-xl" routerLink="/">daisyUI</a>
+    <a class="btn btn-ghost text-xl font-bold text-gray-800" routerLink="/">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" class="text-blue-600">
+        <path fill="currentColor" d="M4 13v5h16v-5zm1.618-2h12.764a1 1 0 0 0 .894-1.447L18 7H6L4.724 9.553A1 1 0 0 0 5.618 11M22 13.5V21a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H5v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-7.5l-1.243-.31A1 1 0 0 1 0 12.22v-.72a.5.5 0 0 1 .5-.5H2l2.447-4.894A2 2 0 0 1 6.237 5H8V3h3v2h2V3h3v2h1.764a2 2 0 0 1 1.789 1.106L22 11h1.5a.5.5 0 0 1 .5.5v.72a1 1 0 0 1-.758.97zM5 14q3.476 0 4.686 2.264a.5.5 0 0 1-.441.736H6a1 1 0 0 1-1-1zm14 0v2a1 1 0 0 1-1 1h-3.245a.5.5 0 0 1-.44-.736Q15.524 14 19 14"/>
+      </svg>
+      Estacionamiento
+    </a>
   </div>
   <div class="navbar-end">
-      <div class="dropdown dropdown-end flex items-center gap-4 px-3 py-2 rounded-lg transition-colors text-gray-300">
-          <span>ADMINISTRADOR</span>
+      <div class="dropdown dropdown-end flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors">
+          <span class="font-semibold text-gray-800">ADMINISTRADOR</span>
             <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-              <div class="w-10 rounded-full">
+              <div class="w-10 rounded-full ring-2 ring-blue-500 ring-offset-2">
                 <img
-                  alt="Tailwind CSS Navbar component"
+                  alt="Avatar del administrador"
                   src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" />
                 </div>
             </div>
             <ul
             tabindex="-1"
-            class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow mt-5">
+            class="menu menu-sm dropdown-content bg-white rounded-box z-50 mt-3 w-52 p-2 shadow-lg border border-gray-200 mt-5">
             <li>
-                <a class="justify-between">
-                    Profile
-                    <span class="badge">New</span>
+                <a class="justify-between hover:bg-blue-50 text-gray-800">
+                    Perfil
+                    <span class="badge badge-primary">New</span>
                 </a>
             </li>
-            <li><a>Settings</a></li>
-            <li><a>Logout</a></li>
+            <li><a class="hover:bg-blue-50 text-gray-800">Configuración</a></li>
+            <li><a class="hover:bg-red-50 text-red-600 font-semibold">Cerrar Sesión</a></li>
         </ul>
       </div>
     

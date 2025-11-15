@@ -1,49 +1,33 @@
-import { Component } from "@angular/core";
-import { Route, Routes } from "@angular/router";
-import { TipoVehiculo } from "./tipo-vehiculo/tipo-vehiculo";
-import { TipoMulta } from "./tipo-multa/tipo-multa";
-import { Tarifa } from "./tarifa/tarifa";
-import { Busqueda } from "../../busqueda/busqueda";
-import { Herramientas } from "../Herramientas";
+import { Routes } from "@angular/router";
 
-export const HerramientasRoutes: Routes =
-    [
-        {
-            path: '',
-            component: Herramientas,
-        },
-
-        {
-            path: 'tarifa',
-            component:Tarifa,
-            children: [
-                {
-                    path: 'register-tarifa',
-                    loadComponent: () => import('./tarifa/register-tarifa/register-tarifa').then(m => m.RegisterTarifa)
-                }
-
-            ]
-        },
-        {
-            path: 'multas',
-            component: TipoMulta,
-            children: [
-                {
-                    path: 'register-multa',
-                    loadComponent: () => import('./tipo-multa/register-multa/register-multa').then(m => m.RegisterMulta)
-                }
-
-            ]
-        },
-        {
-            path: 'tipos-vehiculo',
-            component: TipoVehiculo,
-            children: [
-                {
-                    path: 'register-tipoVehiculo',
-                    loadComponent: () => import('./tipo-vehiculo/register-tipoVehiculo/register-tipoVehiculo').then(m => m.RegisterTipoVehiculo)
-                }
-
-            ]
-        }
-    ]
+export const HerramientasRoutes: Routes = [
+    {
+        path: 'config',
+        children: [
+            {
+                path: 'tarifa',
+                loadComponent: () => import('../tarifa/tarifa').then(m => m.TarifaComponent)
+            },
+            {
+                path: 'registrar-tarifa',
+                loadComponent: () => import('../register-tarifa/register-tarifa').then(m => m.RegisterTarifaComponent)
+            },
+            {
+                path: 'multas',
+                loadComponent: () => import('./tipo-multa/tipo-multa').then(m => m.TipoMulta)
+            },
+            {
+                path: 'registrar-multa',
+                loadComponent: () => import('./tipo-multa/register-multa/register-multa').then(m => m.RegisterMulta)
+            },
+            {
+                path: 'tipos-vehiculo',
+                loadComponent: () => import('./tipo-vehiculo/tipo-vehiculo').then(m => m.TipoVehiculo)
+            },
+            {
+                path: 'registrar-tipoVehiculo',
+                loadComponent: () => import('./tipo-vehiculo/register-tipoVehiculo/register-tipoVehiculo').then(m => m.RegisterTipoVehiculo)
+            }
+        ]
+    }
+]
