@@ -4,8 +4,9 @@ import { CommonModule } from '@angular/common';
 import { WebSocketService } from '../../../alquiler/services/websocket.service';
 
 @Component({
-  selector: 'app-home-page',
-  imports: [RouterLink, CommonModule],
+  selector: 'app-home',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './home-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

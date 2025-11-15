@@ -1,11 +1,4 @@
--- ============================================
--- SCRIPT DE DATOS INICIALES PARA PRUEBAS
--- ============================================
 
--- Limpiar datos existentes (CUIDADO: Esto borra todo)
--- TRUNCATE TABLE ticket, detalle_pago, pago, vehiculo, espacio, cliente, tipo_tarifa, tipo_vehiculo, seccion CASCADE;
-
--- ============================================
 -- 1. SECCIONES
 -- ============================================
 INSERT INTO seccion (letra_seccion) 
@@ -160,7 +153,3 @@ SELECT 'Clientes', COUNT(*) FROM cliente
 UNION ALL
 SELECT 'Vehículos', COUNT(*) FROM vehiculo;
 
--- ============================================
--- MENSAJE DE ÉXITO
--- ============================================
-SELECT '✅ Datos iniciales cargados correctamente' as mensaje;
