@@ -1,0 +1,97 @@
+<!-- Lista de Clientes -->
+<div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+  <h2 class="text-2xl font-semibold text-slate-800 mb-4">Clientes Registrados</h2>
+  
+  @if (clientesConVehiculos().length === 0) {
+    <div class="alert alert-info">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M13 13h-2V7h2m0 10h-2v-2h2M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2z"/>
+      </svg>
+      <span>No hay clientes registrados. Debe registrar un cliente primero.</span>
+    </div>
+  } @else {
+    <div class="space-y-3">
+      @for (cliente of clientesConVehiculos(); track cliente.id) {
+        <div class="card bg-base-100 border-2 border-slate-200 hover:border-blue-400 transition-all">
+          <div class="card-body p-4">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <h3 class="text-lg font-bold text-slate-800">{{ cliente.nombre }}</h3>
+                <p class="text-sm text-slate-600">{{ cliente.email }} • {{ cliente.telefono }}</p>
+              </div>
+              <button (click)="onToggleCliente(cliente.id)" class="btn btn-sm btn-circle btn-ghost">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
+                     [class.rotate-180]="clienteExpandido() === cliente.id"
+                     class="transition-transform">
+                  <path fill="currentColor" d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                </svg>
+              </button>
+            </div>
+
+            @if (clienteExpandido() === cliente.id) {
+              <div class="mt-4 pt-4 border-t">
+                <h4 class="font-semibold text-gray-700 mb-3">Vehículos:</h4>
+                @if (cliente.vehiculos.length === 0) {
+                  <p class="text-sm text-gray-500">Este cliente no tiene vehículos registrados.</p>
+                } @else {
+                  <div class="space-y-2">
+                    @for (vehiculo of cliente.vehiculos; track vehiculo.id) {
+                      <label class="flex items-center p-3 border rounded-lg hover:bg-blue-50 cursor-pointer">
+                        <input type="radio" name="vehiculoSeleccionado" [value]="vehiculo.id"
+                               [(ngModel)]="formData().vehiculoId"
+                               class="radio radio-primary mr-3"/>
+                        <div class="flex-1">
+                          <p class="font-medium text-gray-800">{{ vehiculo.placa }}</p>
+                          <p class="text-sm text-gray-600">{{ vehiculo.marca }} {{ vehiculo.modelo }}</p>
+                        </div>
+                      </label>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Selección de Espacio -->
+<div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+  <h2 class="text-2xl font-semibold text-gray-800 mb-4">Espacio Seleccionado</h2>
+  @if (formData().espacioId) {
+    <div class="alert alert-success">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2m-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+      </svg>
+      <span>Espacio: <strong>{{ espacioSeleccionado()?.numero || formData().espacioId }}</strong></span>
+    </div>
+  } @else {
+    <div class="alert alert-warning">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M13 13h-2V7h2m0 10h-2v-2h2M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2z"/>
+      </svg>
+      <span>Debe seleccionar un espacio disponible</span>
+    </div>
+  }
+  <button (click)="onAbrirModalEspacios()" class="btn bg-blue-600 hover:bg-blue-700 text-white mt-4">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
+    </svg>
+    Seleccionar Espacio
+  </button>
+</div>
+
+<!-- Botones de Acción -->
+<div class="flex justify-end gap-4">
+  <button (click)="onCancelar()" class="btn btn-outline">Cancelar</button>
+  <button (click)="onConfirmar()" 
+          class="btn bg-blue-600 hover:bg-blue-700 text-white"
+          [disabled]="!formData().vehiculoId || !formData().espacioId || isLoading()">
+    @if (isLoading()) {
+      <span class="loading loading-spinner"></span>
+    }
+    Confirmar Asignación
+  </button>
+</div>

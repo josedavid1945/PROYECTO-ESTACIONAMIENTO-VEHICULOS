@@ -82,7 +82,12 @@ class Query:
                     numero=espacios_map[t["espacioId"]]["numero"],
                     _estado=espacios_map[t["espacioId"]]["estado"]
                 ),
-                detallePago=DetallePagoType(**pagos_map[t["detallePagoId"]]) if t.get("detallePagoId") and t["detallePagoId"] in pagos_map else None
+                detallePago=DetallePagoType(
+                    id=pagos_map[t["detallePagoId"]]["id"],
+                    metodo=pagos_map[t["detallePagoId"]]["metodo"],
+                    fechaPago=pagos_map[t["detallePagoId"]]["fechaPago"],
+                    pagoTotal=pagos_map[t["detallePagoId"]]["pagoTotal"]
+                ) if t.get("detallePagoId") and t["detallePagoId"] in pagos_map else None
             )
             for t in tickets
         ]

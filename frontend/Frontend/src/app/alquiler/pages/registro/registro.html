@@ -2,72 +2,9 @@
   
   <!-- ==================== MENÚ PRINCIPAL ==================== -->
   @if (vistaActiva() === 'menu') {
-    <div class="text-center mb-12">
-      <h1 class="text-5xl font-bold text-slate-800 mb-4">Registro de Clientes</h1>
-      <p class="text-slate-600 text-lg">Seleccione la operación que desea realizar</p>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-      <!-- Card 1: Nuevo Cliente -->
-      <div class="card bg-white border-2 border-slate-200 shadow-xl hover:shadow-2xl hover:border-blue-400 transition-all duration-300 cursor-pointer"
-           (click)="irAVista('nuevo-cliente')">
-        <div class="card-body items-center text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" class="text-blue-600 mb-4">
-            <path fill="currentColor" d="M15 14c-2.67 0-8 1.33-8 4v2h16v-2c0-2.67-5.33-4-8-4m-9-4V7H4v3H1v2h3v3h2v-3h3v-2m6 0c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4"/>
-          </svg>
-          <h2 class="card-title text-2xl text-slate-700 mb-2">Registrar Nuevo Usuario</h2>
-          <p class="text-slate-600">Registro de cliente, vehículo y asignación de espacio con ticket descargable</p>
-          <div class="card-actions mt-4">
-            <button class="btn bg-blue-600 hover:bg-blue-700 text-white font-semibold">
-              Comenzar Registro
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card 2: Asignar Espacio -->
-      <div class="card bg-white border-2 border-slate-200 shadow-xl hover:shadow-2xl hover:border-blue-400 transition-all duration-300 cursor-pointer"
-           (click)="irAVista('asignar-espacio')">
-        <div class="card-body items-center text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" class="text-blue-500 mb-4">
-            <path fill="currentColor" d="M12 2a10 10 0 0 1 10 10a10 10 0 0 1-10 10A10 10 0 0 1 2 12A10 10 0 0 1 12 2m0 2a8 8 0 0 0-8 8a8 8 0 0 0 8 8a8 8 0 0 0 8-8a8 8 0 0 0-8-8m1 8V7h-2v5H7v2h5v5h2v-5h5v-2h-5z"/>
-          </svg>
-          <h2 class="card-title text-2xl text-slate-700 mb-2">Asignar Espacio</h2>
-          <p class="text-slate-600">Asignar espacio a clientes ya registrados y generar ticket</p>
-          <div class="card-actions mt-4">
-            <button class="btn bg-blue-600 hover:bg-blue-700 text-white font-semibold">
-              Asignar Espacio
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card 3: Desocupar Espacio -->
-      <div class="card bg-white border-2 border-slate-200 shadow-xl hover:shadow-2xl hover:border-slate-400 transition-all duration-300 cursor-pointer"
-           (click)="irAVista('desocupar-espacio')">
-        <div class="card-body items-center text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" class="text-slate-600 mb-4">
-            <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-          </svg>
-          <h2 class="card-title text-2xl text-slate-700 mb-2">Desocupar Espacio</h2>
-          <p class="text-slate-600">Liberar espacio ocupado y generar comprobante de pago en PDF</p>
-          <div class="card-actions mt-4">
-            <button class="btn bg-slate-700 hover:bg-slate-800 text-white font-semibold">
-              Desocupar Espacio
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <app-menu-registro 
+      (opcionSeleccionada)="irAVista($event)">
+    </app-menu-registro>
   }
 
   <!-- ==================== VISTA: NUEVO CLIENTE ==================== -->
@@ -86,125 +23,15 @@
         </div>
       </div>
 
-      <!-- Formulario -->
-      <div class="bg-white rounded-lg shadow-lg p-8">
-        <!-- Sección 1: Datos del Cliente -->
-        <div class="mb-8">
-          <h2 class="text-2xl font-semibold text-slate-800 mb-4 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" class="text-blue-600 mr-2">
-              <path fill="currentColor" d="M12 4a4 4 0 0 1 4 4a4 4 0 0 1-4 4a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4"/>
-            </svg>
-            Datos del Cliente
-          </h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text text-slate-700 font-semibold text-base">Nombre Completo <span class="text-red-500">*</span></span>
-              </label>
-              <input type="text" [(ngModel)]="nuevoCliente().nombreCliente" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: Juan Pérez"/>
-            </div>
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text text-slate-700 font-semibold text-base">Correo Electrónico <span class="text-red-500">*</span></span>
-              </label>
-              <input type="email" [(ngModel)]="nuevoCliente().emailCliente" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: juan@email.com"/>
-            </div>
-            <div class="form-control md:col-span-2">
-              <label class="label">
-                <span class="label-text text-slate-700 font-semibold text-base">Teléfono <span class="text-red-500">*</span></span>
-              </label>
-              <input type="text" [(ngModel)]="nuevoCliente().telefonoCliente" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: 099123456"/>
-            </div>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- Sección 2: Datos del Vehículo -->
-        <div class="mb-8">
-          <h2 class="text-2xl font-semibold text-slate-800 mb-4 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" class="text-blue-600 mr-2">
-              <path fill="currentColor" d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99M6.5 16a1.5 1.5 0 0 1-1.5-1.5A1.5 1.5 0 0 1 6.5 13A1.5 1.5 0 0 1 8 14.5A1.5 1.5 0 0 1 6.5 16m11 0a1.5 1.5 0 0 1-1.5-1.5a1.5 1.5 0 0 1 1.5-1.5a1.5 1.5 0 0 1 1.5 1.5a1.5 1.5 0 0 1-1.5 1.5M5 11l1.5-4.5h11L19 11H5Z"/>
-            </svg>
-            Datos del Vehículo
-          </h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text text-slate-700 font-semibold text-base">Placa <span class="text-red-500">*</span></span>
-              </label>
-              <input type="text" [(ngModel)]="nuevoCliente().placa" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: ABC-1234"/>
-            </div>
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text text-slate-700 font-semibold text-base">Tipo de Vehículo <span class="text-red-500">*</span></span>
-              </label>
-              <select [(ngModel)]="nuevoCliente().tipoVehiculoId" class="select select-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                <option value="" disabled selected>Seleccione tipo</option>
-                @for (tipo of tiposVehiculo(); track tipo.id) {
-                  <option [value]="tipo.id">{{ tipo.categoria }}</option>
-                }
-              </select>
-            </div>
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text text-slate-700 font-semibold text-base">Marca <span class="text-red-500">*</span></span>
-              </label>
-              <input type="text" [(ngModel)]="nuevoCliente().marca" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: Toyota"/>
-            </div>
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text text-slate-700 font-semibold text-base">Modelo <span class="text-red-500">*</span></span>
-              </label>
-              <input type="text" [(ngModel)]="nuevoCliente().modelo" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: Corolla 2020"/>
-            </div>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- Sección 3: Asignación de Espacio -->
-        <div class="mb-6">
-          <h2 class="text-2xl font-semibold text-slate-800 mb-4 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" class="text-blue-600 mr-2">
-              <path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
-            </svg>
-            Espacio de Estacionamiento
-          </h2>
-          @if (nuevoCliente().espacioId) {
-            <div class="alert alert-success">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2m-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-              </svg>
-              <span>Espacio seleccionado: <strong>{{ espacioSeleccionado()?.numero || nuevoCliente().espacioId }}</strong></span>
-            </div>
-          } @else {
-            <div class="alert alert-warning">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M13 13h-2V7h2m0 10h-2v-2h2M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2z"/>
-              </svg>
-              <span>Debe seleccionar un espacio disponible</span>
-            </div>
-          }
-          <button (click)="abrirModalEspacios()" class="btn bg-blue-600 hover:bg-blue-700 text-white mt-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
-            </svg>
-            Seleccionar Espacio
-          </button>
-        </div>
-
-        <!-- Botones de Acción -->
-        <div class="flex justify-end gap-4 mt-8">
-          <button (click)="volverAlMenu()" class="btn btn-outline">Cancelar</button>
-          <button (click)="registrarNuevoCliente()" class="btn bg-blue-600 hover:bg-blue-700 text-white" [disabled]="isLoading()">
-            @if (isLoading()) {
-              <span class="loading loading-spinner"></span>
-            }
-            Registrar y Generar Ticket
-          </button>
-        </div>
-      </div>
+      <app-form-nuevo-cliente
+        [formData]="nuevoCliente()"
+        [tiposVehiculo]="tiposVehiculo()"
+        [espacioSeleccionado]="espacioSeleccionado()"
+        [isLoading]="isLoading()"
+        (espacioSeleccionClick)="abrirModalEspacios()"
+        (cancelar)="volverAlMenu()"
+        (registrar)="registrarNuevoCliente()">
+      </app-form-nuevo-cliente>
     </div>
   }
 
@@ -224,103 +51,17 @@
         </div>
       </div>
 
-      <!-- Lista de Clientes -->
-      <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <h2 class="text-2xl font-semibold text-slate-800 mb-4">Clientes Registrados</h2>
-        
-        @if (clientesConVehiculos().length === 0) {
-          <div class="alert alert-info">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M13 13h-2V7h2m0 10h-2v-2h2M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2z"/>
-            </svg>
-            <span>No hay clientes registrados. Debe registrar un cliente primero.</span>
-          </div>
-        } @else {
-          <div class="space-y-3">
-            @for (cliente of clientesConVehiculos(); track cliente.id) {
-              <div class="card bg-base-100 border-2 border-slate-200 hover:border-blue-400 transition-all">
-                <div class="card-body p-4">
-                  <div class="flex justify-between items-start">
-                    <div class="flex-1">
-                      <h3 class="text-lg font-bold text-slate-800">{{ cliente.nombre }}</h3>
-                      <p class="text-sm text-slate-600">{{ cliente.email }} • {{ cliente.telefono }}</p>
-                    </div>
-                    <button (click)="toggleCliente(cliente.id)" class="btn btn-sm btn-circle btn-ghost">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
-                           [class.rotate-180]="clienteExpandido() === cliente.id"
-                           class="transition-transform">
-                        <path fill="currentColor" d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
-                      </svg>
-                    </button>
-                  </div>
-
-                  @if (clienteExpandido() === cliente.id) {
-                    <div class="mt-4 pt-4 border-t">
-                      <h4 class="font-semibold text-gray-700 mb-3">Vehículos:</h4>
-                      @if (cliente.vehiculos.length === 0) {
-                        <p class="text-sm text-gray-500">Este cliente no tiene vehículos registrados.</p>
-                      } @else {
-                        <div class="space-y-2">
-                          @for (vehiculo of cliente.vehiculos; track vehiculo.id) {
-                            <label class="flex items-center p-3 border rounded-lg hover:bg-blue-50 cursor-pointer">
-                              <input type="radio" name="vehiculoSeleccionado" [value]="vehiculo.id"
-                                     [(ngModel)]="asignarEspacio().vehiculoId"
-                                     class="radio radio-primary mr-3"/>
-                              <div class="flex-1">
-                                <p class="font-medium text-gray-800">{{ vehiculo.placa }}</p>
-                                <p class="text-sm text-gray-600">{{ vehiculo.marca }} {{ vehiculo.modelo }}</p>
-                              </div>
-                            </label>
-                          }
-                        </div>
-                      }
-                    </div>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        }
-      </div>
-
-      <!-- Selección de Espacio -->
-      <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Espacio Seleccionado</h2>
-        @if (asignarEspacio().espacioId) {
-          <div class="alert alert-success">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2m-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-            <span>Espacio: <strong>{{ espacioSeleccionado()?.numero || asignarEspacio().espacioId }}</strong></span>
-          </div>
-        } @else {
-          <div class="alert alert-warning">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M13 13h-2V7h2m0 10h-2v-2h2M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2z"/>
-            </svg>
-            <span>Debe seleccionar un espacio disponible</span>
-          </div>
-        }
-        <button (click)="abrirModalEspacios()" class="btn bg-blue-600 hover:bg-blue-700 text-white mt-4">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
-          </svg>
-          Seleccionar Espacio
-        </button>
-      </div>
-
-      <!-- Botones de Acción -->
-      <div class="flex justify-end gap-4">
-        <button (click)="volverAlMenu()" class="btn btn-outline">Cancelar</button>
-        <button (click)="confirmarAsignacion()" 
-                class="btn bg-blue-600 hover:bg-blue-700 text-white"
-                [disabled]="!asignarEspacio().vehiculoId || !asignarEspacio().espacioId || isLoading()">
-          @if (isLoading()) {
-            <span class="loading loading-spinner"></span>
-          }
-          Confirmar Asignación
-        </button>
-      </div>
+      <app-form-asignar-espacio
+        [formData]="asignarEspacio()"
+        [clientesConVehiculos]="clientesConVehiculos()"
+        [espacioSeleccionado]="espacioSeleccionado()"
+        [clienteExpandido]="clienteExpandido()"
+        [isLoading]="isLoading()"
+        (toggleCliente)="toggleCliente($event)"
+        (espacioSeleccionClick)="abrirModalEspacios()"
+        (cancelar)="volverAlMenu()"
+        (confirmar)="confirmarAsignacion()">
+      </app-form-asignar-espacio>
     </div>
   }
 
@@ -340,135 +81,15 @@
         </div>
       </div>
 
-      <!-- Tabla de Vehículos Ocupados -->
-      <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <h2 class="text-2xl font-semibold text-slate-800 mb-4">Vehículos Ocupando Espacios</h2>
-        
-        @if (vehiculosOcupados().length === 0) {
-          <div class="alert alert-info">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M13 13h-2V7h2m0 10h-2v-2h2M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2z"/>
-            </svg>
-            <span>No hay vehículos ocupando espacios actualmente.</span>
-          </div>
-        } @else {
-          <div class="overflow-x-auto">
-            <table class="table">
-              <thead class="bg-slate-700 text-white">
-                <tr>
-                  <th class="text-center">Seleccionar</th>
-                  <th>Ticket #</th>
-                  <th>Fecha Ingreso</th>
-                  <th class="text-center">Placa</th>
-                  <th>Vehículo</th>
-                  <th class="text-center">Espacio</th>
-                  <th>Cliente</th>
-                  <th class="text-center">Tiempo</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (vehiculo of vehiculosOcupados(); track vehiculo.ticket.id) {
-                  <tr [class.bg-blue-50]="desocuparEspacio().ticketId === vehiculo.ticket.id"
-                      class="hover:bg-slate-100 transition-colors cursor-pointer"
-                      (click)="desocuparEspacio().ticketId = vehiculo.ticket.id">
-                    <td class="text-center">
-                      <input type="radio" name="ticketSeleccionado" [value]="vehiculo.ticket.id"
-                             [(ngModel)]="desocuparEspacio().ticketId"
-                             class="radio radio-primary radio-lg"/>
-                    </td>
-                    <td class="font-mono text-xs text-gray-600">{{ vehiculo.ticket.id.substring(0, 13) }}...</td>
-                    <td class="text-sm">{{ formatearFecha(vehiculo.ticket.fechaIngreso) }}</td>
-                    <td class="text-center">
-                      <span class="font-bold text-lg text-gray-800">{{ vehiculo.vehiculo.placa }}</span>
-                    </td>
-                    <td class="text-sm text-gray-700">{{ vehiculo.vehiculo.marca }} {{ vehiculo.vehiculo.modelo }}</td>
-                    <td class="text-center">
-                      <span class="badge bg-slate-700 text-white badge-lg font-bold px-4 py-3">{{ vehiculo.espacio.numero }}</span>
-                    </td>
-                    <td class="text-sm text-gray-700">{{ vehiculo.cliente.nombre }}</td>
-                    <td class="text-center">
-                      <span class="text-blue-600 font-bold text-base">{{ calcularTiempoEstadia(vehiculo.ticket.fechaIngreso) }}</span>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        }
-      </div>
-
-      <!-- Formulario de Pago -->
-      @if (desocuparEspacio().ticketId) {
-        <div class="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg shadow-lg p-6 mb-6 border-2 border-slate-200">
-          <h2 class="text-2xl font-semibold text-slate-800 mb-6 flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" class="mr-2">
-              <path fill="currentColor" d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-            </svg>
-            Registrar Pago
-          </h2>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text text-slate-700 font-semibold text-base">Método de Pago <span class="text-red-500">*</span></span>
-              </label>
-              <select [(ngModel)]="desocuparEspacio().metodoPago" 
-                      class="select select-bordered select-lg bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                <option value="" disabled selected>Seleccione método</option>
-                <option value="Efectivo">💵 Efectivo</option>
-                <option value="Tarjeta">💳 Tarjeta de Crédito/Débito</option>
-                <option value="Transferencia">🏦 Transferencia Bancaria</option>
-              </select>
-            </div>
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text text-slate-700 font-semibold text-base">Monto a Pagar (USD) <span class="text-red-500">*</span></span>
-              </label>
-              <div class="relative">
-                <span class="absolute left-3 top-4 text-gray-500 font-bold">$</span>
-                <input type="number" [(ngModel)]="desocuparEspacio().montoPago" 
-                       class="input input-bordered input-lg pl-8 bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 font-semibold" 
-                       placeholder="0.00" step="0.01" min="0"/>
-              </div>
-            </div>
-            <div class="form-control">
-              <label class="label">
-                <span class="label-text text-slate-700 font-semibold text-base">Tipo de Tarifa <span class="text-red-500">*</span></span>
-              </label>
-              <select [(ngModel)]="desocuparEspacio().tipoTarifaId" 
-                      class="select select-bordered select-lg bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                <option value="" disabled selected>Seleccione tarifa</option>
-                <option value="1">⏱️ Por Hora</option>
-                <option value="2">📅 Por Día</option>
-                <option value="3">📆 Mensual</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- Botones de Acción -->
-      <div class="flex justify-end gap-4">
-        <button (click)="volverAlMenu()" 
-                class="btn btn-outline btn-lg hover:bg-gray-100">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="mr-1">
-            <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-          </svg>
-          Cancelar
-        </button>
-        <button (click)="confirmarDesocupacion()" 
-                class="btn btn-lg bg-slate-700 hover:bg-slate-800 text-white shadow-lg hover:shadow-xl transition-all"
-                [disabled]="!desocuparEspacio().ticketId || !desocuparEspacio().metodoPago || !desocuparEspacio().montoPago || !desocuparEspacio().tipoTarifaId || isLoading()">
-          @if (isLoading()) {
-            <span class="loading loading-spinner loading-lg"></span>
-            Procesando...
-          } @else {
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" class="mr-2">
-              <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-            </svg>
-            Desocupar y Generar Comprobante
-          }
-        </button>
-      </div>
+      <app-form-desocupar-espacio
+        [formData]="desocuparEspacio()"
+        [vehiculosOcupados]="vehiculosOcupados()"
+        [tiposTarifa]="tiposTarifa()"
+        [isLoading]="isLoading()"
+        (seleccionarVehiculo)="seleccionarVehiculoOcupado($event)"
+        (cancelar)="volverAlMenu()"
+        (confirmar)="confirmarDesocupacion()">
+      </app-form-desocupar-espacio>
     </div>
   }
 
@@ -478,26 +99,12 @@
       <div class="modal-box max-w-3xl">
         <h3 class="font-bold text-2xl mb-4">Espacios Disponibles</h3>
         
-        @if (espaciosDisponibles().length === 0) {
-          <div class="alert alert-warning">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M13 13h-2V7h2m0 10h-2v-2h2M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2z"/>
-            </svg>
-            <span>No hay espacios disponibles en este momento.</span>
-          </div>
-        } @else {
-          <div class="grid grid-cols-4 gap-3 mb-6">
-            @for (espacio of espaciosDisponibles(); track espacio.id) {
-              <button (click)="seleccionarEspacio(espacio)" 
-                      class="btn btn-lg btn-outline hover:btn-success">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
-                </svg>
-                {{ espacio.numero }}
-              </button>
-            }
-          </div>
-        }
+        <app-espacios-grid
+          [espacios]="espaciosDisponibles()"
+          [mostrarTodos]="false"
+          [gridCols]="4"
+          (espacioSeleccionado)="seleccionarEspacio($event)">
+        </app-espacios-grid>
 
         <div class="modal-action">
           <button (click)="cerrarModalEspacios()" class="btn">Cerrar</button>

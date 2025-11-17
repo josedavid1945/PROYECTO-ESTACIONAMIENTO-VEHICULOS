@@ -1,0 +1,66 @@
+<div class="text-center mb-12">
+  <h1 class="text-5xl font-bold text-slate-800 mb-4">Registro de Clientes</h1>
+  <p class="text-slate-600 text-lg">Seleccione la operación que desea realizar</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+  <!-- Card 1: Nuevo Cliente -->
+  <div class="card bg-white border-2 border-slate-200 shadow-xl hover:shadow-2xl hover:border-blue-400 transition-all duration-300 cursor-pointer"
+       (click)="seleccionarOpcion('nuevo-cliente')">
+    <div class="card-body items-center text-center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" class="text-blue-600 mb-4">
+        <path fill="currentColor" d="M15 14c-2.67 0-8 1.33-8 4v2h16v-2c0-2.67-5.33-4-8-4m-9-4V7H4v3H1v2h3v3h2v-3h3v-2m6 0c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4"/>
+      </svg>
+      <h2 class="card-title text-2xl text-slate-700 mb-2">Registrar Nuevo Usuario</h2>
+      <p class="text-slate-600">Registro de cliente, vehículo y asignación de espacio con ticket descargable</p>
+      <div class="card-actions mt-4">
+        <button class="btn bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+          Comenzar Registro
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: Asignar Espacio -->
+  <div class="card bg-white border-2 border-slate-200 shadow-xl hover:shadow-2xl hover:border-blue-400 transition-all duration-300 cursor-pointer"
+       (click)="seleccionarOpcion('asignar-espacio')">
+    <div class="card-body items-center text-center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" class="text-blue-500 mb-4">
+        <path fill="currentColor" d="M12 2a10 10 0 0 1 10 10a10 10 0 0 1-10 10A10 10 0 0 1 2 12A10 10 0 0 1 12 2m0 2a8 8 0 0 0-8 8a8 8 0 0 0 8 8a8 8 0 0 0 8-8a8 8 0 0 0-8-8m1 8V7h-2v5H7v2h5v5h2v-5h5v-2h-5z"/>
+      </svg>
+      <h2 class="card-title text-2xl text-slate-700 mb-2">Asignar Espacio</h2>
+      <p class="text-slate-600">Asignar espacio a clientes ya registrados y generar ticket</p>
+      <div class="card-actions mt-4">
+        <button class="btn bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+          Asignar Espacio
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: Desocupar Espacio -->
+  <div class="card bg-white border-2 border-slate-200 shadow-xl hover:shadow-2xl hover:border-slate-400 transition-all duration-300 cursor-pointer"
+       (click)="seleccionarOpcion('desocupar-espacio')">
+    <div class="card-body items-center text-center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" class="text-slate-600 mb-4">
+        <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+      </svg>
+      <h2 class="card-title text-2xl text-slate-700 mb-2">Desocupar Espacio</h2>
+      <p class="text-slate-600">Liberar espacio ocupado y generar comprobante de pago en PDF</p>
+      <div class="card-actions mt-4">
+        <button class="btn bg-slate-700 hover:bg-slate-800 text-white font-semibold">
+          Desocupar Espacio
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

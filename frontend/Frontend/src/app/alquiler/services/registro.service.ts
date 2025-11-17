@@ -18,6 +18,18 @@ export interface Vehiculo {
   modelo: string;
   clienteId: string;
   tipoVehiculoId: string;
+  tipoVehiculo?: {
+    id: string;
+    categoria: string;
+    descripcion: string;
+    tipoTarifaId: string;
+    tipotarifa?: {
+      id: string;
+      tipoTarifa: string;
+      precioHora: number;
+      precioDia: number;
+    };
+  };
 }
 
 export interface EspacioDisponible {
@@ -276,8 +288,40 @@ export class RegistroService {
           </div>
         </div>
 
+        <div class="section">
+          <div class="section-title">Datos del Vehículo</div>
+          <div class="field">
+            <span class="field-label">Placa:</span>
+            <span class="field-value">${data.vehiculo?.placa || 'N/A'}</span>
+          </div>
+          <div class="field">
+            <span class="field-label">Marca:</span>
+            <span class="field-value">${data.vehiculo?.marca || 'N/A'}</span>
+          </div>
+          <div class="field">
+            <span class="field-label">Modelo:</span>
+            <span class="field-value">${data.vehiculo?.modelo || 'N/A'}</span>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Datos del Cliente</div>
+          <div class="field">
+            <span class="field-label">Nombre:</span>
+            <span class="field-value">${data.cliente?.nombre || 'N/A'}</span>
+          </div>
+          <div class="field">
+            <span class="field-label">Email:</span>
+            <span class="field-value">${data.cliente?.email || 'N/A'}</span>
+          </div>
+          <div class="field">
+            <span class="field-label">Teléfono:</span>
+            <span class="field-value">${data.cliente?.telefono || 'N/A'}</span>
+          </div>
+        </div>
+
         <div class="total-box">
-          <div class="total-label">TOTAL A PAGAR</div>
+          <div class="total-label">TOTAL PAGADO</div>
           <div class="total-amount">$${data.detallePago.pagoTotal.toFixed(2)}</div>
         </div>
 

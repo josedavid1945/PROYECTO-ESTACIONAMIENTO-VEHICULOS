@@ -146,11 +146,11 @@
                     <th class="text-white font-bold text-center">Acciones</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody class="bg-white">
                   @for (espacio of currentSeccion()!.espacios; track espacio.id) {
-                    <tr class="border-b border-gray-200 hover:bg-slate-50 transition-colors">
-                      <td class="font-bold text-slate-800 bg-white">{{ espacio.numero }}</td>
-                      <td class="bg-white">
+                    <tr class="border-b border-gray-200 hover:bg-slate-50 transition-colors bg-white">
+                      <td class="font-bold text-slate-800">{{ espacio.numero }}</td>
+                      <td>
                         @if (espacio.estado) {
                           <span class="badge bg-blue-100 text-blue-700 border-blue-300 gap-2 font-semibold">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
@@ -167,14 +167,14 @@
                           </span>
                         }
                       </td>
-                      <td class="text-center bg-white">
+                      <td class="text-center">
                         <input 
                           type="checkbox" 
                           class="toggle toggle-primary"
                           [checked]="espacio.estado"
                           (change)="toggleEstadoEspacio(espacio)" />
                       </td>
-                      <td class="text-center bg-white">
+                      <td class="text-center">
                         <button 
                           class="btn bg-slate-600 hover:bg-slate-700 btn-sm text-white"
                           (click)="deleteEspacio(espacio.id)">

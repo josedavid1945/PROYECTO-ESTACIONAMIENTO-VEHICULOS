@@ -181,6 +181,15 @@ export class RegistroService {
       await this.espacioRepository.save(espacio);
     }
 
+    // 7. Cargar información completa para el PDF
+    const vehiculo = await this.vehiculoRepository.findOne({
+      where: { id: ticket.vehiculoId },
+      relations: ['tipoVehiculo'],
+    });
+    const cliente = vehiculo
+      ? await this.clienteRepository.findOne({ where: { id: vehiculo.clienteId } })
+      : null;
+
     return {
       success: true,
       message: 'Espacio desocupado exitosamente',
@@ -189,6 +198,8 @@ export class RegistroService {
         pago: pagoGuardado,
         detallePago: detallePagoGuardado,
         espacio,
+        vehiculo,
+        cliente,
       },
     };
   }
@@ -212,6 +223,7 @@ export class RegistroService {
       ticketsActivos.map(async (ticket) => {
         const vehiculo = await this.vehiculoRepository.findOne({
           where: { id: ticket.vehiculoId },
+          relations: ['tipoVehiculo', 'tipoVehiculo.tipotarifa'],
         });
         const espacio = await this.espacioRepository.findOne({
           where: { id: ticket.espacioId },

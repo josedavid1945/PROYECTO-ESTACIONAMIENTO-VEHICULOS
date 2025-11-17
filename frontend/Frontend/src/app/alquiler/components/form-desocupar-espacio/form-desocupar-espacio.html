@@ -1,0 +1,138 @@
+<!-- Tabla de Vehículos Ocupados -->
+<div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+  <h2 class="text-2xl font-semibold text-slate-800 mb-4">Vehículos Ocupando Espacios</h2>
+  
+  @if (vehiculosOcupados().length === 0) {
+    <div class="alert alert-info">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M13 13h-2V7h2m0 10h-2v-2h2M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2z"/>
+      </svg>
+      <span>No hay vehículos ocupando espacios actualmente.</span>
+    </div>
+  } @else {
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead class="bg-slate-700 text-white">
+          <tr>
+            <th class="text-center">Seleccionar</th>
+            <th>Ticket #</th>
+            <th>Fecha Ingreso</th>
+            <th class="text-center">Placa</th>
+            <th>Vehículo</th>
+            <th class="text-center">Espacio</th>
+            <th>Cliente</th>
+            <th class="text-center">Tiempo</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white">
+          @for (vehiculo of vehiculosOcupados(); track vehiculo.ticket.id) {
+            <tr [class.bg-blue-50]="formData().ticketId === vehiculo.ticket.id"
+                class="bg-white border-b border-slate-100 hover:bg-slate-100 transition-colors cursor-pointer"
+                (click)="onSeleccionarVehiculo(vehiculo.ticket.id)">
+              <td class="text-center">
+                <input type="radio" name="ticketSeleccionado" [value]="vehiculo.ticket.id"
+                       [(ngModel)]="formData().ticketId"
+                       class="radio radio-primary radio-lg"/>
+              </td>
+              <td class="font-mono text-xs text-gray-600">{{ vehiculo.ticket.id.substring(0, 13) }}...</td>
+              <td class="text-sm">{{ formatearFecha(vehiculo.ticket.fechaIngreso) }}</td>
+              <td class="text-center">
+                <span class="font-bold text-lg text-gray-800">{{ vehiculo.vehiculo.placa }}</span>
+              </td>
+              <td class="text-sm text-gray-700">{{ vehiculo.vehiculo.marca }} {{ vehiculo.vehiculo.modelo }}</td>
+              <td class="text-center">
+                <span class="badge bg-slate-700 text-white badge-lg font-bold px-4 py-3">{{ vehiculo.espacio.numero }}</span>
+              </td>
+              <td class="text-sm text-gray-700">{{ vehiculo.cliente.nombre }}</td>
+              <td class="text-center">
+                <span class="text-blue-600 font-bold text-base">{{ calcularTiempoEstadia(vehiculo.ticket.fechaIngreso) }}</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<!-- Formulario de Pago -->
+@if (formData().ticketId) {
+  <div class="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg shadow-lg p-6 mb-6 border-2 border-slate-200">
+    <h2 class="text-2xl font-semibold text-slate-800 mb-6 flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" class="mr-2">
+        <path fill="currentColor" d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+      </svg>
+      Registrar Pago
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text text-slate-700 font-semibold text-base">Método de Pago <span class="text-red-500">*</span></span>
+        </label>
+        <select [(ngModel)]="formData().metodoPago" 
+                class="select select-bordered select-lg bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+          <option value="" disabled selected>Seleccione método</option>
+          <option value="Efectivo">💵 Efectivo</option>
+        </select>
+      </div>
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text text-slate-700 font-semibold text-base">Monto a Pagar (USD) <span class="text-red-500">*</span></span>
+          <span class="label-text-alt text-blue-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" class="inline mr-1">
+              <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+            </svg>
+            Calculado automáticamente (editable)
+          </span>
+        </label>
+        <div class="relative">
+          <span class="absolute left-3 top-4 text-gray-500 font-bold">$</span>
+          <input type="number" [(ngModel)]="formData().montoPago" 
+                 class="input input-bordered input-lg pl-8 bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 font-semibold" 
+                 placeholder="0.00" step="0.01" min="0"/>
+        </div>
+        @if (formData().montoPago > 0) {
+          <label class="label">
+            <span class="label-text-alt text-gray-600">Tiempo de estadía calculado y tarifa aplicada</span>
+          </label>
+        }
+      </div>
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text text-slate-700 font-semibold text-base">Tipo de Tarifa <span class="text-red-500">*</span></span>
+        </label>
+        <select [(ngModel)]="formData().tipoTarifaId" 
+                class="select select-bordered select-lg bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+          <option value="" disabled selected>Seleccione tarifa</option>
+          @for (tarifa of tiposTarifa(); track tarifa.id) {
+            <option [value]="tarifa.id">{{ tarifa.tipoTarifa }} - ${{ tarifa.precioHora }}/hr | ${{ tarifa.precioDia }}/día</option>
+          }
+        </select>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Botones de Acción -->
+<div class="flex justify-end gap-4">
+  <button (click)="onCancelar()" 
+          class="btn btn-outline btn-lg hover:bg-gray-100">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="mr-1">
+      <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+    </svg>
+    Cancelar
+  </button>
+  <button (click)="onConfirmar()" 
+          class="btn btn-lg bg-slate-700 hover:bg-slate-800 text-white shadow-lg hover:shadow-xl transition-all"
+          [disabled]="!formData().ticketId || !formData().metodoPago || !formData().montoPago || !formData().tipoTarifaId || isLoading()">
+    @if (isLoading()) {
+      <span class="loading loading-spinner loading-lg"></span>
+      Procesando...
+    } @else {
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" class="mr-2">
+        <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+      </svg>
+      Desocupar y Generar Comprobante
+    }
+  </button>
+</div>

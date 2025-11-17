@@ -65,23 +65,18 @@ export class SearchVehiculos implements OnInit {
   }
 
   onSearchChange(query: string) {
-    console.log('🔔 onSearchChange llamado con:', query);
     this.searchQuery.set(query);
-    console.log('📝 searchQuery signal actualizado a:', this.searchQuery());
   }
 
   private loadVehiculos() {
-    console.log('🚀 Iniciando carga de vehículos...');
     this.isLoading.set(true);
     this.ticketService.getVehiculosCompletos().subscribe({
       next: (data) => {
-        console.log('✅ Vehículos cargados exitosamente:', data.length);
-        console.log('📋 Datos recibidos:', data);
         this.allVehiculos.set(data);
         this.isLoading.set(false);
       },
       error: (error) => {
-        console.error('❌ Error loading vehiculos:', error);
+        console.error('Error al cargar vehículos:', error);
         this.isLoading.set(false);
       }
     });

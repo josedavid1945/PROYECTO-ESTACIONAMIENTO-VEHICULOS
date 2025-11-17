@@ -114,11 +114,23 @@ export class SearchTicketsPorFecha {
     
     return tickets.filter(ticket => {
       const ticketDate = new Date(ticket.fechaIngreso);
-      ticketDate.setHours(0, 0, 0, 0);
-      const selectedCopy = new Date(selected);
-      selectedCopy.setHours(0, 0, 0, 0);
       
-      return ticketDate.getTime() === selectedCopy.getTime();
+      // Normalizar ambas fechas a medianoche en zona horaria local
+      const normalizedTicket = new Date(
+        ticketDate.getFullYear(),
+        ticketDate.getMonth(),
+        ticketDate.getDate()
+      );
+      
+      const normalizedSelected = new Date(
+        selected.getFullYear(),
+        selected.getMonth(),
+        selected.getDate()
+      );
+      
+      const matches = normalizedTicket.getTime() === normalizedSelected.getTime();
+      
+      return matches;
     });
   });
   
@@ -167,24 +179,42 @@ export class SearchTicketsPorFecha {
   // Verificar si hay tickets en una fecha
   private hasTicketsOnDate(date: Date): boolean {
     const tickets = this.allTickets();
+    
+    const normalizedCheck = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+    
     return tickets.some(ticket => {
       const ticketDate = new Date(ticket.fechaIngreso);
-      ticketDate.setHours(0, 0, 0, 0);
-      const checkDate = new Date(date);
-      checkDate.setHours(0, 0, 0, 0);
-      return ticketDate.getTime() === checkDate.getTime();
+      const normalizedTicket = new Date(
+        ticketDate.getFullYear(),
+        ticketDate.getMonth(),
+        ticketDate.getDate()
+      );
+      return normalizedTicket.getTime() === normalizedCheck.getTime();
     });
   }
 
   // Obtener cantidad de tickets en una fecha
   private getTicketCountOnDate(date: Date): number {
     const tickets = this.allTickets();
+    
+    const normalizedCheck = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+    
     return tickets.filter(ticket => {
       const ticketDate = new Date(ticket.fechaIngreso);
-      ticketDate.setHours(0, 0, 0, 0);
-      const checkDate = new Date(date);
-      checkDate.setHours(0, 0, 0, 0);
-      return ticketDate.getTime() === checkDate.getTime();
+      const normalizedTicket = new Date(
+        ticketDate.getFullYear(),
+        ticketDate.getMonth(),
+        ticketDate.getDate()
+      );
+      return normalizedTicket.getTime() === normalizedCheck.getTime();
     }).length;
   }
 
@@ -196,7 +226,7 @@ export class SearchTicketsPorFecha {
         this.isLoading.set(false);
       },
       error: (error) => {
-        console.error('Error loading tickets:', error);
+        console.error('Error al cargar tickets:', error);
         this.isLoading.set(false);
       }
     });

@@ -2,11 +2,24 @@ import { ChangeDetectionStrategy, Component, OnInit, signal, computed, inject } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RegistroService, ClienteConVehiculos, EspacioDisponible, VehiculoOcupado } from '../../services/registro.service';
-import { HerramientasService, TipoVehiculo } from '../../services/herramientas.service';
+import { HerramientasService, TipoVehiculo, TipoTarifa } from '../../services/herramientas.service';
+import { MenuRegistroComponent } from '../../components/menu-registro/menu-registro';
+import { FormNuevoClienteComponent } from '../../components/form-nuevo-cliente/form-nuevo-cliente';
+import { FormAsignarEspacioComponent } from '../../components/form-asignar-espacio/form-asignar-espacio';
+import { FormDesocuparEspacioComponent } from '../../components/form-desocupar-espacio/form-desocupar-espacio';
+import { EspaciosGridComponent } from '../../components/espacios-grid/espacios-grid';
 
 @Component({
   selector: 'app-registro',
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule, 
+    FormsModule,
+    MenuRegistroComponent,
+    FormNuevoClienteComponent,
+    FormAsignarEspacioComponent,
+    FormDesocuparEspacioComponent,
+    EspaciosGridComponent
+  ],
   templateUrl: './registro.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -20,6 +33,7 @@ export class Registro implements OnInit {
   
   // Datos para formularios
   tiposVehiculo = signal<TipoVehiculo[]>([]);
+  tiposTarifa = signal<TipoTarifa[]>([]);
   espaciosDisponibles = signal<EspacioDisponible[]>([]);
   clientesConVehiculos = signal<ClienteConVehiculos[]>([]);
   vehiculosOcupados = signal<VehiculoOcupado[]>([]);
@@ -59,6 +73,7 @@ export class Registro implements OnInit {
 
   ngOnInit(): void {
     this.loadTiposVehiculo();
+    this.loadTiposTarifa();
   }
 
   // ==================== CARGA DE DATOS ====================
@@ -66,6 +81,13 @@ export class Registro implements OnInit {
     this.herramientasService.getTiposVehiculo().subscribe({
       next: (data) => this.tiposVehiculo.set(data),
       error: (err) => console.error('Error cargando tipos de vehículo:', err)
+    });
+  }
+
+  loadTiposTarifa(): void {
+    this.herramientasService.getTarifas().subscribe({
+      next: (data) => this.tiposTarifa.set(data),
+      error: (err) => console.error('Error cargando tipos de tarifa:', err)
     });
   }
 
@@ -134,8 +156,16 @@ export class Registro implements OnInit {
     this.showEspaciosModal.set(false);
   }
 
-  seleccionarEspacio(espacio: EspacioDisponible): void {
-    this.espacioSeleccionado.set(espacio);
+  seleccionarEspacio(espacio: { id: string; numero: string; estado: boolean; seccionId?: string }): void {
+    // Convertir a EspacioDisponible (seccionId requerido)
+    const espacioDisponible: EspacioDisponible = {
+      id: espacio.id,
+      numero: espacio.numero,
+      estado: espacio.estado,
+      seccionId: espacio.seccionId || '' // Proporcionar valor por defecto
+    };
+    
+    this.espacioSeleccionado.set(espacioDisponible);
     
     // Actualizar el formulario correcto según la vista activa
     if (this.vistaActiva() === 'nuevo-cliente') {
@@ -226,18 +256,65 @@ export class Registro implements OnInit {
     });
   }
 
-  seleccionarVehiculoOcupado(vehiculoOcupado: VehiculoOcupado): void {
+  seleccionarVehiculoOcupado(ticketId: string): void {
     const form = this.desocuparEspacio();
+    const vehiculo = this.vehiculosOcupados().find(v => v.ticket.id === ticketId);
+    
+    if (!vehiculo) return;
+    
+    // Extraer tipo de tarifa
+    const tipoTarifaId = vehiculo?.vehiculo?.tipoVehiculo?.tipotarifa?.id || '';
+    
+    // Calcular monto sugerido basado en tiempo de estadía
+    const montoSugerido = this.calcularMontoSugerido(vehiculo);
+    
     this.desocuparEspacio.set({ 
       ...form, 
-      ticketId: vehiculoOcupado.ticket.id 
+      ticketId: ticketId,
+      tipoTarifaId: tipoTarifaId,
+      montoPago: montoSugerido // Monto sugerido automático (editable por admin)
     });
   }
 
-  calcularMonto(vehiculoOcupado: VehiculoOcupado): number {
-    // Aquí puedes implementar la lógica de cálculo según las tarifas
-    // Por ahora retorna 0, el usuario debe ingresar el monto manualmente
-    return 0;
+  /**
+   * Calcula el monto sugerido basándose en:
+   * 1. Tiempo de estadía del vehículo
+   * 2. Tarifa del tipo de vehículo (precio por hora o por día)
+   * 
+   * El administrador puede modificar este monto antes de confirmar
+   */
+  calcularMontoSugerido(vehiculoOcupado: VehiculoOcupado): number {
+    try {
+      const fechaIngreso = new Date(vehiculoOcupado.ticket.fechaIngreso);
+      const ahora = new Date();
+      const diffMs = ahora.getTime() - fechaIngreso.getTime();
+      
+      // Calcular horas totales (con decimales)
+      const horasTotales = diffMs / (1000 * 60 * 60);
+      
+      // Obtener precio por hora de la tarifa
+      const precioHora = vehiculoOcupado.vehiculo?.tipoVehiculo?.tipotarifa?.precioHora || 0;
+      const precioDia = vehiculoOcupado.vehiculo?.tipoVehiculo?.tipotarifa?.precioDia || 0;
+      
+      if (!precioHora && !precioDia) {
+        console.warn('No se encontró información de tarifa para el vehículo');
+        return 0;
+      }
+      
+      // Si estuvo más de 8 horas, cobrar por día es más económico
+      if (horasTotales >= 8 && precioDia > 0) {
+        const dias = Math.ceil(horasTotales / 24);
+        return parseFloat((dias * precioDia).toFixed(2));
+      }
+      
+      // Cobrar por horas (redondear hacia arriba)
+      const horasCobrar = Math.ceil(horasTotales);
+      return parseFloat((horasCobrar * precioHora).toFixed(2));
+      
+    } catch (error) {
+      console.error('Error calculando monto:', error);
+      return 0;
+    }
   }
 
   confirmarDesocupacion(): void {

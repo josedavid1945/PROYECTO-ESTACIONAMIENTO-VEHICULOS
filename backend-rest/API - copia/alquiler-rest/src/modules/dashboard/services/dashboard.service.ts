@@ -78,34 +78,37 @@ export class DashboardService {
 
     // Dinero recaudado hoy
     const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    const manana = new Date(hoy);
-    manana.setDate(manana.getDate() + 1);
+    const inicioDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    const finDia = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59);
 
-    const dineroHoy = await this.detallePagoRepository
-      .createQueryBuilder('detalle')
-      .select('COALESCE(SUM(detalle.pagoTotal), 0)', 'total')
-      .where('detalle.fechaPago >= :hoy', { hoy })
-      .where('detalle.fechaPago < :manana', { manana })
+    const pagosHoy = await this.detallePagoRepository
+      .createQueryBuilder('detalle_pago')
+      .select('SUM(detalle_pago.pago_total)', 'total')
+      .where('detalle_pago.fecha_pago >= :inicio', { inicio: inicioDia })
+      .andWhere('detalle_pago.fecha_pago <= :fin', { fin: finDia })
       .getRawOne();
 
-    // Dinero recaudado este mes
+    const dineroHoy = pagosHoy?.total || 0;
+
+    // Dinero recaudado en el mes
     const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
     const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23, 59, 59);
 
-    const dineroMes = await this.detallePagoRepository
-      .createQueryBuilder('detalle')
-      .select('COALESCE(SUM(detalle.pagoTotal), 0)', 'total')
-      .where('detalle.fechaPago >= :inicioMes', { inicioMes })
-      .where('detalle.fechaPago <= :finMes', { finMes })
+    const pagosMes = await this.detallePagoRepository
+      .createQueryBuilder('detalle_pago')
+      .select('SUM(detalle_pago.pago_total)', 'total')
+      .where('detalle_pago.fecha_pago >= :inicio', { inicio: inicioMes })
+      .andWhere('detalle_pago.fecha_pago <= :fin', { fin: finMes })
       .getRawOne();
+
+    const dineroMes = pagosMes?.total || 0;
 
     return {
       espacios_disponibles: espaciosDisponibles,
       espacios_ocupados: espaciosOcupados,
       total_espacios: totalEspacios,
-      dinero_recaudado_hoy: parseFloat(dineroHoy?.total || '0'),
-      dinero_recaudado_mes: parseFloat(dineroMes?.total || '0'),
+      dinero_recaudado_hoy: Number(dineroHoy),
+      dinero_recaudado_mes: Number(dineroMes),
       vehiculos_activos: vehiculosActivos,
       timestamp: new Date(),
     };
@@ -222,4 +225,5 @@ export class DashboardService {
 
     return resultado;
   }
+
 }
