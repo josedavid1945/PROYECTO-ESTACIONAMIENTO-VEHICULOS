@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { RegistroService, ClienteConVehiculos, EspacioDisponible, VehiculoOcupado } from '../../services/registro.service';
 import { HerramientasService, TipoVehiculo, TipoTarifa } from '../../services/herramientas.service';
 import { MenuRegistroComponent } from '../../components/menu-registro/menu-registro';
@@ -12,8 +11,7 @@ import { EspaciosGridComponent } from '../../components/espacios-grid/espacios-g
 @Component({
   selector: 'app-registro',
   imports: [
-    CommonModule, 
-    FormsModule,
+    CommonModule,
     MenuRegistroComponent,
     FormNuevoClienteComponent,
     FormAsignarEspacioComponent,
@@ -148,6 +146,20 @@ export class Registro implements OnInit {
     this.espacioSeleccionado.set(null);
   }
 
+  updateNuevoClienteForm(updates: Partial<{
+    nombreCliente: string;
+    emailCliente: string;
+    telefonoCliente: string;
+    placa: string;
+    marca: string;
+    modelo: string;
+    tipoVehiculoId: string;
+    espacioId: string;
+  }>): void {
+    const currentForm = this.nuevoCliente();
+    this.nuevoCliente.set({ ...currentForm, ...updates });
+  }
+
   abrirModalEspacios(): void {
     this.showEspaciosModal.set(true);
   }
@@ -190,14 +202,21 @@ export class Registro implements OnInit {
     this.isLoading.set(true);
     this.registroService.registrarClienteCompleto(form).subscribe({
       next: (response) => {
-        this.isLoading.set(false);
         alert('Cliente registrado exitosamente');
         
-        // Generar PDF del ticket
+        // Generar PDF del ticket de forma asíncrona
         this.registroService.generarTicketPDF(response.data);
         
+        // Resetear formulario y volver al menú
         this.resetFormNuevoCliente();
         this.volverAlMenu();
+        
+        // Recargar datos después de un delay para permitir que el PDF se genere
+        setTimeout(() => {
+          this.loadEspaciosDisponibles();
+          this.loadClientesConVehiculos();
+          this.isLoading.set(false);
+        }, 200);
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -216,7 +235,10 @@ export class Registro implements OnInit {
     this.espacioSeleccionado.set(null);
   }
 
-  // Método eliminado - ahora se usa toggleCliente y el radio button actualiza directamente con ngModel
+  updateAsignarEspacioVehiculo(vehiculoId: string): void {
+    const currentForm = this.asignarEspacio();
+    this.asignarEspacio.set({ ...currentForm, vehiculoId });
+  }
 
   confirmarAsignacion(): void {
     const form = this.asignarEspacio();
@@ -229,14 +251,21 @@ export class Registro implements OnInit {
     this.isLoading.set(true);
     this.registroService.asignarEspacio(form).subscribe({
       next: (response) => {
-        this.isLoading.set(false);
         alert('Espacio asignado exitosamente');
         
-        // Generar PDF del ticket
+        // Generar PDF del ticket de forma asíncrona
         this.registroService.generarTicketPDF(response.data);
         
+        // Resetear formulario y volver al menú
         this.resetFormAsignarEspacio();
         this.volverAlMenu();
+        
+        // Recargar datos después de un delay
+        setTimeout(() => {
+          this.loadEspaciosDisponibles();
+          this.loadClientesConVehiculos();
+          this.isLoading.set(false);
+        }, 200);
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -254,6 +283,16 @@ export class Registro implements OnInit {
       montoPago: 0,
       tipoTarifaId: ''
     });
+  }
+
+  updateDesocuparEspacioForm(updates: Partial<{
+    ticketId: string;
+    metodoPago: string;
+    montoPago: number;
+    tipoTarifaId: string;
+  }>): void {
+    const currentForm = this.desocuparEspacio();
+    this.desocuparEspacio.set({ ...currentForm, ...updates });
   }
 
   seleccionarVehiculoOcupado(ticketId: string): void {
@@ -328,14 +367,21 @@ export class Registro implements OnInit {
     this.isLoading.set(true);
     this.registroService.desocuparEspacio(form).subscribe({
       next: (response) => {
-        this.isLoading.set(false);
         alert('Espacio desocupado exitosamente');
         
-        // Generar PDF del detalle de pago
+        // Generar PDF del detalle de pago de forma asíncrona
         this.registroService.generarDetallePagoPDF(response.data);
         
+        // Resetear formulario y volver al menú
         this.resetFormDesocuparEspacio();
         this.volverAlMenu();
+        
+        // Recargar datos después de un delay
+        setTimeout(() => {
+          this.loadEspaciosDisponibles();
+          this.loadVehiculosOcupados();
+          this.isLoading.set(false);
+        }, 200);
       },
       error: (err) => {
         this.isLoading.set(false);

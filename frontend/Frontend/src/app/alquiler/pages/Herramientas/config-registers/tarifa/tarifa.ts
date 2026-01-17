@@ -1,53 +1,53 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { HerramientasService, TipoTarifa } from '../../../../services/herramientas.service';
 
 @Component({
   selector: 'app-tarifa',
-  imports: [CommonModule, RouterLink],
-  templateUrl: './tarifa.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './tarifa.html'
 })
 export class TarifaComponent implements OnInit {
   private herramientasService = inject(HerramientasService);
-  
-  tarifas = signal<TipoTarifa[]>([]);
-  isLoading = signal(false);
-  error = signal<string | null>(null);
+  private router = inject(Router);
 
-  ngOnInit(): void {
-    this.loadTarifas();
+  public tarifas = signal<TipoTarifa[]>([]);
+  public loading = signal(true);
+
+  ngOnInit() {
+    this.cargarTarifas();
   }
 
-  loadTarifas(): void {
-    this.isLoading.set(true);
-    this.error.set(null);
-    
+  cargarTarifas() {
+    this.loading.set(true);
     this.herramientasService.getTarifas().subscribe({
-      next: (data) => {
-        this.tarifas.set(data);
-        this.isLoading.set(false);
+      next: (tarifas) => {
+        this.tarifas.set(tarifas);
+        this.loading.set(false);
       },
-      error: (err) => {
-        this.error.set('Error al cargar las tarifas');
-        this.isLoading.set(false);
-        console.error(err);
+      error: (error) => {
+        console.error('Error al cargar tarifas:', error);
+        this.loading.set(false);
       }
     });
   }
 
-  deleteTarifa(id: string): void {
-    if (!confirm('¿Estás seguro de eliminar esta tarifa?')) return;
+  eliminarTarifa(id: string) {
+    if (confirm('¿Estás seguro de eliminar esta tarifa?')) {
+      this.herramientasService.deleteTarifa(id).subscribe({
+        next: () => {
+          this.cargarTarifas();
+        },
+        error: (error) => {
+          console.error('Error al eliminar tarifa:', error);
+        }
+      });
+    }
+  }
 
-    this.herramientasService.deleteTarifa(id).subscribe({
-      next: () => {
-        this.loadTarifas();
-      },
-      error: (err) => {
-        this.error.set('Error al eliminar la tarifa');
-        console.error(err);
-      }
-    });
+  irARegistro() {
+    this.router.navigate(['/estacionamiento/herramientas/config/registrar-tarifa']);
   }
 }

@@ -1,0 +1,53 @@
+@if (isOpen()) {
+  <div class="modal modal-open">
+    <div class="modal-box">
+      <h3 class="font-bold text-2xl text-gray-800 mb-4">Crear Múltiples Espacios</h3>
+      <p class="text-slate-600 mb-6">
+        Sección: <span class="font-bold text-blue-600">{{ letraSeccion() }}</span>
+      </p>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-semibold">Número Inicio</span>
+          </label>
+          <input 
+            type="number" 
+            placeholder="1" 
+            min="1"
+            class="input input-bordered w-full"
+            [value]="numeroInicio()"
+            (input)="onNumeroInicioChange($event)" />
+        </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-semibold">Número Fin</span>
+          </label>
+          <input 
+            type="number" 
+            placeholder="10" 
+            min="1"
+            class="input input-bordered w-full"
+            [value]="numeroFin()"
+            (input)="onNumeroFinChange($event)" />
+        </div>
+      </div>
+
+      <div class="alert alert-info mt-4">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+        </svg>
+        <span>Se crearán {{ cantidadEspacios() }} espacios</span>
+      </div>
+
+      <div class="modal-action">
+        <button class="btn btn-ghost" (click)="close.emit()">Cancelar</button>
+        <button class="btn bg-blue-600 hover:bg-blue-700 text-white" (click)="onSubmit()">
+          Crear Espacios
+        </button>
+      </div>
+    </div>
+    <div class="modal-backdrop" (click)="close.emit()"></div>
+  </div>
+}

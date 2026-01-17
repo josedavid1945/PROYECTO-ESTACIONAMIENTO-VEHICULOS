@@ -31,7 +31,8 @@
                 (click)="onSeleccionarVehiculo(vehiculo.ticket.id)">
               <td class="text-center">
                 <input type="radio" name="ticketSeleccionado" [value]="vehiculo.ticket.id"
-                       [(ngModel)]="formData().ticketId"
+                       [checked]="formData().ticketId === vehiculo.ticket.id"
+                       (change)="onTicketChange(vehiculo.ticket.id)"
                        class="radio radio-primary radio-lg"/>
               </td>
               <td class="font-mono text-xs text-gray-600">{{ vehiculo.ticket.id.substring(0, 13) }}...</td>
@@ -69,7 +70,8 @@
         <label class="label">
           <span class="label-text text-slate-700 font-semibold text-base">Método de Pago <span class="text-red-500">*</span></span>
         </label>
-        <select [(ngModel)]="formData().metodoPago" 
+        <select [value]="formData().metodoPago" 
+                (change)="onMetodoPagoChange($event)"
                 class="select select-bordered select-lg bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
           <option value="" disabled selected>Seleccione método</option>
           <option value="Efectivo">💵 Efectivo</option>
@@ -87,7 +89,8 @@
         </label>
         <div class="relative">
           <span class="absolute left-3 top-4 text-gray-500 font-bold">$</span>
-          <input type="number" [(ngModel)]="formData().montoPago" 
+          <input type="number" [value]="formData().montoPago" 
+                 (input)="onMontoPagoChange($event)"
                  class="input input-bordered input-lg pl-8 bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 font-semibold" 
                  placeholder="0.00" step="0.01" min="0"/>
         </div>
@@ -101,7 +104,8 @@
         <label class="label">
           <span class="label-text text-slate-700 font-semibold text-base">Tipo de Tarifa <span class="text-red-500">*</span></span>
         </label>
-        <select [(ngModel)]="formData().tipoTarifaId" 
+        <select [value]="formData().tipoTarifaId" 
+                (change)="onTipoTarifaChange($event)"
                 class="select select-bordered select-lg bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
           <option value="" disabled selected>Seleccione tarifa</option>
           @for (tarifa of tiposTarifa(); track tarifa.id) {

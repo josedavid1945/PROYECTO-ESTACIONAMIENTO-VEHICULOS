@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { WebSocketService } from '../../../alquiler/services/websocket.service';
+import { DashboardData, WebSocketService } from '../../../alquiler/services/websocket.service';
 
 @Component({
   selector: 'app-home',
@@ -55,8 +55,8 @@ export class HomePage {
     effect(() => {
       const data = this.dashboardData();
       if (data) {
-        next: (data) => {
-        this.dashboardData.set(data);
+        // Mostrar notificación o manejar el cambio de datos aquí
+        console.log('Dashboard actualizado:', data);
       }
     });
 

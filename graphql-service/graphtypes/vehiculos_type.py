@@ -1,8 +1,9 @@
 import strawberry
 from uuid import UUID
+from typing import Optional
 from services.vehiculo_services import get_cliente_by_id, get_tipo_vehiculo_by_id
 from graphtypes.tipoTarifa_type import TipoTarifaType
-from graphtypes.cliente_type import clienteType
+from graphtypes.cliente_type import ClienteType
 
 @strawberry.type
 class VehiculoType:
@@ -33,9 +34,10 @@ class TipoVehiculoType:
 
 @strawberry.type
 class VehiculocompletoType:
+    """Tipo GraphQL para vehículo con información completa"""
     id: UUID
     placa: str
     marca: str
     modelo: str
-    cliente: clienteType
+    cliente: ClienteType
     tipoVehiculo: TipoVehiculoType

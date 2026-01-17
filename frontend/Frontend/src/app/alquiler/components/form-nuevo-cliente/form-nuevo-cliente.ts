@@ -1,5 +1,4 @@
 import { Component, input, output } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 interface TipoVehiculo {
@@ -28,7 +27,7 @@ interface FormData {
 @Component({
   selector: 'app-form-nuevo-cliente',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './form-nuevo-cliente.html'
 })
 export class FormNuevoClienteComponent {
@@ -42,6 +41,42 @@ export class FormNuevoClienteComponent {
   espacioSeleccionClick = output<void>();
   cancelar = output<void>();
   registrar = output<void>();
+  updateFormData = output<Partial<FormData>>();
+
+  onNombreClienteChange(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.updateFormData.emit({ nombreCliente: value });
+  }
+
+  onEmailClienteChange(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.updateFormData.emit({ emailCliente: value });
+  }
+
+  onTelefonoClienteChange(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.updateFormData.emit({ telefonoCliente: value });
+  }
+
+  onPlacaChange(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.updateFormData.emit({ placa: value });
+  }
+
+  onTipoVehiculoChange(event: Event) {
+    const value = (event.target as HTMLSelectElement).value;
+    this.updateFormData.emit({ tipoVehiculoId: value });
+  }
+
+  onMarcaChange(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.updateFormData.emit({ marca: value });
+  }
+
+  onModeloChange(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.updateFormData.emit({ modelo: value });
+  }
 
   onAbrirModalEspacios() {
     this.espacioSeleccionClick.emit();

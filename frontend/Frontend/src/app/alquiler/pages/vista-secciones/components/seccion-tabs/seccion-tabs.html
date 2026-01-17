@@ -1,0 +1,36 @@
+<div class="flex items-center gap-4 mb-6">
+  <!-- Botón Anterior -->
+  <button 
+    class="btn btn-circle btn-sm"
+    [disabled]="currentIndex() === 0"
+    (click)="onPrevious()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+    </svg>
+  </button>
+
+  <!-- Tabs -->
+  <div class="tabs tabs-boxed flex-1 bg-gray-100 p-1">
+    @for (seccion of secciones(); track seccion.id; let i = $index) {
+      <button 
+        class="tab transition-all duration-200"
+        [class.tab-active]="i === currentIndex()"
+        [class.bg-blue-600]="i === currentIndex()"
+        [class.text-white]="i === currentIndex()"
+        [class.font-bold]="i === currentIndex()"
+        (click)="selectSeccion.emit(i)">
+        Sección {{ seccion.letraSeccion }}
+      </button>
+    }
+  </div>
+
+  <!-- Botón Siguiente -->
+  <button 
+    class="btn btn-circle btn-sm"
+    [disabled]="currentIndex() === secciones().length - 1"
+    (click)="onNext()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+    </svg>
+  </button>
+</div>

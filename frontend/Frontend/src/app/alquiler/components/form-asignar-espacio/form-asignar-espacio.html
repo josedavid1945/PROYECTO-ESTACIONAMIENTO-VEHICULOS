@@ -16,8 +16,8 @@
           <div class="card-body p-4">
             <div class="flex justify-between items-start">
               <div class="flex-1">
-                <h3 class="text-lg font-bold text-slate-800">{{ cliente.nombre }}</h3>
-                <p class="text-sm text-slate-600">{{ cliente.email }} • {{ cliente.telefono }}</p>
+                <h3 class="text-lg font-bold  text-gray-200">{{ cliente.nombre }}</h3>
+                <p class="text-sm text-gray-600">{{ cliente.email }} • {{ cliente.telefono }}</p>
               </div>
               <button (click)="onToggleCliente(cliente.id)" class="btn btn-sm btn-circle btn-ghost">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" 
@@ -30,19 +30,20 @@
 
             @if (clienteExpandido() === cliente.id) {
               <div class="mt-4 pt-4 border-t">
-                <h4 class="font-semibold text-gray-700 mb-3">Vehículos:</h4>
+                <h4 class="font-semibold text-gray-500 mb-3">Vehículos:</h4>
                 @if (cliente.vehiculos.length === 0) {
                   <p class="text-sm text-gray-500">Este cliente no tiene vehículos registrados.</p>
                 } @else {
                   <div class="space-y-2">
                     @for (vehiculo of cliente.vehiculos; track vehiculo.id) {
-                      <label class="flex items-center p-3 border rounded-lg hover:bg-blue-50 cursor-pointer">
+                      <label class="text-amber-600 flex items-center p-3 border rounded-lg hover:bg-blue-50 cursor-pointer">
                         <input type="radio" name="vehiculoSeleccionado" [value]="vehiculo.id"
-                               [(ngModel)]="formData().vehiculoId"
+                               [checked]="formData().vehiculoId === vehiculo.id"
+                               (change)="onVehiculoChange(vehiculo.id)"
                                class="radio radio-primary mr-3"/>
                         <div class="flex-1">
-                          <p class="font-medium text-gray-800">{{ vehiculo.placa }}</p>
-                          <p class="text-sm text-gray-600">{{ vehiculo.marca }} {{ vehiculo.modelo }}</p>
+                          <p class="font-medium text-gray-400">{{ vehiculo.placa }}</p>
+                          <p class="text-sm text-gray-400">{{ vehiculo.marca }} {{ vehiculo.modelo }}</p>
                         </div>
                       </label>
                     }
@@ -72,7 +73,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
         <path fill="currentColor" d="M13 13h-2V7h2m0 10h-2v-2h2M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2z"/>
       </svg>
-      <span>Debe seleccionar un espacio disponible</span>
+      <span> selecciona un espacio disponible</span>
     </div>
   }
   <button (click)="onAbrirModalEspacios()" class="btn bg-blue-600 hover:bg-blue-700 text-white mt-4">

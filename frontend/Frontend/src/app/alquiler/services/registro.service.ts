@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 // ==================== INTERFACES ====================
 export interface ClienteConVehiculos {
@@ -85,7 +87,11 @@ export interface DesocuparEspacioDto {
 })
 export class RegistroService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000';
+  private readonly apiUrl = environment.apiUrl;
+  
+  // Cache para las plantillas HTML
+  private ticketTemplate: string | null = null;
+  private detallePagoTemplate: string | null = null;
 
   // ==================== OPERACIONES PRINCIPALES ====================
   
@@ -117,103 +123,77 @@ export class RegistroService {
 
   // ==================== GENERACIÓN DE PDFs ====================
   
+  private loadTicketTemplate(): Observable<string> {
+    if (this.ticketTemplate) {
+      return new Observable(observer => {
+        observer.next(this.ticketTemplate!);
+        observer.complete();
+      });
+    }
+    // Cargar desde assets configurados en angular.json
+    return this.http.get('assets/plantillas/ticket.html', { responseType: 'text' })
+      .pipe(
+        tap((template: string) => this.ticketTemplate = template)
+      );
+  }
+
+  private loadDetallePagoTemplate(): Observable<string> {
+    if (this.detallePagoTemplate) {
+      return new Observable(observer => {
+        observer.next(this.detallePagoTemplate!);
+        observer.complete();
+      });
+    }
+    // Cargar desde assets configurados en angular.json
+    return this.http.get('assets/plantillas/detalle-pago.html', { responseType: 'text' })
+      .pipe(
+        tap((template: string) => this.detallePagoTemplate = template)
+      );
+  }
+
   generarTicketPDF(data: any): void {
-    const content = this.buildTicketContent(data);
-    this.downloadPDF(content, `ticket-${data.ticket.id}.pdf`);
+    this.loadTicketTemplate().subscribe({
+      next: (template) => {
+        const content = this.buildTicketContent(template, data);
+        this.downloadPDF(content, `ticket-${data.ticket.id}.pdf`);
+      },
+      error: (error) => {
+        console.error('Error cargando plantilla de ticket:', error);
+        alert('Error al generar el ticket PDF');
+      }
+    });
   }
 
   generarDetallePagoPDF(data: any): void {
-    const content = this.buildDetallePagoContent(data);
-    this.downloadPDF(content, `detalle-pago-${data.detallePago.id}.pdf`);
+    this.loadDetallePagoTemplate().subscribe({
+      next: (template) => {
+        const content = this.buildDetallePagoContent(template, data);
+        this.downloadPDF(content, `detalle-pago-${data.detallePago.id}.pdf`);
+      },
+      error: (error) => {
+        console.error('Error cargando plantilla de detalle de pago:', error);
+        alert('Error al generar el detalle de pago PDF');
+      }
+    });
   }
 
-  private buildTicketContent(data: any): string {
+  private buildTicketContent(template: string, data: any): string {
     const fechaIngreso = new Date(data.ticket.fechaIngreso).toLocaleString('es-EC');
     
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          body { font-family: Arial, sans-serif; padding: 40px; }
-          .header { text-align: center; border-bottom: 3px solid #10b981; padding-bottom: 20px; margin-bottom: 30px; }
-          .title { font-size: 28px; font-weight: bold; color: #10b981; }
-          .subtitle { font-size: 16px; color: #666; margin-top: 5px; }
-          .section { margin: 20px 0; }
-          .section-title { font-size: 18px; font-weight: bold; color: #333; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 12px; }
-          .field { margin: 10px 0; display: flex; }
-          .field-label { font-weight: bold; color: #555; min-width: 150px; }
-          .field-value { color: #333; }
-          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #e5e7eb; padding-top: 20px; }
-          .qr-placeholder { width: 150px; height: 150px; border: 2px dashed #ccc; margin: 20px auto; display: flex; align-items: center; justify-content: center; color: #999; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="title">🚗 TICKET DE ESTACIONAMIENTO</div>
-          <div class="subtitle">Comprobante de Ingreso</div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Información del Ticket</div>
-          <div class="field">
-            <span class="field-label">Nº Ticket:</span>
-            <span class="field-value">${data.ticket.id}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Fecha y Hora:</span>
-            <span class="field-value">${fechaIngreso}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Espacio Asignado:</span>
-            <span class="field-value">${data.espacio?.numero || 'N/A'}</span>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Datos del Vehículo</div>
-          <div class="field">
-            <span class="field-label">Placa:</span>
-            <span class="field-value">${data.vehiculo?.placa || 'N/A'}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Marca:</span>
-            <span class="field-value">${data.vehiculo?.marca || 'N/A'}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Modelo:</span>
-            <span class="field-value">${data.vehiculo?.modelo || 'N/A'}</span>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Datos del Cliente</div>
-          <div class="field">
-            <span class="field-label">Nombre:</span>
-            <span class="field-value">${data.cliente?.nombre || 'N/A'}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Email:</span>
-            <span class="field-value">${data.cliente?.email || 'N/A'}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Teléfono:</span>
-            <span class="field-value">${data.cliente?.telefono || 'N/A'}</span>
-          </div>
-        </div>
-
-        <div class="footer">
-          <p>Este ticket es válido para retirar su vehículo.</p>
-          <p>Conserve este documento hasta la salida.</p>
-          <p>Sistema de Gestión de Estacionamiento © 2025</p>
-        </div>
-      </body>
-      </html>
-    `;
+    // Reemplazar los placeholders en la plantilla
+    return template
+      .replace(/{{TICKET_ID}}/g, data.ticket.id)
+      .replace(/{{FECHA_INGRESO}}/g, fechaIngreso)
+      .replace(/{{ESPACIO_NUMERO}}/g, data.espacio?.numero || 'N/A')
+      .replace(/{{VEHICULO_PLACA}}/g, data.vehiculo?.placa || 'N/A')
+      .replace(/{{VEHICULO_MARCA}}/g, data.vehiculo?.marca || 'N/A')
+      .replace(/{{VEHICULO_MODELO}}/g, data.vehiculo?.modelo || 'N/A')
+      .replace(/{{CLIENTE_NOMBRE}}/g, data.cliente?.nombre || 'N/A')
+      .replace(/{{CLIENTE_EMAIL}}/g, data.cliente?.email || 'N/A')
+      .replace(/{{CLIENTE_TELEFONO}}/g, data.cliente?.telefono || 'N/A');
   }
 
-  private buildDetallePagoContent(data: any): string {
+  private buildDetallePagoContent(template: string, data: any): string {
     const fechaPago = new Date(data.detallePago.fechaPago).toLocaleString('es-EC');
     const fechaIngreso = new Date(data.ticket.fechaIngreso).toLocaleString('es-EC');
     const fechaSalida = new Date(data.ticket.fechaSalida).toLocaleString('es-EC');
@@ -224,128 +204,41 @@ export class RegistroService {
     const diff = salida.getTime() - entrada.getTime();
     const horas = Math.floor(diff / (1000 * 60 * 60));
     const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const tiempoEstadia = `${horas}h ${minutos}min`;
     
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="UTF-8">
-        <style>
-          body { font-family: Arial, sans-serif; padding: 40px; }
-          .header { text-align: center; border-bottom: 3px solid #3b82f6; padding-bottom: 20px; margin-bottom: 30px; }
-          .title { font-size: 28px; font-weight: bold; color: #3b82f6; }
-          .subtitle { font-size: 16px; color: #666; margin-top: 5px; }
-          .section { margin: 20px 0; }
-          .section-title { font-size: 18px; font-weight: bold; color: #333; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 12px; }
-          .field { margin: 10px 0; display: flex; }
-          .field-label { font-weight: bold; color: #555; min-width: 180px; }
-          .field-value { color: #333; }
-          .total-box { background-color: #eff6ff; border: 2px solid #3b82f6; border-radius: 8px; padding: 20px; margin: 25px 0; text-align: center; }
-          .total-label { font-size: 18px; color: #666; }
-          .total-amount { font-size: 36px; font-weight: bold; color: #3b82f6; margin-top: 10px; }
-          .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #e5e7eb; padding-top: 20px; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="title">💵 DETALLE DE PAGO</div>
-          <div class="subtitle">Comprobante de Salida y Pago</div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Información del Pago</div>
-          <div class="field">
-            <span class="field-label">Nº Comprobante:</span>
-            <span class="field-value">${data.detallePago.id}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Fecha de Pago:</span>
-            <span class="field-value">${fechaPago}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Método de Pago:</span>
-            <span class="field-value">${data.detallePago.metodo}</span>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Tiempo de Estadía</div>
-          <div class="field">
-            <span class="field-label">Fecha de Ingreso:</span>
-            <span class="field-value">${fechaIngreso}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Fecha de Salida:</span>
-            <span class="field-value">${fechaSalida}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Tiempo Total:</span>
-            <span class="field-value">${horas}h ${minutos}min</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Espacio Utilizado:</span>
-            <span class="field-value">${data.espacio?.numero || 'N/A'}</span>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Datos del Vehículo</div>
-          <div class="field">
-            <span class="field-label">Placa:</span>
-            <span class="field-value">${data.vehiculo?.placa || 'N/A'}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Marca:</span>
-            <span class="field-value">${data.vehiculo?.marca || 'N/A'}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Modelo:</span>
-            <span class="field-value">${data.vehiculo?.modelo || 'N/A'}</span>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Datos del Cliente</div>
-          <div class="field">
-            <span class="field-label">Nombre:</span>
-            <span class="field-value">${data.cliente?.nombre || 'N/A'}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Email:</span>
-            <span class="field-value">${data.cliente?.email || 'N/A'}</span>
-          </div>
-          <div class="field">
-            <span class="field-label">Teléfono:</span>
-            <span class="field-value">${data.cliente?.telefono || 'N/A'}</span>
-          </div>
-        </div>
-
-        <div class="total-box">
-          <div class="total-label">TOTAL PAGADO</div>
-          <div class="total-amount">$${data.detallePago.pagoTotal.toFixed(2)}</div>
-        </div>
-
-        <div class="footer">
-          <p>Gracias por utilizar nuestros servicios.</p>
-          <p>¡Esperamos verle pronto!</p>
-          <p>Sistema de Gestión de Estacionamiento © 2025</p>
-        </div>
-      </body>
-      </html>
-    `;
+    // Reemplazar los placeholders en la plantilla
+    return template
+      .replace(/{{DETALLE_PAGO_ID}}/g, data.detallePago.id)
+      .replace(/{{FECHA_PAGO}}/g, fechaPago)
+      .replace(/{{METODO_PAGO}}/g, data.detallePago.metodo)
+      .replace(/{{FECHA_INGRESO}}/g, fechaIngreso)
+      .replace(/{{FECHA_SALIDA}}/g, fechaSalida)
+      .replace(/{{TIEMPO_ESTADIA}}/g, tiempoEstadia)
+      .replace(/{{ESPACIO_NUMERO}}/g, data.espacio?.numero || 'N/A')
+      .replace(/{{VEHICULO_PLACA}}/g, data.vehiculo?.placa || 'N/A')
+      .replace(/{{VEHICULO_MARCA}}/g, data.vehiculo?.marca || 'N/A')
+      .replace(/{{VEHICULO_MODELO}}/g, data.vehiculo?.modelo || 'N/A')
+      .replace(/{{CLIENTE_NOMBRE}}/g, data.cliente?.nombre || 'N/A')
+      .replace(/{{CLIENTE_EMAIL}}/g, data.cliente?.email || 'N/A')
+      .replace(/{{CLIENTE_TELEFONO}}/g, data.cliente?.telefono || 'N/A')
+      .replace(/{{TOTAL_PAGADO}}/g, `$${data.detallePago.pagoTotal.toFixed(2)}`);
   }
 
   private downloadPDF(htmlContent: string, filename: string): void {
-    // Crear una nueva ventana para imprimir
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-      
-      // Esperar a que se cargue y luego imprimir
-      printWindow.onload = () => {
-        printWindow.print();
-      };
-    }
+    // Usar setTimeout para no bloquear el hilo principal
+    setTimeout(() => {
+      const printWindow = window.open('', '_blank', 'width=800,height=600');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        
+        // Esperar a que se cargue y luego imprimir
+        printWindow.onload = () => {
+          setTimeout(() => {
+            printWindow.print();
+          }, 250);
+        };
+      }
+    }, 100);
   }
 }

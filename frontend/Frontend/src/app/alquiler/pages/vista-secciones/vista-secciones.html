@@ -49,64 +49,18 @@
   @if (!isLoading() && secciones().length > 0 && currentSeccion()) {
     <div>
       <!-- Tabs de Secciones -->
-      <div class="flex items-center gap-4 mb-6">
-        <!-- Botón Anterior -->
-        <button 
-          class="btn btn-circle btn-sm"
-          [disabled]="currentSeccionIndex() === 0"
-          (click)="previousSeccion()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-          </svg>
-        </button>
-
-        <!-- Tabs -->
-        <div class="tabs tabs-boxed flex-1 bg-gray-100 p-1">
-          @for (seccion of secciones(); track seccion.id; let i = $index) {
-            <button 
-              class="tab transition-all duration-200"
-              [class.tab-active]="i === currentSeccionIndex()"
-              [class.bg-blue-600]="i === currentSeccionIndex()"
-              [class.text-white]="i === currentSeccionIndex()"
-              [class.font-bold]="i === currentSeccionIndex()"
-              (click)="goToSeccion(i)">
-              Sección {{ seccion.letraSeccion }}
-            </button>
-          }
-        </div>
-
-        <!-- Botón Siguiente -->
-        <button 
-          class="btn btn-circle btn-sm"
-          [disabled]="currentSeccionIndex() === secciones().length - 1"
-          (click)="nextSeccion()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-          </svg>
-        </button>
-      </div>
+      <app-seccion-tabs 
+        [secciones]="secciones()"
+        [currentIndex]="currentSeccionIndex()"
+        (selectSeccion)="goToSeccion($event)"
+        (previous)="previousSeccion()"
+        (next)="nextSeccion()" />
 
       <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="stat bg-white border border-slate-200 rounded-lg shadow-sm">
-          <div class="stat-title text-slate-600">Total de Espacios</div>
-          <div class="stat-value text-slate-800">{{ totalEspacios() }}</div>
-        </div>
-        <div class="stat bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
-          <div class="stat-title text-blue-700">Disponibles</div>
-          <div class="stat-value text-blue-600">{{ espaciosDisponibles() }}</div>
-        </div>
-        <div class="stat bg-slate-100 border border-slate-300 rounded-lg shadow-sm">
-          <div class="stat-title text-slate-700">Ocupados</div>
-          <div class="stat-value text-slate-600">{{ espaciosOcupados() }}</div>
-        </div>
-        <div class="stat bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
-          <div class="stat-title text-blue-700">Ocupación</div>
-          <div class="stat-value text-blue-600">
-            {{ totalEspacios() > 0 ? ((espaciosOcupados() / totalEspacios()) * 100).toFixed(0) : 0 }}%
-          </div>
-        </div>
-      </div>
+      <app-seccion-stats 
+        [totalEspacios]="totalEspacios()"
+        [espaciosDisponibles]="espaciosDisponibles()"
+        [espaciosOcupados]="espaciosOcupados()" />
 
       <!-- Action Buttons -->
       <div class="flex gap-3 mb-6">
@@ -129,166 +83,27 @@
       </div>
 
       <!-- Tabla de Espacios -->
-      <div class="card bg-white border-2 border-gray-200 shadow-xl">
-        <div class="card-body">
-          <h2 class="card-title text-2xl text-gray-800 mb-4">
-            Espacios de la Sección {{ currentSeccion()!.letraSeccion }}
-          </h2>
-
-          @if (currentSeccion()!.espacios && currentSeccion()!.espacios.length > 0) {
-            <div class="overflow-x-auto">
-              <table class="table w-full">
-                <thead class="bg-slate-700">
-                  <tr>
-                    <th class="text-white font-bold">Número</th>
-                    <th class="text-white font-bold">Estado</th>
-                    <th class="text-white font-bold text-center">Disponibilidad</th>
-                    <th class="text-white font-bold text-center">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white">
-                  @for (espacio of currentSeccion()!.espacios; track espacio.id) {
-                    <tr class="border-b border-gray-200 hover:bg-slate-50 transition-colors bg-white">
-                      <td class="font-bold text-slate-800">{{ espacio.numero }}</td>
-                      <td>
-                        @if (espacio.estado) {
-                          <span class="badge bg-blue-100 text-blue-700 border-blue-300 gap-2 font-semibold">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                              <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                            </svg>
-                            Disponible
-                          </span>
-                        } @else {
-                          <span class="badge bg-slate-200 text-slate-700 border-slate-400 gap-2 font-semibold">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                              <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                            </svg>
-                            Ocupado
-                          </span>
-                        }
-                      </td>
-                      <td class="text-center">
-                        <input 
-                          type="checkbox" 
-                          class="toggle toggle-primary"
-                          [checked]="espacio.estado"
-                          (change)="toggleEstadoEspacio(espacio)" />
-                      </td>
-                      <td class="text-center">
-                        <button 
-                          class="btn bg-slate-600 hover:bg-slate-700 btn-sm text-white"
-                          (click)="deleteEspacio(espacio.id)">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
-                            <path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V6H4V4h5V3h6v1h5v2h-1v13q0 .825-.587 1.413T17 21zM17 6H7v13h10zM9 17h2V8H9zm4 0h2V8h-2zM7 6v13z"/>
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          } @else {
-            <div class="text-center py-12">
-              <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" class="mx-auto mb-4 text-gray-400">
-                <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
-              </svg>
-              <p class="text-gray-500 text-lg">No hay espacios en esta sección</p>
-              <button 
-                class="btn bg-blue-600 hover:bg-blue-700 text-white mt-4"
-                (click)="openCreateEspaciosModal()">
-                Crear Espacios
-              </button>
-            </div>
-          }
-        </div>
-      </div>
+      <app-espacios-table 
+        [letraSeccion]="currentSeccion()!.letraSeccion"
+        [espacios]="currentSeccion()!.espacios || []"
+        (toggleEstado)="toggleEstadoEspacio($event)"
+        (deleteEspacio)="deleteEspacio($event)"
+        (createEspacios)="openCreateEspaciosModal()" />
     </div>
   }
 
   <!-- Modal: Crear Sección -->
-  @if (showCreateSeccionModal()) {
-    <div class="modal modal-open">
-      <div class="modal-box">
-        <h3 class="font-bold text-2xl text-gray-800 mb-4">Crear Nueva Sección</h3>
-        
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text font-semibold">Letra de la Sección</span>
-          </label>
-          <input 
-            type="text" 
-            placeholder="Ej: A, B, C" 
-            class="input input-bordered w-full"
-            maxlength="5"
-            [(ngModel)]="newSeccionLetra"
-            (keyup.enter)="createSeccion()" />
-          <label class="label">
-            <span class="label-text-alt text-gray-500">Ingresa una letra o código para identificar la sección</span>
-          </label>
-        </div>
-
-        <div class="modal-action">
-          <button class="btn btn-ghost" (click)="closeCreateSeccionModal()">Cancelar</button>
-          <button class="btn bg-blue-600 hover:bg-blue-700 text-white" (click)="createSeccion()">
-            Crear Sección
-          </button>
-        </div>
-      </div>
-      <div class="modal-backdrop" (click)="closeCreateSeccionModal()"></div>
-    </div>
-  }
+  <app-modal-crear-seccion 
+    [isOpen]="showCreateSeccionModal()"
+    (close)="closeCreateSeccionModal()"
+    (submit)="createSeccion($event)" />
 
   <!-- Modal: Crear Múltiples Espacios -->
-  @if (showCreateEspaciosModal()) {
-    <div class="modal modal-open">
-      <div class="modal-box">
-        <h3 class="font-bold text-2xl text-gray-800 mb-4">Crear Múltiples Espacios</h3>
-        <p class="text-slate-600 mb-6">
-          Sección: <span class="font-bold text-blue-600">{{ currentSeccion()!.letraSeccion }}</span>
-        </p>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">Número Inicio</span>
-            </label>
-            <input 
-              type="number" 
-              placeholder="1" 
-              min="1"
-              class="input input-bordered w-full"
-              [(ngModel)]="newEspaciosInicio" />
-          </div>
-
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text font-semibold">Número Fin</span>
-            </label>
-            <input 
-              type="number" 
-              placeholder="10" 
-              min="1"
-              class="input input-bordered w-full"
-              [(ngModel)]="newEspaciosFin" />
-          </div>
-        </div>
-
-        <div class="alert alert-info mt-4">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-          </svg>
-          <span>Se crearán {{ newEspaciosFin() - newEspaciosInicio() + 1 }} espacios</span>
-        </div>
-
-        <div class="modal-action">
-          <button class="btn btn-ghost" (click)="closeCreateEspaciosModal()">Cancelar</button>
-          <button class="btn bg-blue-600 hover:bg-blue-700 text-white" (click)="createMultipleEspacios()">
-            Crear Espacios
-          </button>
-        </div>
-      </div>
-      <div class="modal-backdrop" (click)="closeCreateEspaciosModal()"></div>
-    </div>
+  @if (currentSeccion()) {
+    <app-modal-crear-espacios 
+      [isOpen]="showCreateEspaciosModal()"
+      [letraSeccion]="currentSeccion()!.letraSeccion"
+      (close)="closeCreateEspaciosModal()"
+      (submit)="createMultipleEspacios($event)" />
   }
 </section>

@@ -1,65 +1,84 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { HerramientasService } from '../../../../../services/herramientas.service';
 
 @Component({
   selector: 'app-register-tarifa',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
-  templateUrl: './register-tarifa.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './register-tarifa.html'
 })
 export class RegisterTarifaComponent {
-  private fb = inject(FormBuilder);
   private herramientasService = inject(HerramientasService);
   private router = inject(Router);
 
-  isSubmitting = signal(false);
-  error = signal<string | null>(null);
-  success = signal(false);
+  public tipoTarifa = signal('');
+  public precioHora = signal(0);
+  public precioDia = signal(0);
+  public loading = signal(false);
 
-  tarifaForm: FormGroup = this.fb.group({
-    tipoTarifa: ['', [Validators.required, Validators.minLength(3)]],
-    precioHora: [0, [Validators.required, Validators.min(0)]],
-    precioDia: [0, [Validators.required, Validators.min(0)]]
-  });
+  onTipoTarifaChange(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.tipoTarifa.set(value);
+  }
 
-  onSubmit(): void {
-    if (this.tarifaForm.invalid) {
-      this.tarifaForm.markAllAsTouched();
+  onPrecioHoraChange(event: Event): void {
+    const inputValue = (event.target as HTMLInputElement).value;
+    const value = parseFloat(inputValue);
+    if (inputValue === '' || isNaN(value)) {
+      this.precioHora.set(0);
+    } else {
+      this.precioHora.set(value);
+    }
+  }
+
+  onPrecioDiaChange(event: Event): void {
+    const inputValue = (event.target as HTMLInputElement).value;
+    const value = parseFloat(inputValue);
+    if (inputValue === '' || isNaN(value)) {
+      this.precioDia.set(0);
+    } else {
+      this.precioDia.set(value);
+    }
+  }
+
+  registrarTarifa() {
+    const tipo = this.tipoTarifa().trim();
+    const hora = this.precioHora();
+    const dia = this.precioDia();
+
+    console.log('Datos a registrar:', { tipo, hora, dia });
+
+    if (!tipo || hora <= 0 || dia <= 0) {
+      alert('Por favor completa todos los campos correctamente');
       return;
     }
 
-    this.isSubmitting.set(true);
-    this.error.set(null);
-
-    const { tipoTarifa, precioHora, precioDia } = this.tarifaForm.value;
-
-    this.herramientasService.createTarifa(tipoTarifa, precioHora, precioDia).subscribe({
-      next: () => {
-        this.success.set(true);
-        this.tarifaForm.reset();
-        setTimeout(() => {
-          this.router.navigate(['/estacionamiento/herramientas/config/tarifa']);
-        }, 1500);
+    this.loading.set(true);
+    
+    console.log('Enviando solicitud al backend...');
+    this.herramientasService.createTarifa(
+      tipo,
+      hora,
+      dia
+    ).subscribe({
+      next: (response) => {
+        console.log('Respuesta del servidor:', response);
+        alert('Tarifa registrada exitosamente');
+        this.router.navigate(['/estacionamiento/herramientas/config/tarifa']);
       },
-      error: (err) => {
-        this.error.set('Error al crear la tarifa. Por favor, intenta nuevamente.');
-        this.isSubmitting.set(false);
-        console.error(err);
+      error: (error) => {
+        console.error('Error completo:', error);
+        console.error('Status:', error.status);
+        console.error('Message:', error.error);
+        alert(`Error al registrar la tarifa: ${error.error?.message || error.message}`);
+        this.loading.set(false);
       }
     });
   }
 
-  getErrorMessage(fieldName: string): string {
-    const field = this.tarifaForm.get(fieldName);
-    if (!field || !field.touched) return '';
-
-    if (field.hasError('required')) return 'Este campo es requerido';
-    if (field.hasError('minLength')) return 'Mínimo 3 caracteres';
-    if (field.hasError('min')) return 'El valor debe ser mayor o igual a 0';
-    
-    return '';
+  cancelar() {
+    this.router.navigate(['/estacionamiento/herramientas/config/tarifa']);
   }
 }

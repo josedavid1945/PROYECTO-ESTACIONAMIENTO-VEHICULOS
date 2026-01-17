@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface Espacio {
   id: string;
@@ -36,7 +37,7 @@ export interface CreateMultipleEspaciosDto {
 })
 export class ParkingService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000';
+  private readonly apiUrl = environment.apiUrl;
 
   // ==================== SECCIONES ====================
   getSeccionesWithEspacios(): Observable<Seccion[]> {

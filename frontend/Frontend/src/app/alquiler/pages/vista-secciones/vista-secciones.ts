@@ -1,11 +1,22 @@
 import { ChangeDetectionStrategy, Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ParkingService, Seccion, Espacio } from '../../services/parking.service';
+import { SeccionTabs } from './components/seccion-tabs/seccion-tabs';
+import { SeccionStats } from './components/seccion-stats/seccion-stats';
+import { EspaciosTable } from './components/espacios-table/espacios-table';
+import { ModalCrearSeccion } from './components/modal-crear-seccion/modal-crear-seccion';
+import { ModalCrearEspacios, CreateEspaciosData } from './components/modal-crear-espacios/modal-crear-espacios';
 
 @Component({
   selector: 'app-vista-secciones',
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    SeccionTabs,
+    SeccionStats,
+    EspaciosTable,
+    ModalCrearSeccion,
+    ModalCrearEspacios
+  ],
   templateUrl: './vista-secciones.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -21,11 +32,6 @@ export class VistaSecciones implements OnInit {
   // Modales
   showCreateSeccionModal = signal(false);
   showCreateEspaciosModal = signal(false);
-
-  // Formularios
-  newSeccionLetra = signal('');
-  newEspaciosInicio = signal(1);
-  newEspaciosFin = signal(10);
 
   // Computed
   currentSeccion = computed(() => {
@@ -93,7 +99,6 @@ export class VistaSecciones implements OnInit {
 
   // ==================== CREAR SECCIÓN ====================
   openCreateSeccionModal(): void {
-    this.newSeccionLetra.set('');
     this.showCreateSeccionModal.set(true);
   }
 
@@ -101,13 +106,7 @@ export class VistaSecciones implements OnInit {
     this.showCreateSeccionModal.set(false);
   }
 
-  createSeccion(): void {
-    const letra = this.newSeccionLetra().trim().toUpperCase();
-    if (!letra) {
-      alert('Por favor ingresa una letra para la sección');
-      return;
-    }
-
+  createSeccion(letra: string): void {
     this.parkingService.createSeccion(letra).subscribe({
       next: () => {
         this.loadSecciones();
@@ -122,8 +121,6 @@ export class VistaSecciones implements OnInit {
 
   // ==================== CREAR ESPACIOS ====================
   openCreateEspaciosModal(): void {
-    this.newEspaciosInicio.set(1);
-    this.newEspaciosFin.set(10);
     this.showCreateEspaciosModal.set(true);
   }
 
@@ -131,30 +128,17 @@ export class VistaSecciones implements OnInit {
     this.showCreateEspaciosModal.set(false);
   }
 
-  createMultipleEspacios(): void {
+  createMultipleEspacios(data: CreateEspaciosData): void {
     const seccion = this.currentSeccion();
     if (!seccion) {
       alert('No hay sección seleccionada');
       return;
     }
 
-    const inicio = this.newEspaciosInicio();
-    const fin = this.newEspaciosFin();
-
-    if (inicio > fin) {
-      alert('El número de inicio debe ser menor o igual al número final');
-      return;
-    }
-
-    if (inicio < 1 || fin < 1) {
-      alert('Los números deben ser mayores a 0');
-      return;
-    }
-
     this.parkingService.createMultipleEspacios({
       seccionId: seccion.id,
-      numeroInicio: inicio,
-      numeroFin: fin
+      numeroInicio: data.inicio,
+      numeroFin: data.fin
     }).subscribe({
       next: () => {
         this.loadSecciones();

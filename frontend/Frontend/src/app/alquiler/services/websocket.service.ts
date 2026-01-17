@@ -1,6 +1,7 @@
 import { Injectable, signal, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, timer, switchMap, tap, catchError, of, retry, delay } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 // Interfaces basadas en el servidor Go
 export interface DashboardData {
@@ -55,12 +56,12 @@ interface WebSocketMessage {
 export class WebSocketService {
   private readonly destroyRef = inject(DestroyRef);
   
-  // WebSocket configuration
-  private readonly WS_URL = 'ws://localhost:8080/ws';
+  // WebSocket configuration from environment
+  private readonly WS_URL = environment.websocketUrl;
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
-  private readonly MAX_RECONNECT_ATTEMPTS = 5;
-  private readonly RECONNECT_DELAY = 3000;
+  private readonly MAX_RECONNECT_ATTEMPTS = environment.websocketReconnectAttempts;
+  private readonly RECONNECT_DELAY = environment.websocketReconnectDelay;
 
   // Signals para datos en tiempo real
   readonly dashboardData = signal<DashboardData | null>(null);
@@ -80,14 +81,13 @@ export class WebSocketService {
   constructor() {
     this.connect();
     
-    // Auto-cleanup cuando el servicio se destruya
     this.destroyRef.onDestroy(() => {
       this.disconnect();
     });
   }
 
   /**
-   * Conecta al servidor WebSocket
+   * Coneccion al server de WebSocket
    */
   connect(): void {
     if (this.ws?.readyState === WebSocket.OPEN) {
@@ -106,7 +106,6 @@ export class WebSocketService {
         this.connectionError.set(null);
         this.reconnectAttempts = 0;
         
-        // Solicitar datos iniciales
         this.requestDashboardData();
       };
 

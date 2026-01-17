@@ -28,6 +28,7 @@
         [tiposVehiculo]="tiposVehiculo()"
         [espacioSeleccionado]="espacioSeleccionado()"
         [isLoading]="isLoading()"
+        (updateFormData)="updateNuevoClienteForm($event)"
         (espacioSeleccionClick)="abrirModalEspacios()"
         (cancelar)="volverAlMenu()"
         (registrar)="registrarNuevoCliente()">
@@ -58,6 +59,7 @@
         [clienteExpandido]="clienteExpandido()"
         [isLoading]="isLoading()"
         (toggleCliente)="toggleCliente($event)"
+        (updateVehiculoId)="updateAsignarEspacioVehiculo($event)"
         (espacioSeleccionClick)="abrirModalEspacios()"
         (cancelar)="volverAlMenu()"
         (confirmar)="confirmarAsignacion()">
@@ -87,6 +89,7 @@
         [tiposTarifa]="tiposTarifa()"
         [isLoading]="isLoading()"
         (seleccionarVehiculo)="seleccionarVehiculoOcupado($event)"
+        (updateFormData)="updateDesocuparEspacioForm($event)"
         (cancelar)="volverAlMenu()"
         (confirmar)="confirmarDesocupacion()">
       </app-form-desocupar-espacio>

@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  # ===========================================
+  # Servicio B2B - Webhooks & MCP Chatbot
+  # ===========================================
+  b2b-webhooks:
+    build:
+      context: ./b2b-webhooks-system
+      dockerfile: Dockerfile
+    container_name: parking-b2b-webhooks
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_URL=${DATABASE_URL}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_API_KEY_BACKUP=${GEMINI_API_KEY_BACKUP}
+      - PARKING_API_URL=http://backend-rest:3000
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+    depends_on:
+      - backend-rest
+    networks:
+      - parking-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================
+  # Backend REST API (NestJS)
+  # ===========================================
+  backend-rest:
+    build:
+      context: ./backend-rest/API - copia/alquiler-rest
+      dockerfile: Dockerfile
+    container_name: parking-backend-rest
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_URL=${DATABASE_URL}
+    networks:
+      - parking-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================
+  # GraphQL Service (Python/Strawberry)
+  # ===========================================
+  graphql-service:
+    build:
+      context: ./graphql-service
+      dockerfile: Dockerfile
+    container_name: parking-graphql
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - PYTHONUNBUFFERED=1
+    networks:
+      - parking-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================
+  # WebSocket Server (Go)
+  # ===========================================
+  websocket-server:
+    build:
+      context: ./websocket-server
+      dockerfile: Dockerfile
+    container_name: parking-websocket
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REST_API_URL=http://backend-rest:3000
+    depends_on:
+      - backend-rest
+    networks:
+      - parking-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================
+  # Frontend (Angular)
+  # ===========================================
+  frontend:
+    build:
+      context: ./frontend/Frontend
+      dockerfile: Dockerfile
+    container_name: parking-frontend
+    ports:
+      - "4200:80"
+    environment:
+      - API_URL=http://backend-rest:3000
+      - GRAPHQL_URL=http://graphql-service:8000/graphql
+      - WEBSOCKET_URL=ws://websocket-server:8080/ws
+      - B2B_API_URL=http://b2b-webhooks:3001
+    depends_on:
+      - backend-rest
+      - graphql-service
+      - websocket-server
+      - b2b-webhooks
+    networks:
+      - parking-network
+    restart: unless-stopped
+
+networks:
+  parking-network:
+    driver: bridge
+    name: parking-network
+
+# Volúmenes para persistencia (si necesitas base de datos local)
+# volumes:
+#   postgres-data:

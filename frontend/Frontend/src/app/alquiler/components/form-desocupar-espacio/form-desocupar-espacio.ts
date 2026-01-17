@@ -1,5 +1,4 @@
 import { Component, input, output } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 interface Ticket {
@@ -45,7 +44,7 @@ interface TipoTarifa {
 @Component({
   selector: 'app-form-desocupar-espacio',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './form-desocupar-espacio.html'
 })
 export class FormDesocuparEspacioComponent {
@@ -59,9 +58,29 @@ export class FormDesocuparEspacioComponent {
   seleccionarVehiculo = output<string>();
   cancelar = output<void>();
   confirmar = output<void>();
+  updateFormData = output<Partial<FormData>>();
 
   onSeleccionarVehiculo(ticketId: string) {
     this.seleccionarVehiculo.emit(ticketId);
+  }
+
+  onTicketChange(ticketId: string) {
+    this.updateFormData.emit({ ticketId });
+  }
+
+  onMetodoPagoChange(event: Event) {
+    const value = (event.target as HTMLSelectElement).value;
+    this.updateFormData.emit({ metodoPago: value });
+  }
+
+  onMontoPagoChange(event: Event) {
+    const value = parseFloat((event.target as HTMLInputElement).value);
+    this.updateFormData.emit({ montoPago: value });
+  }
+
+  onTipoTarifaChange(event: Event) {
+    const value = (event.target as HTMLSelectElement).value;
+    this.updateFormData.emit({ tipoTarifaId: value });
   }
 
   onCancelar() {

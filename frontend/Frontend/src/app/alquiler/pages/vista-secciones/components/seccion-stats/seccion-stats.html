@@ -1,0 +1,18 @@
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  <div class="stat bg-white border border-slate-200 rounded-lg shadow-sm">
+    <div class="stat-title text-slate-600">Total de Espacios</div>
+    <div class="stat-value text-slate-800">{{ totalEspacios() }}</div>
+  </div>
+  <div class="stat bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
+    <div class="stat-title text-blue-700">Disponibles</div>
+    <div class="stat-value text-blue-600">{{ espaciosDisponibles() }}</div>
+  </div>
+  <div class="stat bg-slate-100 border border-slate-300 rounded-lg shadow-sm">
+    <div class="stat-title text-slate-700">Ocupados</div>
+    <div class="stat-value text-slate-600">{{ espaciosOcupados() }}</div>
+  </div>
+  <div class="stat bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
+    <div class="stat-title text-blue-700">Ocupación</div>
+    <div class="stat-value text-blue-600">{{ porcentajeOcupacion() }}%</div>
+  </div>
+</div>

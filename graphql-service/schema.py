@@ -9,7 +9,7 @@ from services.detallepago_services import get_todos_detallepago
 from graphtypes.ticket_type import TicketType
 from graphtypes.detallepago_type import DetallePagoType
 from graphtypes.espacios_type import EspacioType, EstadoEspacioType
-from graphtypes.cliente_type import clienteType
+from graphtypes.cliente_type import ClienteType
 from graphtypes.tipoTarifa_type import TipoTarifaType
 from services.espacios_services import filtrar_espacios_por_seccion_y_estado, get_todos_espacios
 from services.cliente_services import get_all_clientes
@@ -71,26 +71,43 @@ class Query:
         espacios_map = {e["id"]: e for e in get_todos_espacios()}
         pagos_map = {p["id"]: p for p in get_todos_detallepago()}
         
-        return [
-            TicketType(
-                id=t["id"],
-                fechaIngreso=datetime.fromisoformat(t["fechaIngreso"].replace('Z', '+00:00')),
-                fechaSalida=datetime.fromisoformat(t["fechaSalida"].replace('Z', '+00:00')) if t.get("fechaSalida") else None,
-                vehiculo=VehiculoType(**vehiculos_map[t["vehiculoId"]]),
-                espacio=EspacioType(
-                    id=espacios_map[t["espacioId"]]["id"],
-                    numero=espacios_map[t["espacioId"]]["numero"],
-                    _estado=espacios_map[t["espacioId"]]["estado"]
-                ),
-                detallePago=DetallePagoType(
-                    id=pagos_map[t["detallePagoId"]]["id"],
-                    metodo=pagos_map[t["detallePagoId"]]["metodo"],
-                    fechaPago=pagos_map[t["detallePagoId"]]["fechaPago"],
-                    pagoTotal=pagos_map[t["detallePagoId"]]["pagoTotal"]
-                ) if t.get("detallePagoId") and t["detallePagoId"] in pagos_map else None
-            )
-            for t in tickets
-        ]
+        result = []
+        for t in tickets:
+            # Verificar que el vehículo existe
+            if t["vehiculoId"] not in vehiculos_map:
+                print(f"⚠️ Ticket {t['id']} tiene vehiculoId {t['vehiculoId']} que no existe")
+                continue
+            
+            # Verificar que el espacio existe
+            if t["espacioId"] not in espacios_map:
+                print(f"⚠️ Ticket {t['id']} tiene espacioId {t['espacioId']} que no existe")
+                continue
+            
+            try:
+                ticket = TicketType(
+                    id=t["id"],
+                    fechaIngreso=datetime.fromisoformat(t["fechaIngreso"].replace('Z', '+00:00')),
+                    fechaSalida=datetime.fromisoformat(t["fechaSalida"].replace('Z', '+00:00')) if t.get("fechaSalida") else None,
+                    vehiculo=VehiculoType(**vehiculos_map[t["vehiculoId"]]),
+                    espacio=EspacioType(
+                        id=espacios_map[t["espacioId"]]["id"],
+                        numero=espacios_map[t["espacioId"]]["numero"],
+                        _estado=espacios_map[t["espacioId"]]["estado"]
+                    ),
+                    detallePago=DetallePagoType(
+                        id=pagos_map[t["detallePagoId"]]["id"],
+                        metodo=pagos_map[t["detallePagoId"]]["metodo"],
+                        fechaPago=pagos_map[t["detallePagoId"]]["fechaPago"],
+                        pagoTotal=pagos_map[t["detallePagoId"]]["pagoTotal"]
+                    ) if t.get("detallePagoId") and t["detallePagoId"] in pagos_map else None
+                )
+                result.append(ticket)
+            except Exception as e:
+                print(f"❌ Error procesando ticket {t['id']}: {str(e)}")
+                continue
+        
+        print(f"✅ Tickets procesados: {len(result)} de {len(tickets)}")
+        return result
     
     @strawberry.field
     def vehiculos_completos(self) -> List[VehiculocompletoType]:
@@ -105,7 +122,7 @@ class Query:
                 placa=v["placa"],
                 marca=v["marca"],
                 modelo=v["modelo"],
-                cliente=clienteType(**clientes_map[v["clienteId"]]),
+                cliente=ClienteType(**clientes_map[v["clienteId"]]),
                 tipoVehiculo=TipoVehiculoType(
                     id=tipos_map[v["tipoVehiculoId"]]["id"],
                     categoria=tipos_map[v["tipoVehiculoId"]]["categoria"],

@@ -1,0 +1,32 @@
+@if (isOpen()) {
+  <div class="modal modal-open">
+    <div class="modal-box">
+      <h3 class="font-bold text-2xl text-gray-800 mb-4">Crear Nueva Sección</h3>
+      
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text font-semibold">Letra de la Sección</span>
+        </label>
+        <input 
+          type="text" 
+          placeholder="Ej: A, B, C" 
+          class="input input-bordered w-full"
+          maxlength="5"
+          [value]="letraSeccion()"
+          (input)="onLetraChange($event)"
+          (keyup.enter)="onSubmit()" />
+        <label class="label">
+          <span class="label-text-alt text-gray-500">Ingresa una letra o código para identificar la sección</span>
+        </label>
+      </div>
+
+      <div class="modal-action">
+        <button class="btn btn-ghost" (click)="close.emit()">Cancelar</button>
+        <button class="btn bg-blue-600 hover:bg-blue-700 text-white" (click)="onSubmit()">
+          Crear Sección
+        </button>
+      </div>
+    </div>
+    <div class="modal-backdrop" (click)="close.emit()"></div>
+  </div>
+}

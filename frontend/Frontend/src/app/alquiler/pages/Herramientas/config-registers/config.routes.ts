@@ -6,11 +6,11 @@ export const HerramientasRoutes: Routes = [
         children: [
             {
                 path: 'tarifa',
-                loadComponent: () => import('../tarifa/tarifa').then(m => m.TarifaComponent)
+                loadComponent: () => import('./tarifa/tarifa').then(m => m.TarifaComponent)
             },
             {
                 path: 'registrar-tarifa',
-                loadComponent: () => import('../register-tarifa/register-tarifa').then(m => m.RegisterTarifaComponent)
+                loadComponent: () => import('./tarifa/register-tarifa/register-tarifa').then(m => m.RegisterTarifaComponent)
             },
             {
                 path: 'multas',

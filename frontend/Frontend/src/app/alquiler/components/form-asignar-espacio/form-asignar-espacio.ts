@@ -1,5 +1,4 @@
 import { Component, input, output } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 interface Cliente {
@@ -31,7 +30,7 @@ interface FormData {
 @Component({
   selector: 'app-form-asignar-espacio',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './form-asignar-espacio.html'
 })
 export class FormAsignarEspacioComponent {
@@ -47,9 +46,14 @@ export class FormAsignarEspacioComponent {
   espacioSeleccionClick = output<void>();
   cancelar = output<void>();
   confirmar = output<void>();
+  updateVehiculoId = output<string>();
 
   onToggleCliente(clienteId: string) {
     this.toggleCliente.emit(clienteId);
+  }
+
+  onVehiculoChange(vehiculoId: string) {
+    this.updateVehiculoId.emit(vehiculoId);
   }
 
   onAbrirModalEspacios() {

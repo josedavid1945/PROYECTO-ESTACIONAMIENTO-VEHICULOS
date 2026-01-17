@@ -1,0 +1,137 @@
+<div class="chat-container">
+  <!-- Header -->
+  <div class="chat-header">
+    <div class="header-info">
+      <div class="bot-avatar">🤖</div>
+      <div class="header-text">
+        <h3>Asistente B2B</h3>
+        <span class="status">
+          <span class="status-dot" [class.online]="!isLoading()"></span>
+          {{ isLoading() ? 'Procesando...' : 'En línea' }}
+        </span>
+      </div>
+    </div>
+    <button class="clear-btn" (click)="clearChat()" title="Nueva conversación">
+      🗑️
+    </button>
+  </div>
+
+  <!-- Messages Area -->
+  <div class="messages-area" #messageContainer>
+    @if (!hasMessages()) {
+      <div class="empty-state">
+        <div class="empty-icon">💬</div>
+        <p>Inicia una conversación</p>
+      </div>
+    }
+
+    @for (msg of messages(); track $index) {
+      <div class="message" [class.user]="msg.role === 'user'" [class.assistant]="msg.role === 'assistant'" [class.error]="msg.isError">
+        <div class="message-content">
+          @if (msg.role === 'assistant') {
+            <div class="bot-icon">🤖</div>
+          }
+          <div class="message-bubble">
+            <div class="message-text" [innerHTML]="formatMessage(msg.content)"></div>
+            @if (msg.attachments && msg.attachments.length > 0) {
+              <div class="attachments-list">
+                @for (file of msg.attachments; track file) {
+                  <span class="attachment-badge">📎 {{ file }}</span>
+                }
+              </div>
+            }
+            <span class="message-time">
+              {{ msg.timestamp | date:'HH:mm' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (isLoading()) {
+      <div class="message assistant">
+        <div class="message-content">
+          <div class="bot-icon">🤖</div>
+          <div class="message-bubble typing">
+            <div class="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Quick Actions -->
+  @if (!hasMessages() || messages().length <= 1) {
+    <div class="quick-actions">
+      <p class="quick-label">Acciones rápidas:</p>
+      <div class="quick-buttons">
+        @for (action of quickActions; track action.label) {
+          <button class="quick-btn" (click)="useQuickAction(action.prompt)">
+            {{ action.label }}
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Selected Files Preview -->
+  @if (selectedFiles().length > 0) {
+    <div class="files-preview">
+      @for (file of selectedFiles(); track file.name; let i = $index) {
+        <div class="file-chip">
+          <span class="file-icon">
+            {{ file.type.startsWith('image/') ? '🖼️' : '📄' }}
+          </span>
+          <span class="file-name">{{ file.name }}</span>
+          <button class="remove-file" (click)="removeFile(i)">×</button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Input Area -->
+  <div class="input-area">
+    <input
+      type="file"
+      #fileInput
+      (change)="onFileSelected($event)"
+      accept="image/*,.pdf"
+      multiple
+      hidden
+    />
+    
+    <button 
+      class="attach-btn" 
+      (click)="triggerFileInput()"
+      title="Adjuntar imagen o PDF"
+    >
+      📎
+    </button>
+
+    <textarea
+      class="message-input"
+      [ngModel]="inputMessage()"
+      (ngModelChange)="inputMessage.set($event)"
+      (keydown)="onKeyDown($event)"
+      placeholder="Escribe tu mensaje..."
+      rows="1"
+      [disabled]="isLoading()"
+    ></textarea>
+
+    <button 
+      class="send-btn" 
+      (click)="sendMessage()"
+      [disabled]="isLoading() || (!inputMessage().trim() && selectedFiles().length === 0)"
+    >
+      @if (isLoading()) {
+        ⏳
+      } @else {
+        ➤
+      }
+    </button>
+  </div>
+</div>

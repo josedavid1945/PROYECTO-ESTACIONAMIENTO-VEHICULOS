@@ -12,19 +12,19 @@
         <label class="label">
           <span class="label-text text-slate-700 font-semibold text-base">Nombre Completo <span class="text-red-500">*</span></span>
         </label>
-        <input type="text" [(ngModel)]="formData().nombreCliente" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: Juan Pérez"/>
+        <input type="text" [value]="formData().nombreCliente" (input)="onNombreClienteChange($event)" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: Juan Pérez"/>
       </div>
       <div class="form-control">
         <label class="label">
           <span class="label-text text-slate-700 font-semibold text-base">Correo Electrónico <span class="text-red-500">*</span></span>
         </label>
-        <input type="email" [(ngModel)]="formData().emailCliente" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: juan@email.com"/>
+        <input type="email" [value]="formData().emailCliente" (input)="onEmailClienteChange($event)" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: juan@email.com"/>
       </div>
       <div class="form-control md:col-span-2">
         <label class="label">
           <span class="label-text text-slate-700 font-semibold text-base">Teléfono <span class="text-red-500">*</span></span>
         </label>
-        <input type="text" [(ngModel)]="formData().telefonoCliente" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: 099123456"/>
+        <input type="text" [value]="formData().telefonoCliente" (input)="onTelefonoClienteChange($event)" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: 099123456"/>
       </div>
     </div>
   </div>
@@ -44,13 +44,13 @@
         <label class="label">
           <span class="label-text text-slate-700 font-semibold text-base">Placa <span class="text-red-500">*</span></span>
         </label>
-        <input type="text" [(ngModel)]="formData().placa" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: ABC-1234"/>
+        <input type="text" [value]="formData().placa" (input)="onPlacaChange($event)" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: ABC-1234"/>
       </div>
       <div class="form-control">
         <label class="label">
           <span class="label-text text-slate-700 font-semibold text-base">Tipo de Vehículo <span class="text-red-500">*</span></span>
         </label>
-        <select [(ngModel)]="formData().tipoVehiculoId" class="select select-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+        <select [value]="formData().tipoVehiculoId" (change)="onTipoVehiculoChange($event)" class="select select-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
           <option value="" disabled selected>Seleccione tipo</option>
           @for (tipo of tiposVehiculo(); track tipo.id) {
             <option [value]="tipo.id">{{ tipo.categoria }}</option>
@@ -61,13 +61,13 @@
         <label class="label">
           <span class="label-text text-slate-700 font-semibold text-base">Marca <span class="text-red-500">*</span></span>
         </label>
-        <input type="text" [(ngModel)]="formData().marca" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: Toyota"/>
+        <input type="text" [value]="formData().marca" (input)="onMarcaChange($event)" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: Toyota"/>
       </div>
       <div class="form-control">
         <label class="label">
           <span class="label-text text-slate-700 font-semibold text-base">Modelo <span class="text-red-500">*</span></span>
         </label>
-        <input type="text" [(ngModel)]="formData().modelo" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: Corolla 2020"/>
+        <input type="text" [value]="formData().modelo" (input)="onModeloChange($event)" class="input input-bordered bg-white border-slate-300 text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="Ej: Corolla 2020"/>
       </div>
     </div>
   </div>

@@ -28,5 +28,9 @@ export const alquilerRoute: Routes =
         {
             path: 'herramientas',
             loadChildren: () => import('./pages/Herramientas/config-registers/config.routes').then(m => m.HerramientasRoutes),
+        },
+        {
+            path: 'b2b-assistant',
+            loadComponent: () => import('./pages/b2b-assistant/b2b-assistant.page').then(m => m.B2bAssistantPage),
         }
     ]

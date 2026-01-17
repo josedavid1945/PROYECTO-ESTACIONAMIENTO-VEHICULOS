@@ -16,34 +16,14 @@ import "reflect-metadata";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
-  /**
-   * ELIMINADO: Prefijo Global
-   * Las rutas ahora son directas sin /api
-   * Ejemplo: /clientes (en lugar de /api/clientes)
-   */
-  // app.setGlobalPrefix('api'); // REMOVIDO
-  
-  /**
-   * CONFIGURACIÓN 1: CORS (Cross-Origin Resource Sharing)
-   * Configurado para permitir peticiones desde:
-   * - Frontend (http://localhost:8080)
-   * - WebSocket Server (localhost:8081)
-   * - Navegadores en general
-   * 
-   * Esto es CRÍTICO para que el WebSocket Server en Go pueda
-   * consultar los endpoints del REST API
-   */
+
   app.enableCors({
     origin: true, // Permite cualquier origen (para desarrollo)
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
   
-  /**
-   * CONFIGURACIÓN 2: Validación Global de DTOs
-   * Valida automáticamente todos los datos de entrada usando
-   * los decoradores de class-validator en los DTOs
-   */
+
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,              // Elimina propiedades no definidas en el DTO
     forbidNonWhitelisted: true,   // Lanza error si hay propiedades extras
@@ -74,11 +54,7 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
   
-  console.log(`🚀 Aplicación ejecutándose en: http://localhost:${port}`);
-  console.log(`📚 Documentación Swagger en: http://localhost:${port}/api`);
-  console.log(`👥 Endpoint de clientes: http://localhost:${port}/clientes`);
-  console.log(`🎫 Endpoint de tickets: http://localhost:${port}/tickets`);
-  console.log(`💳 Endpoint de transacciones: http://localhost:${port}/transacciones`);
+
 }
 
 bootstrap();

@@ -147,11 +147,86 @@ func (c *RestClient) getVehiculosActivos() (int, error) {
 	return activos, nil
 }
 
-// getDineroRecaudado obtiene el dinero recaudado (hoy y mes)
+// DetallePago representa un registro de pago del backend
+type DetallePago struct {
+	ID        string  `json:"id"`
+	Metodo    string  `json:"metodo"`
+	FechaPago string  `json:"fechaPago"`
+	PagoTotal float64 `json:"pagoTotal"`
+	TicketID  string  `json:"ticketId"`
+	PagoID    string  `json:"pagoId"`
+}
+
+// getDineroRecaudado obtiene el dinero recaudado (hoy y mes) desde el endpoint detalle-pago
 func (c *RestClient) getDineroRecaudado() (float64, float64) {
-	// TODO: Si tienes endpoint de transacciones/pagos, usar aquí
-	// Por ahora retornar 0
-	return 0.0, 0.0
+	url := fmt.Sprintf("%s/detalle-pago", c.baseURL)
+
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		fmt.Printf("Error obteniendo detalles de pago: %v\n", err)
+		return 0.0, 0.0
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("Status code inesperado al obtener pagos: %d\n", resp.StatusCode)
+		return 0.0, 0.0
+	}
+
+	var detallesPago []DetallePago
+	if err := json.NewDecoder(resp.Body).Decode(&detallesPago); err != nil {
+		fmt.Printf("Error decodificando detalles de pago: %v\n", err)
+		return 0.0, 0.0
+	}
+
+	// Obtener fecha actual
+	now := time.Now()
+	inicioHoy := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	inicioMes := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+
+	var dineroHoy, dineroMes float64
+
+	for _, detalle := range detallesPago {
+		// Parsear la fecha del pago (puede venir en varios formatos)
+		fechaPago, err := parseFechaPago(detalle.FechaPago)
+		if err != nil {
+			fmt.Printf("Error parseando fecha de pago '%s': %v\n", detalle.FechaPago, err)
+			continue
+		}
+
+		// Sumar al total del mes si la fecha es >= inicio del mes
+		if !fechaPago.Before(inicioMes) {
+			dineroMes += detalle.PagoTotal
+
+			// Sumar al total de hoy si la fecha es >= inicio del día
+			if !fechaPago.Before(inicioHoy) {
+				dineroHoy += detalle.PagoTotal
+			}
+		}
+	}
+
+	return dineroHoy, dineroMes
+}
+
+// parseFechaPago intenta parsear la fecha en varios formatos comunes
+func parseFechaPago(fechaStr string) (time.Time, error) {
+	// Formatos comunes que puede devolver el backend
+	formatos := []string{
+		time.RFC3339,                    // "2006-01-02T15:04:05Z07:00"
+		"2006-01-02T15:04:05.000Z",      // ISO con milisegundos
+		"2006-01-02T15:04:05Z",          // ISO sin zona horaria
+		"2006-01-02T15:04:05",           // Sin zona horaria
+		"2006-01-02 15:04:05",           // Formato PostgreSQL
+		"2006-01-02",                    // Solo fecha
+	}
+
+	for _, formato := range formatos {
+		if fecha, err := time.Parse(formato, fechaStr); err == nil {
+			return fecha, nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("formato de fecha no reconocido: %s", fechaStr)
 }
 
 // GetEspaciosPorSeccion obtiene espacios agrupados por sección desde el REST API
