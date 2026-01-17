@@ -55,8 +55,7 @@ export class HomePage {
     effect(() => {
       const data = this.dashboardData();
       if (data) {
-        // Mostrar notificación o manejar el cambio de datos aquí
-        console.log('Dashboard actualizado:', data);
+        console.log('📊 Dashboard actualizado:', data);
       }
     });
 
