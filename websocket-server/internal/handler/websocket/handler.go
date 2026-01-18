@@ -4,17 +4,44 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/gorilla/websocket"
 	"github.com/josedavid1945/estacionamiento-websocket/internal/service/dashboard"
 )
 
+// getAllowedOrigins devuelve los orígenes permitidos desde variable de entorno
+func getAllowedOrigins() []string {
+	origins := os.Getenv("ALLOWED_ORIGINS")
+	if origins == "" {
+		// Orígenes por defecto para desarrollo
+		return []string{
+			"http://localhost:4200",
+			"http://localhost:3000",
+			"http://127.0.0.1:4200",
+		}
+	}
+	return strings.Split(origins, ",")
+}
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
-		// En producción, verificar el origen adecuadamente
-		return true
+		origin := r.Header.Get("Origin")
+		// En desarrollo, si no hay origen, permitir (para testing)
+		if origin == "" {
+			return true
+		}
+		// Verificar contra orígenes permitidos
+		for _, allowed := range getAllowedOrigins() {
+			if strings.TrimSpace(allowed) == origin {
+				return true
+			}
+		}
+		log.Printf("Origen WebSocket rechazado: %s", origin)
+		return false
 	},
 }
 

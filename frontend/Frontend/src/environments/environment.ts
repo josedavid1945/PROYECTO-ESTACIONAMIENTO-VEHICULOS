@@ -11,6 +11,9 @@ export const environment = {
   // Backend REST API (NestJS)
   apiUrl: 'http://localhost:3000',
   
+  // Auth Service (NestJS) - Microservicio de autenticación
+  authUrl: 'http://localhost:3002',
+  
   // GraphQL Service (Python/FastAPI)
   graphqlUrl: 'http://127.0.0.1:8000/graphql',
   
@@ -24,6 +27,8 @@ export const environment = {
   reconnectAttempts: 5,
   reconnectDelay: 3000, // ms
   websocketUpdateInterval: 5000, // ms
+  websocketReconnectAttempts: 5,
+  websocketReconnectDelay: 3000, // ms
 };
 
 /**

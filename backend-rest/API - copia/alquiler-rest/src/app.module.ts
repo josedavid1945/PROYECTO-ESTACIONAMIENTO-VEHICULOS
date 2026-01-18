@@ -5,7 +5,7 @@ import { ParkingModule } from './modules/parking/parking.module';
 import { ClientsModule } from './modules/clients/clients.module';
 import { FinesModule } from './modules/fines/fines.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TransactionsModule } from './modules/transactions/transactions.module';
 import { OperationsModule } from './modules/operations/operations.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
@@ -16,27 +16,22 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      
-      // ========================================
-      // ☁️ SUPABASE - EN USO
-      // ========================================
-      url: 'postgresql://postgres.jqqruzcbtcqcmzkogxqo:l6GKZ7G0RWdWEIOo@aws-1-us-east-1.pooler.supabase.com:5432/postgres',
-      
-      // ========================================
-      // 🐳 DOCKER LOCAL - Comentado (problema de autenticación)
-      // ========================================
-      // url: 'postgresql://admin:admin123@localhost:5432/estacionamiento',
-      // host: 'localhost',
-      // port: 5432,
-      // username: 'admin',
-      // password: 'admin123',
-      // database: 'estacionamiento',
-      
-      autoLoadEntities: true,
-      synchronize: true,
-      logging: true,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        host: configService.get<string>('DB_HOST'),
+        port: configService.get<number>('DB_PORT', 5432),
+        username: configService.get<string>('DB_USERNAME'),
+        password: configService.get<string>('DB_PASSWORD'),
+        database: configService.get<string>('DB_DATABASE'),
+        autoLoadEntities: true,
+        // DESACTIVADO - La BD ya tiene su schema definido, no modificar automáticamente
+        synchronize: false,
+        logging: configService.get<string>('NODE_ENV') === 'development',
+        ssl: configService.get<string>('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
+      }),
     }),
     ParkingModule,
     ClientsModule, 

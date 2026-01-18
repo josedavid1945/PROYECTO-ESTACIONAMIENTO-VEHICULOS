@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('cliente')
@@ -18,4 +18,12 @@ export class Cliente {
   @ApiProperty({ description: 'Teléfono del cliente', example: '+1234567890' })
   @Column()
   telefono: string;
+
+  @ApiProperty({ description: 'ID del usuario en Auth Service (para vincular cuenta)', required: false })
+  @Column({ type: 'uuid', nullable: true, name: 'auth_user_id' })
+  authUserId: string;
+
+  @ApiProperty({ description: 'Fecha de vinculación con cuenta de usuario', required: false })
+  @Column({ type: 'timestamp', nullable: true, name: 'linked_at' })
+  linkedAt: Date;
 }

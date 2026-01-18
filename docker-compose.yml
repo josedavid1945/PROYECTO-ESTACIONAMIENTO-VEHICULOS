@@ -2,6 +2,38 @@ version: '3.8'
 
 services:
   # ===========================================
+  # Auth Service - Microservicio de Autenticación
+  # ===========================================
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: parking-auth-service
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - PORT=3002
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE:-postgres}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_EXPIRATION=${JWT_ACCESS_EXPIRATION:-15m}
+      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION:-7d}
+      - RATE_LIMIT_TTL=${RATE_LIMIT_TTL:-60}
+      - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-10}
+    networks:
+      - parking-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===========================================
   # Servicio B2B - Webhooks & MCP Chatbot
   # ===========================================
   b2b-webhooks:
@@ -44,7 +76,15 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3000
-      - DATABASE_URL=${DATABASE_URL}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE:-postgres}
+      - DB_SSL=${DB_SSL:-false}
+      - AUTH_SERVICE_URL=http://auth-service:3002
+    depends_on:
+      - auth-service
     networks:
       - parking-network
     restart: unless-stopped
@@ -67,6 +107,10 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - PYTHONUNBUFFERED=1
+      - CORS_ORIGINS=http://localhost:4200,http://frontend:80,http://parking-frontend:80
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DEBUG=false
     networks:
       - parking-network
     restart: unless-stopped
@@ -89,6 +133,7 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - REST_API_URL=http://backend-rest:3000
+      - ALLOWED_ORIGINS=http://localhost:4200,http://frontend:80,http://parking-frontend:80
     depends_on:
       - backend-rest
     networks:

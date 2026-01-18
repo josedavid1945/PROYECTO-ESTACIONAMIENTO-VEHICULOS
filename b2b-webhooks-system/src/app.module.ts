@@ -22,15 +22,33 @@ import { SharedModule } from './shared/shared.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        url: configService.get('DATABASE_URL'),
-        autoLoadEntities: true,
-        synchronize: true, // Solo desarrollo
-        ssl: {
-          rejectUnauthorized: false,
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get('DATABASE_URL');
+        const nodeEnv = configService.get('NODE_ENV', 'development');
+        // Parse URL manually to handle usernames with dots (like postgres.xxx)
+        const url = new URL(databaseUrl);
+        const config = {
+          type: 'postgres' as const,
+          host: url.hostname,
+          port: parseInt(url.port) || 5432,
+          username: decodeURIComponent(url.username),
+          password: decodeURIComponent(url.password),
+          database: url.pathname.replace('/', ''),
+          autoLoadEntities: true,
+          // Solo sincronizar en desarrollo - NUNCA en producción
+          synchronize: nodeEnv === 'development',
+          ssl: {
+            rejectUnauthorized: false,
+          },
+        };
+        console.log('🔧 Database config:', {
+          host: config.host,
+          port: config.port,
+          username: config.username,
+          database: config.database,
+        });
+        return config;
+      },
     }),
 
     // Tareas programadas

@@ -22,18 +22,18 @@ export class Vehicle {
   modelo: string;
 
   @ApiProperty({ description: 'ID del cliente propietario', example: 'cli-001' })
-  @Column({ type: 'uuid', nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   clienteId: string;
 
   @ApiProperty({ description: 'ID del tipo de vehículo', example: 'tipo-veh-001', required: false })
-  @Column({ type: 'uuid', nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   tipoVehiculoId: string;
 
-  @ManyToOne(() => TipoVehiculo, { nullable: true })
+  @ManyToOne(() => TipoVehiculo, { nullable: true, createForeignKeyConstraints: false })
   @JoinColumn({ name: 'tipoVehiculoId' })
   tipoVehiculo: TipoVehiculo;
 
-  @ManyToOne(() => Cliente)
+  @ManyToOne(() => Cliente, { createForeignKeyConstraints: false })
   @JoinColumn({ name: 'clienteId' })
   cliente: Cliente;
 }

@@ -1,5 +1,5 @@
-import { IsUUID, IsNotEmpty, IsString, IsNumber } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsUUID, IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class DesocuparEspacioDto {
   @ApiProperty({ description: 'ID del ticket activo', example: 'uuid-ticket' })
@@ -12,13 +12,19 @@ export class DesocuparEspacioDto {
   @IsNotEmpty()
   metodoPago: string;
 
-  @ApiProperty({ description: 'Monto del pago', example: 15.50 })
+  @ApiPropertyOptional({ 
+    description: 'Monto del pago (opcional - se calcula automáticamente si no se proporciona)', 
+    example: 15.50 
+  })
   @IsNumber()
-  @IsNotEmpty()
-  montoPago: number;
+  @IsOptional()
+  montoPago?: number;
 
-  @ApiProperty({ description: 'ID del tipo de tarifa', example: 'uuid-tipo-tarifa' })
+  @ApiPropertyOptional({ 
+    description: 'ID del tipo de tarifa (opcional - se obtiene del vehículo si no se proporciona)', 
+    example: 'uuid-tipo-tarifa' 
+  })
   @IsUUID()
-  @IsNotEmpty()
-  tipoTarifaId: string;
+  @IsOptional()
+  tipoTarifaId?: string;
 }

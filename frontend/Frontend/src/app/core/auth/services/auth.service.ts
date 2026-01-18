@@ -19,7 +19,7 @@ import {
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:3001/auth';
+  private readonly API_URL = 'http://localhost:3002/auth';
   
   // Signals para estado reactivo
   private _currentUser = signal<UserProfile | null>(null);

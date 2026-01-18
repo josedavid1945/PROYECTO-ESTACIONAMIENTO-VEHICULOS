@@ -1,5 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { Vehicle } from '../../clients/entities/vehiculo.entity';
+import { Espacio } from '../../parking/entities/espacio.entity';
+import { DetallePago } from '../../transactions/entities/detallePago.entity';
 
 @Entity('ticket')
 export class Ticket {
@@ -16,14 +19,35 @@ export class Ticket {
   fechaSalida: Date;
 
   @ApiProperty({ description: 'ID del vehículo asociado', example: 'veh-001' })
-  @Column()
+  @Column({ type: 'varchar' })
   vehiculoId: string;
 
   @ApiProperty({ description: 'ID del espacio asignado', example: 'esp-001' })
-  @Column()
+  @Column({ type: 'varchar' })
   espacioId: string;
 
   @ApiProperty({ description: 'ID del detalle de pago (opcional)', example: 'det-pago-001', required: false })
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   detallePagoId: string;
+
+  @ApiProperty({ description: 'Monto calculado del estacionamiento', required: false })
+  @Column({ type: 'float', nullable: true, name: 'monto_calculado' })
+  montoCalculado: number;
+
+  @ApiProperty({ description: 'Horas de estacionamiento', required: false })
+  @Column({ type: 'float', nullable: true, name: 'horas_estacionamiento' })
+  horasEstacionamiento: number;
+
+  // Relaciones (sin crear FKs automáticas para evitar conflictos con la BD existente)
+  @ManyToOne(() => Vehicle, { eager: false, createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'vehiculoId' })
+  vehiculo: Vehicle;
+
+  @ManyToOne(() => Espacio, { eager: false, createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'espacioId' })
+  espacio: Espacio;
+
+  @OneToOne(() => DetallePago, { eager: false, nullable: true, createForeignKeyConstraints: false })
+  @JoinColumn({ name: 'detallePagoId' })
+  detallePago: DetallePago;
 }
