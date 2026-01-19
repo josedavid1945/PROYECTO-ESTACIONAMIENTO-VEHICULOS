@@ -25,6 +25,7 @@ import { SharedModule } from './shared/shared.module';
       useFactory: (configService: ConfigService) => {
         const databaseUrl = configService.get('DATABASE_URL');
         const nodeEnv = configService.get('NODE_ENV', 'development');
+        const useSSL = configService.get('DB_SSL', 'false') === 'true';
         // Parse URL manually to handle usernames with dots (like postgres.xxx)
         const url = new URL(databaseUrl);
         const config = {
@@ -37,9 +38,7 @@ import { SharedModule } from './shared/shared.module';
           autoLoadEntities: true,
           // Solo sincronizar en desarrollo - NUNCA en producción
           synchronize: nodeEnv === 'development',
-          ssl: {
-            rejectUnauthorized: false,
-          },
+          ssl: useSSL ? { rejectUnauthorized: false } : false,
         };
         console.log('🔧 Database config:', {
           host: config.host,

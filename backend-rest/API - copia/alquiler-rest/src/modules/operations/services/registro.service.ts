@@ -5,6 +5,7 @@ import { Cliente } from '../../clients/entities/cliente.entity';
 import { Vehicle } from '../../clients/entities/vehiculo.entity';
 import { Ticket } from '../entities/ticket.entity';
 import { Espacio } from '../../parking/entities/espacio.entity';
+import { Seccion } from '../../parking/entities/seccion.entity';
 import { Pago } from '../../transactions/entities/pago.entity';
 import { DetallePago } from '../../transactions/entities/detallePago.entity';
 import { TipoTarifa } from '../../config/entities/tipoTarifa.entity';
@@ -24,6 +25,8 @@ export class RegistroService {
     private readonly ticketRepository: Repository<Ticket>,
     @InjectRepository(Espacio)
     private readonly espacioRepository: Repository<Espacio>,
+    @InjectRepository(Seccion)
+    private readonly seccionRepository: Repository<Seccion>,
     @InjectRepository(Pago)
     private readonly pagoRepository: Repository<Pago>,
     @InjectRepository(DetallePago)
@@ -319,44 +322,110 @@ export class RegistroService {
   /**
    * Obtener vehículos con espacios ocupados (tickets activos)
    * Incluye cálculo de tiempo y monto estimado en tiempo real
+   * NOTA: Usa consultas separadas para evitar problemas de tipos uuid/varchar en PostgreSQL
    */
   async getVehiculosOcupados() {
-    const ticketsActivos = await this.ticketRepository.find({
-      where: { fechaSalida: IsNull() },
-      relations: ['vehiculo', 'vehiculo.tipoVehiculo', 'vehiculo.tipoVehiculo.tipotarifa', 'vehiculo.cliente', 'espacio', 'espacio.seccion'],
-    });
+    console.log('[getVehiculosOcupados] INICIO');
+    
+    try {
+      // Primero obtener solo los tickets sin relaciones para evitar errores de tipos
+      const ticketsActivos = await this.ticketRepository.find({
+        where: { fechaSalida: IsNull() },
+      });
 
-    return ticketsActivos.map(ticket => {
-      // Calcular tiempo actual de estacionamiento
-      const ahora = new Date();
-      const tiempoMs = ahora.getTime() - ticket.fechaIngreso.getTime();
-      const horasActuales = tiempoMs / (1000 * 60 * 60);
-      
-      // Calcular monto estimado actual
-      let montoEstimado = 0;
-      const tarifa = ticket.vehiculo?.tipoVehiculo?.tipotarifa;
-      if (tarifa) {
-        if (horasActuales >= 8) {
-          const dias = Math.ceil(horasActuales / 24);
-          montoEstimado = dias * tarifa.precioDia;
-        } else {
-          const horasACobrar = Math.max(1, Math.ceil(horasActuales));
-          montoEstimado = horasACobrar * tarifa.precioHora;
-        }
+      console.log(`[getVehiculosOcupados] Tickets activos encontrados: ${ticketsActivos.length}`);
+
+      if (ticketsActivos.length === 0) {
+        return [];
       }
 
-      return {
-        ticket,
-        vehiculo: ticket.vehiculo,
-        espacio: ticket.espacio,
-        cliente: ticket.vehiculo?.cliente,
-        tiempoActual: {
-          horas: Math.floor(horasActuales),
-          minutos: Math.round((horasActuales % 1) * 60),
-          montoEstimado: Math.round(montoEstimado * 100) / 100,
+      // Obtener todos los vehículos y espacios de una sola vez
+      const vehiculoIds = ticketsActivos.map(t => t.vehiculoId).filter(id => id);
+      const espacioIds = ticketsActivos.map(t => t.espacioId).filter(id => id);
+
+      const vehiculos = vehiculoIds.length > 0 
+        ? await this.vehiculoRepository.find({ relations: ['cliente', 'tipoVehiculo', 'tipoVehiculo.tipotarifa'] })
+        : [];
+      
+      const espacios = espacioIds.length > 0 
+        ? await this.espacioRepository.find({ relations: ['seccion'] })
+        : [];
+
+      // Crear mapas para búsqueda rápida
+      const vehiculoMap = new Map(vehiculos.map(v => [v.id, v]));
+      const espacioMap = new Map(espacios.map(e => [e.id, e]));
+
+      // Mapear resultados
+      const resultado = ticketsActivos.map((ticket) => {
+        const vehiculo = vehiculoMap.get(ticket.vehiculoId);
+        const espacio = espacioMap.get(ticket.espacioId);
+        const tarifa = vehiculo?.tipoVehiculo?.tipotarifa;
+        const seccion = espacio?.seccion;
+        const cliente = vehiculo?.cliente;
+
+        const ahora = new Date();
+        const fechaIngreso = ticket.fechaIngreso ? new Date(ticket.fechaIngreso) : ahora;
+        const tiempoMs = ahora.getTime() - fechaIngreso.getTime();
+        const horasActuales = Math.max(0, tiempoMs / (1000 * 60 * 60));
+
+        // Calcular monto estimado
+        let montoEstimado = 0;
+        if (tarifa) {
+          if (horasActuales >= 8) {
+            const dias = Math.ceil(horasActuales / 24);
+            montoEstimado = dias * (tarifa.precioDia || 0);
+          } else {
+            const horasACobrar = Math.max(1, Math.ceil(horasActuales));
+            montoEstimado = horasACobrar * (tarifa.precioHora || 0);
+          }
         }
-      };
-    });
+
+        // Construir nombre del espacio
+        let espacioNumero = espacio?.numero?.toString() || 'N/A';
+        if (seccion?.letraSeccion) {
+          espacioNumero = `${seccion.letraSeccion}-${espacioNumero}`;
+        }
+
+        return {
+          ticket: {
+            id: ticket.id,
+            fechaIngreso: ticket.fechaIngreso,
+          },
+          vehiculo: vehiculo ? {
+            placa: vehiculo.placa || 'N/A',
+            marca: vehiculo.marca || 'N/A',
+            modelo: vehiculo.modelo || 'N/A',
+            tipoVehiculo: vehiculo.tipoVehiculo ? {
+              id: vehiculo.tipoVehiculo.id,
+              categoria: vehiculo.tipoVehiculo.categoria,
+              tipotarifa: tarifa ? {
+                id: tarifa.id,
+                tipoTarifa: tarifa.tipoTarifa,
+                precioHora: tarifa.precioHora,
+                precioDia: tarifa.precioDia,
+              } : null,
+            } : null,
+          } : null,
+          espacio: {
+            numero: espacioNumero,
+          },
+          cliente: cliente ? {
+            nombre: cliente.nombre || 'N/A',
+          } : null,
+          tiempoActual: {
+            horas: Math.floor(horasActuales),
+            minutos: Math.round((horasActuales % 1) * 60),
+            montoEstimado: Math.round(montoEstimado * 100) / 100,
+          }
+        };
+      });
+
+      console.log('[getVehiculosOcupados] FIN - Retornando', resultado.length, 'vehículos');
+      return resultado;
+    } catch (error) {
+      console.error('[getVehiculosOcupados] ERROR:', error);
+      throw error;
+    }
   }
 
   /**

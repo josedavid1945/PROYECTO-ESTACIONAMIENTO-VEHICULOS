@@ -1,44 +1,13 @@
 import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-interface Ticket {
-  id: string;
-  fechaIngreso: string;
-}
-
-interface Vehiculo {
-  placa: string;
-  marca: string;
-  modelo: string;
-}
-
-interface Espacio {
-  numero: string;
-}
-
-interface Cliente {
-  nombre: string;
-}
-
-interface VehiculoOcupado {
-  ticket: Ticket;
-  vehiculo: Vehiculo;
-  espacio: Espacio;
-  cliente: Cliente;
-}
+import { VehiculoOcupado } from '../../services/registro.service';
+import { TipoTarifa } from '../../services/herramientas.service';
 
 interface FormData {
   ticketId: string;
   metodoPago: string;
   montoPago: number;
   tipoTarifaId: string;
-}
-
-interface TipoTarifa {
-  id: string;
-  tipoTarifa: string;
-  precioHora: number;
-  precioDia: number;
 }
 
 @Component({

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Ticket } from './entities/ticket.entity';
 import { Espacio } from '../parking/entities/espacio.entity';
+import { Seccion } from '../parking/entities/seccion.entity';
 import { Cliente } from '../clients/entities/cliente.entity';
 import { Vehicle } from '../clients/entities/vehiculo.entity';
 import { Pago } from '../transactions/entities/pago.entity';
@@ -31,7 +32,8 @@ import { ConfigModule } from '../config/config.module';
   imports: [
     TypeOrmModule.forFeature([
       Ticket, 
-      Espacio, 
+      Espacio,
+      Seccion, 
       Cliente, 
       Vehicle, 
       Pago, 

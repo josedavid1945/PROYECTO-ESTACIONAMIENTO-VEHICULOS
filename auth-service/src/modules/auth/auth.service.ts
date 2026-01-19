@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { TokensService } from '../tokens/tokens.service';
+import { ClientLinkingService } from './client-linking.service';
 import { RegisterDto, LoginDto, LogoutDto, RefreshTokenDto } from './dto/auth.dto';
 import {
   AuthResponseDto,
@@ -23,10 +24,12 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly tokensService: TokensService,
+    private readonly clientLinkingService: ClientLinkingService,
   ) {}
 
   /**
    * Registrar nuevo usuario
+   * Incluye vinculación automática con cliente existente si se encuentra por email o placa
    */
   async register(
     registerDto: RegisterDto,
@@ -37,6 +40,17 @@ export class AuthService {
 
     // Crear usuario
     const user = await this.usersService.create(registerDto);
+
+    // Intentar vincular con cliente existente (async, no bloquea el registro)
+    const linkingResult = await this.clientLinkingService.tryLinkUserToClient(
+      user.id,
+      registerDto.email,
+      registerDto.vehiclePlate,
+    );
+
+    if (linkingResult.linked) {
+      this.logger.log(`Usuario ${user.id} vinculado con cliente ${linkingResult.clienteId}`);
+    }
 
     // Generar tokens
     const tokens = await this.tokensService.generateTokenPair(
@@ -52,6 +66,7 @@ export class AuthService {
       tokenType: 'Bearer',
       expiresIn: tokens.expiresIn,
       user: this.mapUserToProfile(user),
+      linkingInfo: linkingResult, // Información de vinculación
     };
   }
 

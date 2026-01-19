@@ -31,73 +31,14 @@ export class BusinessToolsService implements OnModuleInit {
   }
 
   private registerAllTools(): void {
-    // ============ HERRAMIENTAS DE CONSULTA ============
+    // ============ HERRAMIENTAS DE CONSULTA (ADMIN) ============
+    // NOTA: buscar_espacios está registrado en parking-tools.service.ts
 
-    // 1. Buscar espacios disponibles
-    this.mcpTools.registerTool({
-      name: 'buscar_espacios',
-      description: 'Busca espacios de estacionamiento disponibles. Puede filtrar por sección y tipo.',
-      parameters: {
-        type: 'object',
-        properties: {
-          seccion: {
-            type: 'string',
-            description: 'Sección del estacionamiento (A, B, C, etc.)',
-          },
-          soloDisponibles: {
-            type: 'boolean',
-            description: 'Si true, solo muestra espacios disponibles',
-          },
-          limite: {
-            type: 'number',
-            description: 'Número máximo de resultados',
-          },
-        },
-        required: [],
-      },
-      handler: async (params) => {
-        try {
-          const response = await fetch(`${this.parkingApiUrl}/espacios`);
-          let espacios = await response.json();
-
-          if (params.seccion) {
-            espacios = espacios.filter((e: any) => 
-              e.seccion?.nombre?.toLowerCase().includes(params.seccion.toLowerCase())
-            );
-          }
-
-          if (params.soloDisponibles) {
-            espacios = espacios.filter((e: any) => e.estado === true);
-          }
-
-          if (params.limite) {
-            espacios = espacios.slice(0, params.limite);
-          }
-
-          const disponibles = espacios.filter((e: any) => e.estado === true).length;
-          const ocupados = espacios.filter((e: any) => e.estado === false).length;
-
-          return {
-            total: espacios.length,
-            disponibles,
-            ocupados,
-            espacios: espacios.map((e: any) => ({
-              id: e.id,
-              numero: e.numero,
-              seccion: e.seccion?.nombre || 'Sin sección',
-              disponible: e.estado,
-            })),
-          };
-        } catch (error: any) {
-          return { error: `No se pudo conectar al sistema de estacionamiento: ${error.message}` };
-        }
-      },
-    });
-
-    // 2. Ver ticket/reserva
+    // 2. Ver ticket/reserva (ADMIN)
     this.mcpTools.registerTool({
       name: 'ver_ticket',
       description: 'Obtiene información detallada de un ticket de estacionamiento por su ID o placa del vehículo.',
+      allowedRoles: ['admin', 'operator'],
       parameters: {
         type: 'object',
         properties: {
@@ -142,12 +83,13 @@ export class BusinessToolsService implements OnModuleInit {
       },
     });
 
-    // ============ HERRAMIENTAS DE ACCIÓN ============
+    // ============ HERRAMIENTAS DE ACCIÓN (ADMIN) ============
 
-    // 3. Crear reserva
+    // 3. Crear reserva (ADMIN)
     this.mcpTools.registerTool({
       name: 'crear_reserva',
       description: 'Crea una nueva reserva de espacio de estacionamiento.',
+      allowedRoles: ['admin', 'operator'],
       parameters: {
         type: 'object',
         properties: {
@@ -217,10 +159,11 @@ export class BusinessToolsService implements OnModuleInit {
       },
     });
 
-    // 4. Procesar pago
+    // 4. Procesar pago (ADMIN)
     this.mcpTools.registerTool({
       name: 'procesar_pago',
       description: 'Procesa el pago de un ticket de estacionamiento.',
+      allowedRoles: ['admin', 'operator'],
       parameters: {
         type: 'object',
         properties: {
@@ -285,12 +228,13 @@ export class BusinessToolsService implements OnModuleInit {
       },
     });
 
-    // ============ HERRAMIENTAS DE REPORTE ============
+    // ============ HERRAMIENTAS DE REPORTE (ADMIN) ============
 
     // 5. Resumen de ventas/recaudación
     this.mcpTools.registerTool({
       name: 'resumen_recaudacion',
       description: 'Obtiene un resumen de la recaudación del estacionamiento.',
+      allowedRoles: ['admin', 'operator'],
       parameters: {
         type: 'object',
         properties: {
@@ -360,12 +304,13 @@ export class BusinessToolsService implements OnModuleInit {
       },
     });
 
-    // ============ HERRAMIENTAS B2B ============
+    // ============ HERRAMIENTAS B2B (SOLO ADMIN) ============
 
     // 6. Registrar partner
     this.mcpTools.registerTool({
       name: 'registrar_partner',
       description: 'Registra un nuevo partner B2B en el sistema.',
+      allowedRoles: ['admin'],
       parameters: {
         type: 'object',
         properties: {
@@ -413,10 +358,11 @@ export class BusinessToolsService implements OnModuleInit {
       },
     });
 
-    // 7. Listar partners
+    // 7. Listar partners (ADMIN)
     this.mcpTools.registerTool({
       name: 'listar_partners',
       description: 'Lista todos los partners B2B registrados.',
+      allowedRoles: ['admin'],
       parameters: {
         type: 'object',
         properties: {
@@ -452,10 +398,11 @@ export class BusinessToolsService implements OnModuleInit {
       },
     });
 
-    // 8. Simular evento para partner
+    // 8. Simular evento para partner (ADMIN)
     this.mcpTools.registerTool({
       name: 'simular_evento_partner',
       description: 'Simula un evento de estacionamiento y lo envía a un partner específico.',
+      allowedRoles: ['admin'],
       parameters: {
         type: 'object',
         properties: {
@@ -497,10 +444,11 @@ export class BusinessToolsService implements OnModuleInit {
       },
     });
 
-    // 9. Estadísticas de eventos
+    // 9. Estadísticas de eventos (ADMIN)
     this.mcpTools.registerTool({
       name: 'estadisticas_eventos',
       description: 'Obtiene estadísticas de los eventos/webhooks del sistema.',
+      allowedRoles: ['admin'],
       parameters: {
         type: 'object',
         properties: {
@@ -524,10 +472,11 @@ export class BusinessToolsService implements OnModuleInit {
       },
     });
 
-    // 10. Diagnosticar webhook fallido
+    // 10. Diagnosticar webhook fallido (ADMIN)
     this.mcpTools.registerTool({
       name: 'diagnosticar_webhook',
       description: 'Analiza por qué falló un webhook y sugiere soluciones.',
+      allowedRoles: ['admin'],
       parameters: {
         type: 'object',
         properties: {

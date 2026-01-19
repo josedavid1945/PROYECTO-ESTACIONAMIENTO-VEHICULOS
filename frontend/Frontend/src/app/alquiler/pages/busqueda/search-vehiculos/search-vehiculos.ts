@@ -24,40 +24,19 @@ export class SearchVehiculos implements OnInit {
     const query = this.searchQuery().toLowerCase().trim();
     const vehiculos = this.allVehiculos();
     
-    console.log('🔍 FILTRADO DE VEHÍCULOS:');
-    console.log('Query actual:', query);
-    console.log('Total vehículos cargados:', vehiculos.length);
-    
     if (!query) {
-      console.log('✅ Sin query, mostrando todos los vehículos');
       return vehiculos;
     }
     
-    const filtered = vehiculos.filter(vehiculo => {
+    return vehiculos.filter(vehiculo => {
       const placaMatch = vehiculo.placa.toLowerCase().includes(query);
       const marcaMatch = vehiculo.marca.toLowerCase().includes(query);
       const modeloMatch = vehiculo.modelo.toLowerCase().includes(query);
       const clienteMatch = vehiculo.cliente.nombre.toLowerCase().includes(query);
       const categoriaMatch = vehiculo.tipoVehiculo.categoria.toLowerCase().includes(query);
       
-      const match = placaMatch || marcaMatch || modeloMatch || clienteMatch || categoriaMatch;
-      
-      if (match) {
-        console.log('✅ Match encontrado:', {
-          placa: vehiculo.placa,
-          placaMatch,
-          marcaMatch,
-          modeloMatch,
-          clienteMatch,
-          categoriaMatch
-        });
-      }
-      
-      return match;
+      return placaMatch || marcaMatch || modeloMatch || clienteMatch || categoriaMatch;
     });
-    
-    console.log('📊 Resultados filtrados:', filtered.length);
-    return filtered;
   });
 
   ngOnInit() {

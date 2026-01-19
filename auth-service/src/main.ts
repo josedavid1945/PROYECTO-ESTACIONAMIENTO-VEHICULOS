@@ -90,7 +90,7 @@ Este servicio maneja toda la autenticación del sistema de estacionamiento.
     },
   });
 
-  const port = process.env.PORT || 3001;
+  const port = process.env.PORT || 3002;
   await app.listen(port);
 
   console.log(`

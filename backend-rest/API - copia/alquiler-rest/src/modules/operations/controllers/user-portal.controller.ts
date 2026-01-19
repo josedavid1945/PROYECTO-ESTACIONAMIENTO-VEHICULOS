@@ -93,7 +93,17 @@ export class UserPortalController {
       };
     }
 
-    return this.userPortalService.vincularCuentaConCliente(authUserId, vincularDto.email);
+    // Si viene clienteId, vincular directamente por ID
+    // Si viene email, vincular por email
+    if (vincularDto.clienteId) {
+      return this.userPortalService.vincularCuentaConCliente(authUserId, vincularDto.clienteId, true);
+    } else if (vincularDto.email) {
+      return this.userPortalService.vincularCuentaConCliente(authUserId, vincularDto.email, false);
+    } else {
+      return {
+        error: 'Debes proporcionar email o clienteId para vincular tu cuenta.'
+      };
+    }
   }
 
   /**

@@ -301,17 +301,17 @@ export class Registro implements OnInit {
     
     if (!vehiculo) return;
     
-    // Extraer tipo de tarifa
+    // Extraer tipo de tarifa del vehículo
     const tipoTarifaId = vehiculo?.vehiculo?.tipoVehiculo?.tipotarifa?.id || '';
     
-    // Calcular monto sugerido basado en tiempo de estadía
-    const montoSugerido = this.calcularMontoSugerido(vehiculo);
+    // Usar el monto estimado calculado por el backend
+    const montoEstimado = vehiculo.tiempoActual?.montoEstimado || 0;
     
     this.desocuparEspacio.set({ 
       ...form, 
       ticketId: ticketId,
       tipoTarifaId: tipoTarifaId,
-      montoPago: montoSugerido // Monto sugerido automático (editable por admin)
+      montoPago: montoEstimado // Monto calculado por el backend (editable por admin)
     });
   }
 

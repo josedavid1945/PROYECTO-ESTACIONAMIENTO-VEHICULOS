@@ -23,11 +23,41 @@ export const alquilerRoute: Routes =
         },
         {
             path: 'herramientas',
-            component: Herramientas,
-        },
-        {
-            path: 'herramientas',
-            loadChildren: () => import('./pages/Herramientas/config-registers/config.routes').then(m => m.HerramientasRoutes),
+            children: [
+                {
+                    path: '',
+                    component: Herramientas,
+                },
+                {
+                    path: 'config',
+                    children: [
+                        {
+                            path: 'tarifa',
+                            loadComponent: () => import('./pages/Herramientas/config-registers/tarifa/tarifa').then(m => m.TarifaComponent)
+                        },
+                        {
+                            path: 'registrar-tarifa',
+                            loadComponent: () => import('./pages/Herramientas/config-registers/tarifa/register-tarifa/register-tarifa').then(m => m.RegisterTarifaComponent)
+                        },
+                        {
+                            path: 'multas',
+                            loadComponent: () => import('./pages/Herramientas/config-registers/tipo-multa/tipo-multa').then(m => m.TipoMulta)
+                        },
+                        {
+                            path: 'registrar-multa',
+                            loadComponent: () => import('./pages/Herramientas/config-registers/tipo-multa/register-multa/register-multa').then(m => m.RegisterMulta)
+                        },
+                        {
+                            path: 'tipos-vehiculo',
+                            loadComponent: () => import('./pages/Herramientas/config-registers/tipo-vehiculo/tipo-vehiculo').then(m => m.TipoVehiculo)
+                        },
+                        {
+                            path: 'registrar-tipoVehiculo',
+                            loadComponent: () => import('./pages/Herramientas/config-registers/tipo-vehiculo/register-tipoVehiculo/register-tipoVehiculo').then(m => m.RegisterTipoVehiculo)
+                        }
+                    ]
+                }
+            ]
         },
         {
             path: 'b2b-assistant',

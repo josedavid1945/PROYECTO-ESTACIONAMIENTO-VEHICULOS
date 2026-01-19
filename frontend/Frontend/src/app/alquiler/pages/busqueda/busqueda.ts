@@ -20,10 +20,10 @@ export class Busqueda {
   onSelectedOptionChange(option: string) {
     this.selectedOption.set(option);
     if (option) {
-      this.router.navigate([`/estacionamiento/busqueda/${option}`]);
+      this.router.navigate([`/admin/estacionamiento/busqueda/${option}`]);
     } else {
       // Si se selecciona "todos", volver a la vista por defecto
-      this.router.navigate(['/estacionamiento/busqueda']);
+      this.router.navigate(['/admin/estacionamiento/busqueda']);
     }
   }
 }

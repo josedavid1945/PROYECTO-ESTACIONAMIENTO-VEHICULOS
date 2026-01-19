@@ -15,8 +15,8 @@ RUN apk add --no-cache \
 # Copiar archivos de dependencias
 COPY package*.json ./
 
-# Instalar dependencias
-RUN npm ci --only=production && npm cache clean --force
+# Instalar TODAS las dependencias (incluyendo dev para build)
+RUN npm ci
 
 # Copiar código fuente
 COPY . .
@@ -49,14 +49,14 @@ USER nestjs
 
 # Variables de entorno
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=3002
 
 # Exponer puerto
-EXPOSE 3001
+EXPOSE 3002
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --spider -q http://localhost:3001/health || exit 1
+    CMD wget --spider -q http://localhost:3002/health || exit 1
 
 # Comando de inicio
 CMD ["node", "dist/main.js"]

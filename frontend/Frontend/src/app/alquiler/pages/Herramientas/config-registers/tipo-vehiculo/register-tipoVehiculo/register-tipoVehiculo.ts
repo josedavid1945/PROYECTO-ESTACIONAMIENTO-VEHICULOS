@@ -69,7 +69,7 @@ export class RegisterTipoVehiculo implements OnInit {
         this.success.set(true);
         this.tipoVehiculoForm.reset();
         setTimeout(() => {
-          this.router.navigate(['/estacionamiento/herramientas/config/tipos-vehiculo']);
+          this.router.navigate(['/admin/estacionamiento/herramientas/config/tipos-vehiculo']);
         }, 1500);
       },
       error: (err) => {

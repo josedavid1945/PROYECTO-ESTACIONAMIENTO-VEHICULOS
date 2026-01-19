@@ -45,16 +45,32 @@ export interface VehiculoOcupado {
   ticket: {
     id: string;
     fechaIngreso: string;
-    vehiculoId: string;
-    espacioId: string;
   };
-  vehiculo: Vehiculo;
-  espacio: EspacioDisponible;
+  vehiculo: {
+    placa: string;
+    marca: string;
+    modelo: string;
+    tipoVehiculo?: {
+      id: string;
+      categoria: string;
+      tipotarifa?: {
+        id: string;
+        tipoTarifa: string;
+        precioHora: number;
+        precioDia: number;
+      } | null;
+    } | null;
+  } | null;
+  espacio: {
+    numero: string;
+  };
   cliente: {
-    id: string;
     nombre: string;
-    email: string;
-    telefono: string;
+  } | null;
+  tiempoActual: {
+    horas: number;
+    minutos: number;
+    montoEstimado: number;
   };
 }
 

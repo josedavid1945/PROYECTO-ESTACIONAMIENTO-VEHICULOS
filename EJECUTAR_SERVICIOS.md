@@ -62,7 +62,42 @@ npm run start:dev
 
 ---
 
-## 🔍 3. GraphQL Service (Python/FastAPI)
+## � 3. Auth Service (NestJS)
+
+### Directorio
+```bash
+cd auth-service
+```
+
+### Instalación de dependencias (primera vez)
+```bash
+npm install
+```
+
+### Configuración
+Asegúrate de que el archivo `.env` exista con:
+```env
+PORT=3002
+DATABASE_URL=postgresql://user:pass@host:5432/db
+JWT_SECRET=tu_clave_secreta_muy_larga_y_segura
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+BACKEND_REST_URL=http://localhost:3000
+```
+
+### Ejecución
+```bash
+npm run start:dev
+```
+
+### Verificar
+- **URL**: http://localhost:3002
+- **Swagger**: http://localhost:3002/api
+- **Health**: http://localhost:3002/auth/health
+
+---
+
+## 🔍 4. GraphQL Service (Python/FastAPI)
 
 ### Directorio
 ```bash
@@ -95,7 +130,7 @@ python app.py
 
 ---
 
-## 🔌 4. WebSocket Server (Go)
+## 🔌 5. WebSocket Server (Go)
 
 ### Directorio
 ```bash
@@ -129,7 +164,7 @@ go run cmd/server/main.go
 
 ---
 
-## 🌐 5. Frontend (Angular)
+## 🌐 6. Frontend (Angular)
 
 ### Directorio
 ```bash
@@ -151,7 +186,7 @@ npm start
 
 ---
 
-## 🤖 6. B2B Webhooks & MCP Chat (NestJS)
+## 🤖 7. B2B Webhooks & MCP Chat (NestJS)
 
 ### Directorio
 ```bash
@@ -192,10 +227,11 @@ Para ejecutar el proyecto completo, sigue este orden:
 
 1. **Base de Datos PostgreSQL** (Docker o local)
 2. **Backend REST API** (NestJS) - Terminal 1
-3. **GraphQL Service** (Python) - Terminal 2
-4. **WebSocket Server** (Go) - Terminal 3
-5. **B2B Webhooks Service** (NestJS) - Terminal 4
-6. **Frontend** (Angular) - Terminal 5
+3. **Auth Service** (NestJS) - Terminal 2
+4. **GraphQL Service** (Python) - Terminal 3
+5. **WebSocket Server** (Go) - Terminal 4
+6. **B2B Webhooks Service** (NestJS) - Terminal 5
+7. **Frontend** (Angular) - Terminal 6
 
 ---
 
@@ -204,6 +240,12 @@ Para ejecutar el proyecto completo, sigue este orden:
 ### Ejecutar Backend REST
 ```powershell
 cd "C:\Users\ASUS I5\OneDrive\Desktop\universidad\5to semestre\aplicaciones para servidor web\Estacionamiento de vehiculos\backend-rest\API - copia\alquiler-rest"
+npm run start:dev
+```
+
+### Ejecutar Auth Service
+```powershell
+cd "C:\Users\ASUS I5\OneDrive\Desktop\universidad\5to semestre\aplicaciones para servidor web\Estacionamiento de vehiculos\auth-service"
 npm run start:dev
 ```
 
@@ -238,6 +280,7 @@ npm start
 | Servicio | Puerto | URL de Prueba |
 |----------|--------|---------------|
 | Backend REST | 3000 | http://localhost:3000/api |
+| Auth Service | 3002 | http://localhost:3002/api |
 | GraphQL | 8000 | http://127.0.0.1:8000/graphql |
 | WebSocket | 8080 | ws://localhost:8080/ws |
 | B2B Webhooks | 3001 | http://localhost:3001/api |

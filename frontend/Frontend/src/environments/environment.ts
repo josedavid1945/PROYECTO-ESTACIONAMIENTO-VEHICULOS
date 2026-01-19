@@ -12,16 +12,16 @@ export const environment = {
   apiUrl: 'http://localhost:3000',
   
   // Auth Service (NestJS) - Microservicio de autenticación
-  authUrl: 'http://localhost:3002',
+  authUrl: 'http://localhost:3001',
   
   // GraphQL Service (Python/FastAPI)
-  graphqlUrl: 'http://127.0.0.1:8000/graphql',
+  graphqlUrl: 'http://localhost:8000/graphql',
   
   // WebSocket Server (Go)
   websocketUrl: 'ws://localhost:8080/ws',
 
   // B2B Webhooks & MCP Chat Service (NestJS)
-  b2bApiUrl: 'http://localhost:3001',
+  b2bApiUrl: 'http://localhost:3002',
   
   // Configuración adicional
   reconnectAttempts: 5,

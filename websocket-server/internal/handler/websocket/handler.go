@@ -17,9 +17,13 @@ func getAllowedOrigins() []string {
 	if origins == "" {
 		// Orígenes por defecto para desarrollo
 		return []string{
+			"http://localhost",
+			"http://localhost:80",
 			"http://localhost:4200",
 			"http://localhost:3000",
+			"http://127.0.0.1",
 			"http://127.0.0.1:4200",
+			"http://127.0.0.1:80",
 		}
 	}
 	return strings.Split(origins, ",")

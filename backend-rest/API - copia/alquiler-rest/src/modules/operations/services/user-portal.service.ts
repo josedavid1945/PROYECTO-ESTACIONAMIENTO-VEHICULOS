@@ -34,11 +34,13 @@ export class UserPortalService {
   /**
    * Vincular cuenta de auth-service con cliente existente
    * El usuario proporciona su email para encontrar su registro de cliente
+   * O el auth-service proporciona directamente el clienteId
    * 
    * @param authUserId - ID del usuario del auth-service (JWT sub)
-   * @param email - Email del cliente para buscar y vincular
+   * @param emailOrClienteId - Email del cliente o clienteId directo
+   * @param isClienteId - Si true, el segundo parámetro es clienteId, si false es email
    */
-  async vincularCuentaConCliente(authUserId: string, email: string): Promise<any> {
+  async vincularCuentaConCliente(authUserId: string, emailOrClienteId: string, isClienteId: boolean = false): Promise<any> {
     // Verificar que el authUserId no esté ya vinculado a otro cliente
     const clienteYaVinculado = await this.clienteRepository.findOne({
       where: { authUserId }
@@ -50,16 +52,27 @@ export class UserPortalService {
       );
     }
 
-    // Buscar cliente por email
-    const cliente = await this.clienteRepository.findOne({
-      where: { email: email.toLowerCase() }
-    });
-
-    if (!cliente) {
-      throw new NotFoundException(
-        `No se encontró un cliente con el email: ${email}. ` +
-        `Contacta al administrador para que registre tu información.`
-      );
+    // Buscar cliente por email o por ID
+    let cliente;
+    if (isClienteId) {
+      cliente = await this.clienteRepository.findOne({
+        where: { id: emailOrClienteId }
+      });
+      if (!cliente) {
+        throw new NotFoundException(
+          `No se encontró un cliente con el ID: ${emailOrClienteId}.`
+        );
+      }
+    } else {
+      cliente = await this.clienteRepository.findOne({
+        where: { email: emailOrClienteId.toLowerCase() }
+      });
+      if (!cliente) {
+        throw new NotFoundException(
+          `No se encontró un cliente con el email: ${emailOrClienteId}. ` +
+          `Contacta al administrador para que registre tu información.`
+        );
+      }
     }
 
     // Verificar que el cliente no esté vinculado a otra cuenta

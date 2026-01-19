@@ -1,12 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HerramientasService } from '../../../../../services/herramientas.service';
 
 @Component({
   selector: 'app-register-tarifa',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './register-tarifa.html'
 })
 export class RegisterTarifaComponent {
@@ -48,8 +48,6 @@ export class RegisterTarifaComponent {
     const hora = this.precioHora();
     const dia = this.precioDia();
 
-    console.log('Datos a registrar:', { tipo, hora, dia });
-
     if (!tipo || hora <= 0 || dia <= 0) {
       alert('Por favor completa todos los campos correctamente');
       return;
@@ -57,21 +55,17 @@ export class RegisterTarifaComponent {
 
     this.loading.set(true);
     
-    console.log('Enviando solicitud al backend...');
     this.herramientasService.createTarifa(
       tipo,
       hora,
       dia
     ).subscribe({
-      next: (response) => {
-        console.log('Respuesta del servidor:', response);
+      next: () => {
         alert('Tarifa registrada exitosamente');
-        this.router.navigate(['/estacionamiento/herramientas/config/tarifa']);
+        this.router.navigate(['/admin/estacionamiento/herramientas/config/tarifa']);
       },
       error: (error) => {
-        console.error('Error completo:', error);
-        console.error('Status:', error.status);
-        console.error('Message:', error.error);
+        console.error('Error al registrar tarifa:', error);
         alert(`Error al registrar la tarifa: ${error.error?.message || error.message}`);
         this.loading.set(false);
       }
@@ -79,6 +73,6 @@ export class RegisterTarifaComponent {
   }
 
   cancelar() {
-    this.router.navigate(['/estacionamiento/herramientas/config/tarifa']);
+    this.router.navigate(['/admin/estacionamiento/herramientas/config/tarifa']);
   }
 }

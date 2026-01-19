@@ -27,8 +27,8 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         autoLoadEntities: true,
-        // DESACTIVADO - La BD ya tiene su schema definido, no modificar automáticamente
-        synchronize: false,
+        // Sincronizar solo en desarrollo para crear tablas automáticamente
+        synchronize: configService.get<string>('NODE_ENV') !== 'production',
         logging: configService.get<string>('NODE_ENV') === 'development',
         ssl: configService.get<string>('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
       }),

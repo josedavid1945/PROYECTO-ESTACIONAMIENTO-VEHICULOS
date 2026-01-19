@@ -233,8 +233,8 @@ CREATE TYPE users_status_enum AS ENUM ('active', 'inactive', 'locked');
 
 ## 📡 API Endpoints
 
-### Base URL: `http://localhost:3001`
-### Documentación Swagger: `http://localhost:3001/api`
+### Base URL: `http://localhost:3002`
+### Documentación Swagger: `http://localhost:3002/api`
 
 ### Endpoints Públicos (sin autenticación)
 
@@ -509,7 +509,7 @@ readonly fullName = computed(() => {
 ### Variables de Entorno (.env)
 ```env
 # Servidor
-PORT=3001
+PORT=3002
 NODE_ENV=development
 
 # Base de Datos
@@ -560,8 +560,8 @@ npm start
 ### URLs de Desarrollo
 | Servicio | URL |
 |----------|-----|
-| Auth Service | http://localhost:3001 |
-| Swagger UI | http://localhost:3001/api |
+| Auth Service | http://localhost:3002 |
+| Swagger UI | http://localhost:3002/api |
 | Frontend | http://localhost:4200 |
 
 ### Comandos Útiles

@@ -4,13 +4,6 @@
         <app-search-input 
             (value)="onSearchChange($event)"
             [placeholder]="'Buscar por placa, marca, modelo, cliente o categoría...'"/>
-        
-        <!-- Debug info -->
-        <div class="mt-2 text-xs text-gray-600 bg-slate-100 p-2 rounded">
-            <strong>Debug:</strong> Query actual: "{{ searchQuery() }}" | 
-            Total vehículos: {{ allVehiculos().length }} | 
-            Filtrados: {{ filteredVehiculos().length }}
-        </div>
     </div>
 
     <!-- Estado de carga con skeleton -->

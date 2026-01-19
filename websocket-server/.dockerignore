@@ -1,0 +1,10 @@
+*.exe
+*.dll
+*.so
+*.dylib
+.git
+.gitignore
+.env
+.env.local
+*.md
+cmd/server/server.exe

@@ -50,7 +50,7 @@ export class NavBar {
   // Active route tracking
   isActive(path: string): boolean {
     const currentPath = window.location.pathname;
-    const fullPath = `/estacionamiento/${path}`;
+    const fullPath = `/admin/estacionamiento/${path}`;
     return currentPath.startsWith(fullPath);
   }
 

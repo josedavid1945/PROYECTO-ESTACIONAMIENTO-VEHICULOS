@@ -15,6 +15,7 @@ export interface McpTool {
   };
   handler: (params: Record<string, any>) => Promise<any>;
   timeout?: number;
+  allowedRoles?: string[]; // Roles que pueden usar esta herramienta
 }
 
 export interface McpToolResult {
@@ -46,16 +47,25 @@ export class McpToolsService {
   /**
    * Obtiene todas las herramientas disponibles (para el LLM)
    */
-  getToolsDefinition(): Array<{
+  getToolsDefinition(userRole?: string): Array<{
     name: string;
     description: string;
     parameters: McpTool['parameters'];
   }> {
-    return Array.from(this.tools.values()).map(tool => ({
-      name: tool.name,
-      description: tool.description,
-      parameters: tool.parameters,
-    }));
+    return Array.from(this.tools.values())
+      .filter(tool => {
+        // Si no tiene restricción de roles, está disponible para todos
+        if (!tool.allowedRoles || tool.allowedRoles.length === 0) {
+          return true;
+        }
+        // Si hay roles permitidos, verificar
+        return userRole && tool.allowedRoles.includes(userRole);
+      })
+      .map(tool => ({
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.parameters,
+      }));
   }
 
   /**

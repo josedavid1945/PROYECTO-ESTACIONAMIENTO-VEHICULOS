@@ -63,7 +63,7 @@ export class GeminiAdapterService implements OnModuleInit {
 
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       generationConfig: {
         temperature: 0.7,
         topK: 40,
@@ -177,7 +177,7 @@ export class GeminiAdapterService implements OnModuleInit {
       };
 
       modelWithTools = this.genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         tools: [toolsConfig],
         generationConfig: {
           temperature: 0.7,
@@ -219,7 +219,7 @@ export class GeminiAdapterService implements OnModuleInit {
     }
 
     const backupModel = this.backupGenAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
     });
 
     // Simplificar para backup (sin herramientas)

@@ -14,12 +14,13 @@ import {
   USER_KEY,
   UserRole
 } from '../models/auth.models';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = 'http://localhost:3002/auth';
+  private readonly API_URL = `${environment.authUrl}/auth`;
   
   // Signals para estado reactivo
   private _currentUser = signal<UserProfile | null>(null);

@@ -26,6 +26,13 @@ export interface ChatSession {
   messages: ChatMessage[];
   createdAt: Date;
   lastActivity: Date;
+  userContext?: UserContext;
+}
+
+export interface UserContext {
+  role: string;
+  userId?: string;
+  userEmail?: string;
 }
 
 /**
@@ -39,27 +46,53 @@ export class AiOrchestratorService {
   private readonly systemPrompt = `Eres un asistente inteligente para el Sistema de Gestión de Estacionamiento B2B.
 
 Tu rol es ayudar a los usuarios a:
-1. Gestionar el estacionamiento (buscar espacios, ver tickets, procesar pagos)
-2. Administrar partners B2B (registrar, listar, configurar webhooks)
-3. Monitorear eventos y webhooks (estadísticas, diagnósticos)
-4. Simular flujos de prueba para integraciones
+1. Gestionar el estacionamiento (buscar espacios, registrar ingresos/salidas, ver tickets)
+2. Administrar clientes y vehículos (buscar por placa, email o nombre)
+3. Procesar pagos y consultar tarifas
+4. Administrar partners B2B (registrar, listar, configurar webhooks)
+5. Monitorear eventos y webhooks (estadísticas, diagnósticos)
+6. Generar reportes operativos y de recaudación
+7. Registrar multas por infracciones
 
 Tienes acceso a las siguientes herramientas que DEBES usar cuando sea necesario:
-- buscar_espacios: Buscar espacios de estacionamiento disponibles
-- ver_ticket: Ver información de un ticket o reserva
-- crear_reserva: Crear una nueva reserva
+
+📍 ESTACIONAMIENTO:
+- buscar_espacios: Buscar espacios de estacionamiento disponibles por zona o tipo
+- registrar_ingreso: Registrar entrada de un vehículo al estacionamiento
+- registrar_salida: Registrar salida y calcular cobro del vehículo
+- ver_ticket: Ver información detallada de un ticket activo
+- consultar_tarifas: Ver tarifas activas del estacionamiento
+
+👤 CLIENTES Y VEHÍCULOS:
+- buscar_cliente: Buscar cliente por email, nombre o placa de vehículo
+- historial_tickets: Ver historial de tickets de un cliente
+
+💰 PAGOS Y REPORTES:
 - procesar_pago: Procesar el pago de un ticket
-- resumen_recaudacion: Ver resumen de ventas/recaudación
+- resumen_recaudacion: Ver resumen de ventas/recaudación por periodo
+- reporte_operativo: Resumen operativo del día (ocupación, ingresos, rotación)
+
+🚫 MULTAS:
+- registrar_multa: Registrar una multa por infracción
+
+🔗 B2B PARTNERS:
 - registrar_partner: Registrar un nuevo partner B2B
-- listar_partners: Listar todos los partners
-- simular_evento_partner: Simular un evento para un partner
-- estadisticas_eventos: Ver estadísticas de webhooks
+- listar_partners: Listar todos los partners activos
+- simular_evento_partner: Simular un evento webhook para un partner
+- estadisticas_eventos: Ver estadísticas de webhooks enviados
 - diagnosticar_webhook: Analizar webhooks fallidos
+
+🖼️ CAPACIDADES MULTIMODALES:
+- Puedo analizar imágenes de tickets, placas vehiculares, facturas y documentos
+- Puedo extraer texto de PDFs (contratos, facturas, reportes)
+- Si el usuario sube una foto de una placa, puedo leerla y buscar el vehículo
+- Si sube un ticket, puedo extraer los datos y consultar su estado
 
 Cuando el usuario pregunte algo que puedas resolver con una herramienta, ÚSALA.
 Si el usuario sube una imagen o PDF, analiza su contenido para ayudarlo.
 Responde siempre en español y de forma concisa pero útil.
-Si no puedes hacer algo, explica por qué y sugiere alternativas.`;
+Si no puedes hacer algo, explica por qué y sugiere alternativas.
+Cuando muestres datos monetarios, usa el formato "Bs. XX.XX" para bolivianos.`;
 
   constructor(
     private geminiAdapter: GeminiAdapterService,
@@ -101,8 +134,15 @@ Si no puedes hacer algo, explica por qué y sugiere alternativas.`;
     sessionId: string,
     content: string,
     files?: Array<{ buffer: Buffer; filename: string; mimeType: string }>,
+    userContext?: UserContext,
   ): Promise<ChatMessage> {
     const session = this.getOrCreateSession(sessionId);
+    
+    // Guardar contexto de usuario en la sesión
+    if (userContext) {
+      session.userContext = userContext;
+    }
+    
     const startTime = Date.now();
 
     // Procesar archivos adjuntos si existen
@@ -156,14 +196,18 @@ Si no puedes hacer algo, explica por qué y sugiere alternativas.`;
       }),
     }));
 
-    // Obtener definiciones de herramientas
-    const tools = this.mcpTools.getToolsDefinition();
+    // Obtener definiciones de herramientas según el rol del usuario
+    const userRole = session.userContext?.role || 'user';
+    const tools = this.mcpTools.getToolsDefinition(userRole);
+    
+    // Obtener system prompt dinámico según rol
+    const systemPrompt = this.getSystemPromptForRole(userRole, session.userContext);
 
     // Generar respuesta inicial
     let response = await this.geminiAdapter.generateResponse(
       llmMessages,
       tools,
-      this.systemPrompt,
+      systemPrompt,
     );
 
     // Ejecutar herramientas si se solicitan (hasta 5 iteraciones)
@@ -207,7 +251,7 @@ Si no puedes hacer algo, explica por qué y sugiere alternativas.`;
       response = await this.geminiAdapter.generateResponse(
         llmMessages,
         tools,
-        this.systemPrompt,
+        systemPrompt,
       );
     }
 
@@ -232,6 +276,87 @@ Si no puedes hacer algo, explica por qué y sugiere alternativas.`;
   getSessionHistory(sessionId: string): ChatMessage[] {
     const session = this.sessions.get(sessionId);
     return session?.messages || [];
+  }
+
+  /**
+   * Genera system prompt según el rol del usuario
+   */
+  private getSystemPromptForRole(role: string, userContext?: UserContext): string {
+    const isAdmin = role === 'admin' || role === 'operator';
+    
+    if (isAdmin) {
+      return `Eres un asistente de administración para el Sistema de Gestión de Estacionamiento.
+
+Tu rol es ayudar a los ADMINISTRADORES a:
+1. **Reservar espacios** por placa de vehículo (registrar_ingreso)
+2. **Desocupar espacios** y procesar salidas (registrar_salida)
+3. Gestionar tickets y pagos
+4. Buscar clientes y vehículos
+5. Generar reportes operativos
+6. Registrar multas
+7. Administrar partners B2B
+
+HERRAMIENTAS DISPONIBLES PARA ADMIN:
+
+🚗 GESTIÓN DE ESTACIONAMIENTO:
+- registrar_ingreso: Reservar un espacio para un vehículo por su PLACA
+- registrar_salida: Desocupar espacio y procesar el cobro
+- buscar_espacios: Ver espacios disponibles por zona
+- ver_ticket: Consultar detalles de un ticket
+
+👤 CLIENTES Y VEHÍCULOS:
+- buscar_cliente: Buscar cliente por email, nombre o placa
+- historial_tickets: Ver historial completo de tickets
+
+💰 PAGOS Y REPORTES:
+- procesar_pago: Procesar pagos de tickets
+- consultar_tarifas: Ver tarifas vigentes
+- reporte_operativo: Resumen del día (ocupación, ingresos, etc.)
+
+🚫 MULTAS:
+- registrar_multa: Registrar multa por infracción
+
+🔗 B2B PARTNERS:
+- registrar_partner, listar_partners, estadisticas_eventos
+
+Cuando el admin diga "reservar [placa]" o "ingreso [placa]" → usa registrar_ingreso
+Cuando diga "desocupar [placa]" o "salida [placa]" → usa registrar_salida
+
+Responde en español, de forma profesional y concisa.
+Cuando muestres montos, usa "Bs. XX.XX"`;
+    }
+    
+    // Usuario normal
+    const userEmail = userContext?.userEmail ? ` (${userContext.userEmail})` : '';
+    return `Eres un asistente amigable para usuarios del estacionamiento.
+
+El usuario actual es: ${userContext?.userId || 'invitado'}${userEmail}
+
+Tu rol es ayudar al USUARIO a:
+1. **Ver espacios disponibles** en el estacionamiento
+2. **Ver sus reservas actuales** (tickets activos)
+3. **Consultar historial** de reservas anteriores
+4. **Ver tarifas** del estacionamiento
+
+HERRAMIENTAS DISPONIBLES PARA USUARIO:
+
+🅿️ ESPACIOS:
+- buscar_espacios: Ver espacios disponibles por zona
+
+📋 MIS RESERVAS:
+- mis_reservas_activas: Ver reservas/tickets actuales del usuario
+- mi_historial: Ver historial de reservas anteriores
+
+💰 TARIFAS:
+- consultar_tarifas: Ver precios del estacionamiento
+
+IMPORTANTE:
+- NO puedes reservar espacios directamente, eso lo hace el admin
+- Puedes ver TUS reservas, no las de otros usuarios
+- Si el usuario quiere reservar, explica que debe ir a la entrada del estacionamiento
+
+Responde en español, de forma amigable y útil.
+Cuando muestres montos, usa "Bs. XX.XX"`;
   }
 
   /**

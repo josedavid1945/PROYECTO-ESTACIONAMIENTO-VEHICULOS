@@ -1,0 +1,163 @@
+# =====================================================
+# RENDER.YAML - Configuración de Despliegue en Render
+# =====================================================
+# https://render.com/docs/blueprint-spec
+# =====================================================
+
+services:
+  # ==================== DATABASE ====================
+  - type: pserv
+    name: parking-database
+    env: docker
+    plan: free
+    dockerfilePath: ./database/Dockerfile
+    envVars:
+      - key: POSTGRES_USER
+        value: parking_user
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+      - key: POSTGRES_DB
+        value: parking_db
+
+  # ==================== BACKEND REST API ====================
+  - type: web
+    name: parking-backend-rest
+    env: docker
+    plan: free
+    dockerfilePath: ./backend-rest/API - copia/alquiler-rest/Dockerfile
+    dockerContext: ./backend-rest/API - copia/alquiler-rest
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DB_HOST
+        fromService:
+          type: pserv
+          name: parking-database
+          property: host
+      - key: DB_PORT
+        value: 5432
+      - key: DB_USERNAME
+        value: parking_user
+      - key: DB_PASSWORD
+        fromService:
+          type: pserv
+          name: parking-database
+          envVarKey: POSTGRES_PASSWORD
+      - key: DB_DATABASE
+        value: parking_db
+
+  # ==================== AUTH SERVICE ====================
+  - type: web
+    name: parking-auth-service
+    env: docker
+    plan: free
+    dockerfilePath: ./auth-service/Dockerfile
+    dockerContext: ./auth-service
+    healthCheckPath: /auth/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: DB_HOST
+        fromService:
+          type: pserv
+          name: parking-database
+          property: host
+      - key: DB_PORT
+        value: 5432
+      - key: DB_USERNAME
+        value: parking_user
+      - key: DB_PASSWORD
+        fromService:
+          type: pserv
+          name: parking-database
+          envVarKey: POSTGRES_PASSWORD
+      - key: DB_DATABASE
+        value: parking_auth
+
+  # ==================== GRAPHQL SERVICE ====================
+  - type: web
+    name: parking-graphql
+    env: docker
+    plan: free
+    dockerfilePath: ./graphql-service/Dockerfile
+    dockerContext: ./graphql-service
+    healthCheckPath: /graphql
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 8000
+      - key: DEBUG
+        value: false
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: parking-database
+          property: connectionString
+      - key: CORS_ORIGINS
+        value: https://parking-frontend.onrender.com
+
+  # ==================== WEBSOCKET SERVER ====================
+  - type: web
+    name: parking-websocket
+    env: docker
+    plan: free
+    dockerfilePath: ./websocket-server/Dockerfile
+    dockerContext: ./websocket-server
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: parking-database
+          property: connectionString
+
+  # ==================== B2B WEBHOOKS SYSTEM ====================
+  - type: web
+    name: parking-b2b-webhooks
+    env: docker
+    plan: free
+    dockerfilePath: ./b2b-webhooks-system/Dockerfile
+    dockerContext: ./b2b-webhooks-system
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3002
+      - key: DATABASE_URL
+        fromService:
+          type: pserv
+          name: parking-database
+          property: connectionString
+      - key: GEMINI_API_KEY
+        sync: false
+
+  # ==================== FRONTEND ====================
+  - type: web
+    name: parking-frontend
+    env: docker
+    plan: free
+    dockerfilePath: ./frontend/Frontend/Dockerfile
+    dockerContext: ./frontend/Frontend
+    healthCheckPath: /
+    envVars:
+      - key: API_URL
+        value: https://parking-backend-rest.onrender.com
+      - key: GRAPHQL_URL
+        value: https://parking-graphql.onrender.com/graphql
+      - key: WS_URL
+        value: wss://parking-websocket.onrender.com/ws
+      - key: AUTH_URL
+        value: https://parking-auth-service.onrender.com

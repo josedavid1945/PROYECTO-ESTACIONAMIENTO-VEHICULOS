@@ -10,6 +10,7 @@ export interface RegisterRequest {
   password: string;
   firstName: string;
   lastName: string;
+  vehiclePlate?: string; // Placa del vehículo para vincular con cliente existente
 }
 
 export interface AuthResponse {

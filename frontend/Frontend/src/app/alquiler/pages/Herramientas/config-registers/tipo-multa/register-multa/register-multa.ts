@@ -40,7 +40,7 @@ export class RegisterMulta {
         this.success.set(true);
         this.multaForm.reset();
         setTimeout(() => {
-          this.router.navigate(['/estacionamiento/herramientas/config/multas']);
+          this.router.navigate(['/admin/estacionamiento/herramientas/config/multas']);
         }, 1500);
       },
       error: (err) => {

@@ -1,12 +1,12 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HerramientasService, TipoTarifa } from '../../../../services/herramientas.service';
 
 @Component({
   selector: 'app-tarifa',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './tarifa.html'
 })
 export class TarifaComponent implements OnInit {
@@ -48,6 +48,6 @@ export class TarifaComponent implements OnInit {
   }
 
   irARegistro() {
-    this.router.navigate(['/estacionamiento/herramientas/config/registrar-tarifa']);
+    this.router.navigate(['/admin/estacionamiento/herramientas/config/registrar-tarifa']);
   }
 }

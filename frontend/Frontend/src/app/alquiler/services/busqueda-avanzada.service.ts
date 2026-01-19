@@ -95,20 +95,12 @@ export class TicketService {
 
   // Método básico para obtener tickets - USANDO API REST
   getTickets(): Observable<TicketFull[]> {
-    console.log('🔍 Obteniendo tickets desde API REST...');
-    
     return forkJoin({
       tickets: this.http.get<RestTicket[]>(`${this.apiUrl}/tickets`),
       vehiculos: this.http.get<RestVehiculo[]>(`${this.apiUrl}/vehiculos`),
       espacios: this.http.get<RestEspacio[]>(`${this.apiUrl}/espacios`)
     }).pipe(
       map(({ tickets, vehiculos, espacios }) => {
-        console.log('📦 Datos REST recibidos:', {
-          tickets: tickets.length,
-          vehiculos: vehiculos.length,
-          espacios: espacios.length
-        });
-        
         // Crear maps para búsqueda rápida
         const vehiculosMap = new Map(vehiculos.map(v => [v.id, v]));
         const espaciosMap = new Map(espacios.map(e => [e.id, e]));
@@ -118,14 +110,6 @@ export class TicketService {
           .filter(t => {
             const hasVehiculo = vehiculosMap.has(t.vehiculoId);
             const hasEspacio = espaciosMap.has(t.espacioId);
-            
-            if (!hasVehiculo) {
-              console.warn(`⚠️ Ticket ${t.id} tiene vehiculoId ${t.vehiculoId} inválido`);
-            }
-            if (!hasEspacio) {
-              console.warn(`⚠️ Ticket ${t.id} tiene espacioId ${t.espacioId} inválido`);
-            }
-            
             return hasVehiculo && hasEspacio;
           })
           .map(t => {
@@ -141,9 +125,6 @@ export class TicketService {
               estadoTicket: espacio.estado ? 'Ocupado' : 'Desocupado'
             };
           });
-        
-        console.log('✅ Tickets mapeados:', ticketsFull.length);
-        console.log('📊 Primeros 3 tickets:', ticketsFull.slice(0, 3));
         
         return ticketsFull;
       })

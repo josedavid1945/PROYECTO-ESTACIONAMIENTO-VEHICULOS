@@ -1,0 +1,200 @@
+# =====================================================
+# DOCKER COMPOSE - PRODUCCIÓN
+# =====================================================
+# Para deploy en cualquier servidor con Docker
+# =====================================================
+# Para usar Supabase, cambiar las variables DB_* a las
+# credenciales de Supabase y agregar DB_SSL: "true"
+# =====================================================
+
+services:
+  # ==================== DATABASE ====================
+  postgres:
+    image: postgres:16-alpine
+    container_name: parking-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-parking_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-parking_secret}
+      POSTGRES_DB: ${DB_DATABASE:-parking_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/auth-init.sql:/docker-entrypoint-initdb.d/01-auth-init.sql
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-parking_user} -d ${DB_DATABASE:-parking_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parking-network
+
+  # ==================== BACKEND REST API ====================
+  backend-rest:
+    build:
+      context: ./backend-rest/API - copia/alquiler-rest
+      dockerfile: Dockerfile
+    container_name: parking-backend-rest
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-parking_user}
+      DB_PASSWORD: ${DB_PASSWORD:-parking_secret}
+      DB_DATABASE: ${DB_DATABASE:-parking_db}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/dashboard/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - parking-network
+
+  # ==================== AUTH SERVICE ====================
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: parking-auth
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-super_secret_access_jwt_key_change_in_production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-super_secret_refresh_jwt_key_change_in_production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-parking_user}
+      DB_PASSWORD: ${DB_PASSWORD:-parking_secret}
+      DB_DATABASE: parking_auth
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - parking-network
+
+  # ==================== GRAPHQL SERVICE ====================
+  graphql-service:
+    build:
+      context: ./graphql-service
+      dockerfile: Dockerfile
+    container_name: parking-graphql
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8000
+      DEBUG: "false"
+      DATABASE_URL: postgresql://${DB_USERNAME:-parking_user}:${DB_PASSWORD:-parking_secret}@postgres:5432/${DB_DATABASE:-parking_db}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4200,http://localhost}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - parking-network
+
+  # ==================== WEBSOCKET SERVER ====================
+  websocket-server:
+    build:
+      context: ./websocket-server
+      dockerfile: Dockerfile
+    container_name: parking-websocket
+    restart: unless-stopped
+    environment:
+      PORT: 8080
+      MODE: rest
+      REST_API_URL: http://backend-rest:3000
+      ALLOWED_ORIGINS: http://localhost,http://localhost:80,http://localhost:4200,http://127.0.0.1
+      DATABASE_URL: postgresql://${DB_USERNAME:-parking_user}:${DB_PASSWORD:-parking_secret}@postgres:5432/${DB_DATABASE:-parking_db}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend-rest:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - parking-network
+
+  # ==================== B2B WEBHOOKS SYSTEM ====================
+  b2b-webhooks:
+    build:
+      context: ./b2b-webhooks-system
+      dockerfile: Dockerfile
+    container_name: parking-b2b
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      DATABASE_URL: postgresql://${DB_USERNAME:-parking_user}:${DB_PASSWORD:-parking_secret}@postgres:5432/${DB_DATABASE:-parking_db}
+      DB_SSL: "false"
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_API_KEY_BACKUP: ${GEMINI_API_KEY_BACKUP:-}
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3002/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - parking-network
+
+  # ==================== FRONTEND ====================
+  frontend:
+    build:
+      context: ./frontend/Frontend
+      dockerfile: Dockerfile
+    container_name: parking-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-rest
+      - graphql-service
+      - websocket-server
+      - auth-service
+    networks:
+      - parking-network
+
+volumes:
+  postgres_data:
+
+networks:
+  parking-network:
+    driver: bridge

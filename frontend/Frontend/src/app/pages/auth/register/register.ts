@@ -28,6 +28,7 @@ export class RegisterPage {
       firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
       lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
       email: ['', [Validators.required, Validators.email]],
+      vehiclePlate: ['', [Validators.maxLength(20)]], // Campo opcional para vincular con cliente existente
       password: ['', [
         Validators.required, 
         Validators.minLength(8),
@@ -88,9 +89,9 @@ export class RegisterPage {
     this.errorMessage.set(null);
     this.successMessage.set(null);
 
-    const { firstName, lastName, email, password } = this.registerForm.value;
+    const { firstName, lastName, email, password, vehiclePlate } = this.registerForm.value;
 
-    this.authService.register({ firstName, lastName, email, password }).subscribe({
+    this.authService.register({ firstName, lastName, email, password, vehiclePlate: vehiclePlate || undefined }).subscribe({
       next: (response) => {
         this.isLoading.set(false);
         this.successMessage.set('¡Cuenta creada exitosamente!');

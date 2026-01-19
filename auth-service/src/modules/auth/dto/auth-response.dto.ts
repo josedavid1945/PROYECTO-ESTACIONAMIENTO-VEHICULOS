@@ -100,6 +100,22 @@ export class AuthResponseDto {
     description: 'Información del usuario autenticado',
   })
   user: UserProfileDto;
+
+  @ApiPropertyOptional({
+    description: 'Información de vinculación con cliente existente (solo en registro)',
+  })
+  linkingInfo?: {
+    linked: boolean;
+    clienteId?: string;
+    clienteNombre?: string;
+    vehiculos?: Array<{
+      id: string;
+      placa: string;
+      marca: string;
+      modelo: string;
+    }>;
+    message: string;
+  };
 }
 
 /**

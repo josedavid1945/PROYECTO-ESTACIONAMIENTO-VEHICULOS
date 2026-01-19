@@ -117,6 +117,33 @@
           }
         </div>
 
+        <!-- Placa del Vehículo (Opcional - para vincular cuenta) -->
+        <div>
+          <label for="vehiclePlate" class="block text-sm font-medium text-slate-300 mb-2">
+            Placa del vehículo
+            <span class="text-slate-500 text-xs ml-1">(opcional)</span>
+          </label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg class="h-5 w-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+              </svg>
+            </div>
+            <input 
+              type="text" 
+              id="vehiclePlate" 
+              formControlName="vehiclePlate"
+              class="w-full pl-10 pr-4 py-3 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all uppercase"
+              placeholder="ABC-123"
+              maxlength="20"
+            />
+          </div>
+          <p class="mt-1 text-xs text-slate-500">
+            Si ya tienes un vehículo registrado, ingresa la placa para vincular tu cuenta automáticamente
+          </p>
+        </div>
+
         <!-- Password -->
         <div>
           <label for="password" class="block text-sm font-medium text-slate-300 mb-2">

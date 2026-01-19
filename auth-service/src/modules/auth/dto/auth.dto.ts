@@ -75,6 +75,15 @@ export class RegisterDto {
   documentNumber?: string;
 
   @ApiPropertyOptional({
+    description: 'Placa del vehículo (para vincular con cliente existente)',
+    example: 'ABC-123',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  vehiclePlate?: string;
+
+  @ApiPropertyOptional({
     description: 'Rol del usuario',
     enum: UserRole,
     default: UserRole.USER,
