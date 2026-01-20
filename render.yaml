@@ -6,7 +6,7 @@ services:
     plan: free
     rootDir: auth-service
     buildCommand: npm ci --include=dev && npm run build
-    startCommand: node dist/main
+    startCommand: node dist/src/main.js
     healthCheckPath: /auth/health
     envVars:
       - key: NODE_ENV
