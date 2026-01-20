@@ -65,10 +65,7 @@ services:
       - key: DB_SSL
         value: true
       - key: AUTH_SERVICE_URL
-        fromService:
-          name: parking-auth-service
-          type: web
-          property: hostport
+        value: https://parking-auth-service.onrender.com
 
   - type: web
     name: parking-b2b-webhooks
@@ -91,10 +88,7 @@ services:
       - key: GEMINI_API_KEY_BACKUP
         sync: false
       - key: PARKING_API_URL
-        fromService:
-          name: parking-backend-rest
-          type: web
-          property: hostport
+        value: https://parking-backend-rest.onrender.com
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
@@ -138,10 +132,7 @@ services:
       - key: PORT
         value: 8080
       - key: REST_API_URL
-        fromService:
-          name: parking-backend-rest
-          type: web
-          property: hostport
+        value: https://parking-backend-rest.onrender.com
 
   - type: web
     name: parking-frontend
