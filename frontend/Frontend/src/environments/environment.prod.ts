@@ -9,20 +9,20 @@ export const environment = {
   production: true,
   
   // URL del API REST (Backend NestJS) - Puerto 3000
-  apiUrl: 'https://parking-backend-rest.onrender.com',
+  apiUrl: 'https://parking-backend-rest-g7vl.onrender.com',
   
   // URL del Auth Service (Microservicio de Autenticación) - Puerto 3002
-  authUrl: 'https://parking-auth-service.onrender.com',
+  authUrl: 'https://parking-auth-service-g7vl.onrender.com',
   
   // URL del servicio GraphQL (Python/Strawberry) - Puerto 8000
-  graphqlUrl: 'https://parking-graphql.onrender.com/graphql',
+  graphqlUrl: 'https://parking-graphql-g7vl.onrender.com/graphql',
   
   // URL del servidor WebSocket (Go) - Puerto 8080
   // Nota: Render soporta WSS automáticamente en servicios web
-  websocketUrl: 'wss://parking-websocket.onrender.com/ws',
+  websocketUrl: 'wss://parking-websocket-g7vl.onrender.com/ws',
   
   // URL del servicio B2B Webhooks (Chatbot/MCP) - Puerto 3001
-  b2bApiUrl: 'https://parking-b2b-webhooks.onrender.com',
+  b2bApiUrl: 'https://parking-b2b-webhooks-g7vl.onrender.com',
   
   // Configuración adicional
   reconnectAttempts: 10,
