@@ -8,7 +8,12 @@ async function bootstrap() {
 
   // Configurar CORS
   app.enableCors({
-    origin: ['http://localhost:4200', 'http://localhost:3000'],
+    origin: [
+      'http://localhost:4200', 
+      'http://localhost:3000',
+      'https://parking-frontend-g7vl.onrender.com',
+      /\.onrender\.com$/
+    ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
