@@ -150,12 +150,15 @@ Cuando muestres datos monetarios, usa el formato "Bs. XX.XX" para bolivianos.`;
     let attachmentsInfo: ChatMessage['attachments'] = [];
 
     if (files && files.length > 0) {
+      this.logger.log(`📁 Procesando ${files.length} archivos adjuntos`);
       for (const file of files) {
+        this.logger.log(`📎 Archivo: ${file.filename} (${file.mimeType}, ${file.buffer.length} bytes)`);
         const processed = await this.multimodalProcessor.processFile(
           file.buffer,
           file.filename,
           file.mimeType,
         );
+        this.logger.log(`✅ Procesado: tipo=${processed.type}, texto=${processed.extractedText?.length || 0} chars, error=${processed.error || 'ninguno'}`);
         processedFiles.push(processed);
         attachmentsInfo.push({
           type: processed.type,
@@ -171,14 +174,24 @@ Cuando muestres datos monetarios, usa el formato "Bs. XX.XX" para bolivianos.`;
       const fileContents = processedFiles
         .map((f, i) => `[Archivo ${i + 1}: ${files![i].filename}]\n${f.extractedText || f.error}`)
         .join('\n\n');
-      userContent = `${content}\n\n--- Contenido de archivos adjuntos ---\n${fileContents}`;
+      
+      // Detectar si hay PDFs para agregar instrucciones específicas
+      const hasPdf = processedFiles.some(f => f.type === 'pdf');
+      const pdfInstruction = hasPdf 
+        ? '\n\n⚠️ INSTRUCCIÓN IMPORTANTE: El PDF ya fue procesado y su contenido está arriba. NO pidas el PDF en base64. Usa los datos extraídos (Nº Ticket, Placa, etc.) para buscar el ticket con la herramienta ver_ticket usando el ticketId o placa.'
+        : '';
+      
+      userContent = `${content}\n\n--- Contenido de archivos adjuntos ---\n${fileContents}${pdfInstruction}`;
+      
+      this.logger.log(`📝 Mensaje construido con archivos (${userContent.length} chars)`);
+      this.logger.log(`📄 Contenido extraído: ${fileContents.substring(0, 300)}...`);
     }
 
-    // Agregar mensaje del usuario a la sesión
+    // Agregar mensaje del usuario a la sesión (con contenido procesado de archivos)
     const userMessage: ChatMessage = {
       id: `msg_${Date.now()}`,
       role: 'user',
-      content: content,
+      content: userContent, // Usar userContent que incluye el texto extraído de PDFs
       timestamp: new Date(),
       attachments: attachmentsInfo.length > 0 ? attachmentsInfo : undefined,
     };
@@ -195,6 +208,10 @@ Cuando muestres datos monetarios, usa el formato "Bs. XX.XX" para bolivianos.`;
         },
       }),
     }));
+
+    // Log del último mensaje que se enviará al LLM
+    const lastMsg = llmMessages[llmMessages.length - 1];
+    this.logger.log(`🤖 Último mensaje para LLM (${lastMsg.content.length} chars): ${lastMsg.content.substring(0, 400)}...`);
 
     // Obtener definiciones de herramientas según el rol del usuario
     const userRole = session.userContext?.role || 'user';
@@ -295,6 +312,7 @@ Tu rol es ayudar a los ADMINISTRADORES a:
 5. Generar reportes operativos
 6. Registrar multas
 7. Administrar partners B2B
+8. **Verificar tickets desde PDFs adjuntos**
 
 HERRAMIENTAS DISPONIBLES PARA ADMIN:
 
@@ -319,8 +337,18 @@ HERRAMIENTAS DISPONIBLES PARA ADMIN:
 🔗 B2B PARTNERS:
 - registrar_partner, listar_partners, estadisticas_eventos
 
+📄 DOCUMENTOS PDF:
+- verificar_ticket_pdf: Lee un PDF de ticket y valida contra la BD
+- analizar_documento_pdf: Analiza documentos (licencias, registros, comprobantes)
+
+IMPORTANTE PARA ARCHIVOS PDF:
+- Cuando el usuario suba un PDF, el contenido ya está extraído en el mensaje.
+- Si el PDF contiene datos de ticket (ID, placa, fecha, monto), extrae esos datos y usa ver_ticket o historial_tickets para verificar.
+- NO pidas que envíen el PDF en base64 manualmente, ya tienes el contenido.
+
 Cuando el admin diga "reservar [placa]" o "ingreso [placa]" → usa registrar_ingreso
 Cuando diga "desocupar [placa]" o "salida [placa]" → usa registrar_salida
+Cuando suba un PDF de ticket → extrae los datos y verifica con ver_ticket
 
 Responde en español, de forma profesional y concisa.
 Cuando muestres montos, usa "Bs. XX.XX"`;
@@ -337,6 +365,7 @@ Tu rol es ayudar al USUARIO a:
 2. **Ver sus reservas actuales** (tickets activos)
 3. **Consultar historial** de reservas anteriores
 4. **Ver tarifas** del estacionamiento
+5. **Verificar tickets** desde PDFs adjuntos
 
 HERRAMIENTAS DISPONIBLES PARA USUARIO:
 
@@ -349,6 +378,14 @@ HERRAMIENTAS DISPONIBLES PARA USUARIO:
 
 💰 TARIFAS:
 - consultar_tarifas: Ver precios del estacionamiento
+
+📄 DOCUMENTOS:
+- verificar_ticket_pdf: Verificar un ticket desde PDF adjunto
+
+IMPORTANTE PARA ARCHIVOS PDF:
+- Cuando el usuario suba un PDF, el contenido ya está extraído en el mensaje.
+- Si el PDF contiene datos de ticket, extrae el ID o placa y verifica con mis_reservas_activas o mi_historial.
+- NO pidas que envíen el PDF en base64 manualmente, ya tienes el contenido.
 
 IMPORTANTE:
 - NO puedes reservar espacios directamente, eso lo hace el admin

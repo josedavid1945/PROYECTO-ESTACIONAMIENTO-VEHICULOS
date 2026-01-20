@@ -64,6 +64,14 @@ export class McpController {
     @Body() dto: ChatMessageDto,
     @UploadedFiles() files?: Express.Multer.File[],
   ) {
+    // Log para depuración de archivos
+    this.logger.log(`📨 Chat recibido - Mensaje: "${dto.message || dto.content}" | Archivos: ${files?.length || 0}`);
+    if (files?.length) {
+      files.forEach((f, i) => {
+        this.logger.log(`📎 Archivo ${i + 1}: ${f.originalname} (${f.mimetype}, ${f.size} bytes)`);
+      });
+    }
+    
     try {
       const session = this.aiOrchestrator.getOrCreateSession(dto.sessionId);
       const messageContent = dto.message || dto.content || '';

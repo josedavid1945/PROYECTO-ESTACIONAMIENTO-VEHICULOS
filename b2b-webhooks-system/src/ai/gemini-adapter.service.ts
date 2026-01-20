@@ -123,15 +123,20 @@ export class GeminiAdapterService implements OnModuleInit {
     // Construir historial de conversación
     const contents: Content[] = [];
     
-    // Agregar system prompt como primer mensaje de usuario si existe
+    // Agregar system prompt como primer mensaje
     if (systemPrompt) {
       contents.push({
         role: 'user',
-        parts: [{ text: `[Sistema]: ${systemPrompt}\n\n[Usuario]: ${messages[0]?.content || ''}` }],
+        parts: [{ text: `[Instrucciones del sistema]: ${systemPrompt}` }],
       });
-      messages = messages.slice(1);
+      // Añadir una respuesta modelo para "aceptar" las instrucciones
+      contents.push({
+        role: 'model',
+        parts: [{ text: 'Entendido. Estoy listo para ayudarte con el sistema de estacionamiento.' }],
+      });
     }
 
+    // Procesar todos los mensajes
     for (const msg of messages) {
       if (msg.role === 'user') {
         contents.push({
@@ -152,11 +157,14 @@ export class GeminiAdapterService implements OnModuleInit {
         });
       }
     }
+    
+    this.logger.log(`🔵 Contents array tiene ${contents.length} elementos`);
 
     // Configurar herramientas si están disponibles
     let modelWithTools = this.model;
     
     if (tools && tools.length > 0) {
+      this.logger.log(`🔧 Configurando ${tools.length} herramientas`);
       const toolsConfig = {
         functionDeclarations: tools.map(t => ({
           name: t.name,
@@ -186,13 +194,19 @@ export class GeminiAdapterService implements OnModuleInit {
       });
     }
 
-    // Generar respuesta
+    // Generar respuesta - usar todos los contents excepto el último como historial
+    const history = contents.slice(0, -1);
+    const lastContent = contents[contents.length - 1];
+    const lastMsgText = lastContent?.parts?.[0]?.text || '';
+    
+    this.logger.log(`📜 Historia: ${history.length} mensajes`);
+    this.logger.log(`🔷 Mensaje actual (${lastMsgText.length} chars): ${lastMsgText.substring(0, 800)}...`);
+    
     const chat = modelWithTools.startChat({
-      history: contents.slice(0, -1),
+      history: history,
     });
-
-    const lastMessage = contents[contents.length - 1];
-    const result = await chat.sendMessage(lastMessage?.parts?.[0]?.text || '');
+    
+    const result = await chat.sendMessage(lastMsgText);
     const response = result.response;
 
     // Procesar respuesta

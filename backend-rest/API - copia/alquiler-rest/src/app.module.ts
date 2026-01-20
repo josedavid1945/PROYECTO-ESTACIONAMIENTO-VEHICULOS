@@ -27,8 +27,8 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
         autoLoadEntities: true,
-        // Sincronizar solo en desarrollo para crear tablas automáticamente
-        synchronize: configService.get<string>('NODE_ENV') !== 'production',
+        // Desactivado para usar la BD existente de Supabase sin alterarla
+        synchronize: false,
         logging: configService.get<string>('NODE_ENV') === 'development',
         ssl: configService.get<string>('DB_SSL') === 'true' ? { rejectUnauthorized: false } : false,
       }),

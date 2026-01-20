@@ -6,6 +6,7 @@ import { EventsService } from '../events/events.service';
 import { PaymentService } from '../payments/payment.service';
 import { EventType } from '../events/entities/event.entity';
 import { PartnerType } from '../partners/entities/partner.entity';
+import * as pdf from 'pdf-parse';
 
 /**
  * BusinessToolsService - Implementa las 5+ herramientas de negocio MCP
@@ -553,5 +554,254 @@ export class BusinessToolsService implements OnModuleInit {
         return diagnostico;
       },
     });
+
+    // ============ HERRAMIENTA DE VERIFICACIÓN PDF ============
+
+    // Verificar ticket desde PDF
+    this.mcpTools.registerTool({
+      name: 'verificar_ticket_pdf',
+      description: 'Lee y verifica la existencia de un ticket de estacionamiento desde un archivo PDF. Extrae datos como ID del ticket, placa, fechas y montos para validar contra la base de datos.',
+      allowedRoles: ['admin', 'operator', 'user'],
+      parameters: {
+        type: 'object',
+        properties: {
+          pdf_base64: {
+            type: 'string',
+            description: 'Contenido del archivo PDF codificado en base64',
+          },
+          validar_en_bd: {
+            type: 'boolean',
+            description: 'Si es true, valida el ticket extraído contra la base de datos (default: true)',
+          },
+        },
+        required: ['pdf_base64'],
+      },
+      handler: async (params) => {
+        try {
+          // 1. Decodificar PDF de base64
+          const pdfBuffer = Buffer.from(params.pdf_base64, 'base64');
+          
+          // 2. Extraer texto del PDF
+          const pdfData = await pdf(pdfBuffer);
+          const texto = pdfData.text;
+
+          this.logger.log(`PDF procesado: ${pdfData.numpages} páginas, ${texto.length} caracteres`);
+
+          // 3. Extraer datos del ticket usando patrones
+          const datosExtraidos = this.extraerDatosTicketPDF(texto);
+
+          // 4. Validar contra la base de datos si se requiere
+          let validacion = null;
+          if (params.validar_en_bd !== false && datosExtraidos.ticketId) {
+            validacion = await this.validarTicketEnBD(datosExtraidos);
+          }
+
+          return {
+            success: true,
+            pdf_info: {
+              paginas: pdfData.numpages,
+              caracteres: texto.length,
+            },
+            datos_extraidos: datosExtraidos,
+            validacion_bd: validacion,
+            texto_completo: texto.substring(0, 1000) + (texto.length > 1000 ? '...' : ''),
+          };
+        } catch (error: any) {
+          this.logger.error(`Error al procesar PDF: ${error.message}`);
+          return {
+            success: false,
+            error: `No se pudo procesar el PDF: ${error.message}`,
+            sugerencia: 'Asegúrese de que el archivo sea un PDF válido y esté correctamente codificado en base64',
+          };
+        }
+      },
+    });
+
+    // Analizar documento de licencia/identificación
+    this.mcpTools.registerTool({
+      name: 'analizar_documento_pdf',
+      description: 'Analiza documentos PDF como licencias de conducir, registros vehiculares o comprobantes de pago para extraer información relevante.',
+      allowedRoles: ['admin', 'operator'],
+      parameters: {
+        type: 'object',
+        properties: {
+          pdf_base64: {
+            type: 'string',
+            description: 'Contenido del archivo PDF codificado en base64',
+          },
+          tipo_documento: {
+            type: 'string',
+            description: 'Tipo de documento a analizar',
+            enum: ['licencia_conducir', 'registro_vehicular', 'comprobante_pago', 'poliza_seguro', 'otro'],
+          },
+          cliente_id: {
+            type: 'string',
+            description: 'ID del cliente para asociar el documento (opcional)',
+          },
+        },
+        required: ['pdf_base64', 'tipo_documento'],
+      },
+      handler: async (params) => {
+        try {
+          const pdfBuffer = Buffer.from(params.pdf_base64, 'base64');
+          const pdfData = await pdf(pdfBuffer);
+          const texto = pdfData.text;
+
+          let datosExtraidos: any = {
+            tipo_documento: params.tipo_documento,
+            paginas: pdfData.numpages,
+          };
+
+          // Extraer campos según el tipo de documento
+          switch (params.tipo_documento) {
+            case 'licencia_conducir':
+              datosExtraidos = {
+                ...datosExtraidos,
+                numero_licencia: this.extraerCampo(texto, /(?:Licencia|License|No\.|Número)[\s:#]*([A-Z0-9\-]+)/i),
+                nombre_titular: this.extraerCampo(texto, /(?:Nombre|Name|Titular)[\s:#]*([A-Za-zÁÉÍÓÚáéíóúñÑ\s]+)/i),
+                fecha_expedicion: this.extraerCampo(texto, /(?:Expedición|Issue|Emitido)[\s:#]*([\d\/\-]+)/i),
+                fecha_vencimiento: this.extraerCampo(texto, /(?:Vencimiento|Expires|Válido hasta)[\s:#]*([\d\/\-]+)/i),
+                categoria: this.extraerCampo(texto, /(?:Categoría|Category|Tipo)[\s:#]*([A-Z0-9]+)/i),
+              };
+              break;
+
+            case 'registro_vehicular':
+              datosExtraidos = {
+                ...datosExtraidos,
+                placa: this.extraerCampo(texto, /(?:Placa|Plate|Matrícula)[\s:#]*([A-Z0-9\-]+)/i),
+                vin: this.extraerCampo(texto, /(?:VIN|Chasis|Serie)[\s:#]*([A-Z0-9]{17})/i),
+                marca: this.extraerCampo(texto, /(?:Marca|Make|Brand)[\s:#]*([A-Za-z]+)/i),
+                modelo: this.extraerCampo(texto, /(?:Modelo|Model)[\s:#]*([A-Za-z0-9\s]+)/i),
+                año: this.extraerCampo(texto, /(?:Año|Year)[\s:#]*(\d{4})/i),
+                propietario: this.extraerCampo(texto, /(?:Propietario|Owner|Titular)[\s:#]*([A-Za-zÁÉÍÓÚáéíóúñÑ\s]+)/i),
+              };
+              break;
+
+            case 'comprobante_pago':
+              datosExtraidos = {
+                ...datosExtraidos,
+                numero_comprobante: this.extraerCampo(texto, /(?:Comprobante|Receipt|Factura|No\.)[\s:#]*([A-Z0-9\-]+)/i),
+                monto: this.extraerCampo(texto, /(?:Total|Monto|Amount)[\s:#$]*(\d+[.,]?\d*)/i),
+                fecha_pago: this.extraerCampo(texto, /(?:Fecha|Date)[\s:#]*([\d\/\-]+)/i),
+                metodo_pago: this.extraerCampo(texto, /(?:Método|Method|Pago con)[\s:#]*([A-Za-z]+)/i),
+              };
+              break;
+
+            case 'poliza_seguro':
+              datosExtraidos = {
+                ...datosExtraidos,
+                numero_poliza: this.extraerCampo(texto, /(?:Póliza|Policy|No\.)[\s:#]*([A-Z0-9\-]+)/i),
+                aseguradora: this.extraerCampo(texto, /(?:Aseguradora|Insurer|Compañía)[\s:#]*([A-Za-z\s]+)/i),
+                vigencia_desde: this.extraerCampo(texto, /(?:Desde|From|Inicio)[\s:#]*([\d\/\-]+)/i),
+                vigencia_hasta: this.extraerCampo(texto, /(?:Hasta|To|Fin|Vence)[\s:#]*([\d\/\-]+)/i),
+                cobertura: this.extraerCampo(texto, /(?:Cobertura|Coverage)[\s:#]*([A-Za-z\s]+)/i),
+              };
+              break;
+
+            default:
+              datosExtraidos.texto_extraido = texto.substring(0, 2000);
+          }
+
+          return {
+            success: true,
+            datos: datosExtraidos,
+            confianza: this.calcularConfianzaExtraccion(datosExtraidos),
+            cliente_id: params.cliente_id || null,
+          };
+        } catch (error: any) {
+          return {
+            success: false,
+            error: `Error al analizar documento: ${error.message}`,
+          };
+        }
+      },
+    });
+  }
+
+  // ============ MÉTODOS AUXILIARES PARA PDF ============
+
+  private extraerDatosTicketPDF(texto: string): any {
+    return {
+      ticketId: this.extraerCampo(texto, /(?:Ticket|ID|Número)[\s:#]*([a-f0-9\-]{36}|[A-Z0-9\-]+)/i),
+      placa: this.extraerCampo(texto, /(?:Placa|Plate|Vehículo)[\s:#]*([A-Z0-9\-]+)/i),
+      fechaIngreso: this.extraerCampo(texto, /(?:Entrada|Ingreso|Entry|Check-in)[\s:#]*([\d\/\-\s:]+)/i),
+      fechaSalida: this.extraerCampo(texto, /(?:Salida|Exit|Check-out)[\s:#]*([\d\/\-\s:]+)/i),
+      espacio: this.extraerCampo(texto, /(?:Espacio|Space|Lugar|Slot)[\s:#]*([A-Z0-9\-]+)/i),
+      monto: this.extraerCampo(texto, /(?:Total|Monto|Amount|Pagar)[\s:#$]*(\d+[.,]?\d*)/i),
+      estado: this.extraerCampo(texto, /(?:Estado|Status)[\s:#]*([A-Za-z]+)/i),
+    };
+  }
+
+  private extraerCampo(texto: string, regex: RegExp): string | null {
+    const match = texto.match(regex);
+    return match ? match[1].trim() : null;
+  }
+
+  private calcularConfianzaExtraccion(datos: any): number {
+    const campos = Object.values(datos).filter(v => v !== null && typeof v !== 'number');
+    const camposEncontrados = campos.filter(v => v !== null).length;
+    return Math.round((camposEncontrados / campos.length) * 100);
+  }
+
+  private async validarTicketEnBD(datosExtraidos: any): Promise<any> {
+    try {
+      let ticketEnBD = null;
+
+      // Buscar por ID si existe
+      if (datosExtraidos.ticketId) {
+        const response = await fetch(`${this.parkingApiUrl}/tickets/${datosExtraidos.ticketId}`);
+        if (response.ok) {
+          ticketEnBD = await response.json();
+        }
+      }
+
+      // Si no se encontró por ID, buscar por placa en tickets activos
+      if (!ticketEnBD && datosExtraidos.placa) {
+        const response = await fetch(`${this.parkingApiUrl}/tickets`);
+        if (response.ok) {
+          const tickets = await response.json();
+          ticketEnBD = tickets.find((t: any) => 
+            t.vehiculo?.placa?.toLowerCase() === datosExtraidos.placa.toLowerCase() ||
+            t.vehiculoId === datosExtraidos.placa
+          );
+        }
+      }
+
+      if (ticketEnBD) {
+        // Comparar datos
+        const coincidencias = {
+          ticketId: ticketEnBD.id === datosExtraidos.ticketId,
+          monto: datosExtraidos.monto ? 
+            Math.abs(parseFloat(ticketEnBD.montoCalculado || 0) - parseFloat(datosExtraidos.monto)) < 0.01 : null,
+        };
+
+        return {
+          encontrado: true,
+          ticket_bd: {
+            id: ticketEnBD.id,
+            fechaIngreso: ticketEnBD.fechaIngreso,
+            fechaSalida: ticketEnBD.fechaSalida,
+            montoCalculado: ticketEnBD.montoCalculado,
+            espacioId: ticketEnBD.espacioId,
+          },
+          coincidencias,
+          verificado: Object.values(coincidencias).every(v => v === true || v === null),
+        };
+      }
+
+      return {
+        encontrado: false,
+        mensaje: 'No se encontró el ticket en la base de datos',
+        datos_buscados: {
+          ticketId: datosExtraidos.ticketId,
+          placa: datosExtraidos.placa,
+        },
+      };
+    } catch (error: any) {
+      return {
+        encontrado: false,
+        error: `Error al validar en BD: ${error.message}`,
+      };
+    }
   }
 }

@@ -19,15 +19,15 @@ export class Ticket {
   fechaSalida: Date;
 
   @ApiProperty({ description: 'ID del vehículo asociado', example: 'veh-001' })
-  @Column({ type: 'varchar' })
+  @Column({ type: 'uuid' })
   vehiculoId: string;
 
   @ApiProperty({ description: 'ID del espacio asignado', example: 'esp-001' })
-  @Column({ type: 'varchar' })
+  @Column({ type: 'uuid' })
   espacioId: string;
 
   @ApiProperty({ description: 'ID del detalle de pago (opcional)', example: 'det-pago-001', required: false })
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ type: 'uuid', nullable: true })
   detallePagoId: string;
 
   @ApiProperty({ description: 'Monto calculado del estacionamiento', required: false })

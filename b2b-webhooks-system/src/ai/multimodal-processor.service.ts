@@ -311,11 +311,14 @@ Tipos de vehículo válidos: automovil, motocicleta, camioneta, camion, biciclet
    * Procesa documento PDF con extracción estructurada
    */
   async processPdf(pdfBuffer: Buffer): Promise<ProcessedInput> {
-    this.logger.debug('Procesando PDF...');
+    this.logger.log(`📄 Procesando PDF... (${pdfBuffer.length} bytes)`);
 
     try {
       const data = await pdfParse(pdfBuffer);
       const extractedText = data.text.trim();
+      
+      this.logger.log(`✅ PDF procesado: ${data.numpages} páginas, ${extractedText.length} caracteres`);
+      this.logger.log(`📝 Texto extraído (primeros 200): ${extractedText.substring(0, 200)}`);
       
       // Detectar entidades en el texto del PDF
       const entities = this.detectBusinessEntities(extractedText);
@@ -336,7 +339,8 @@ Tipos de vehículo válidos: automovil, motocicleta, camioneta, camion, biciclet
         },
       };
     } catch (error: any) {
-      this.logger.error(`Error procesando PDF: ${error.message}`);
+      this.logger.error(`❌ Error procesando PDF: ${error.message}`);
+      this.logger.error(`Stack: ${error.stack}`);
       
       return {
         type: 'pdf',
