@@ -146,7 +146,6 @@ services:
   - type: web
     name: parking-frontend
     runtime: static
-    plan: free
     rootDir: frontend/Frontend
     buildCommand: npm ci && npm run build -- --configuration=production
     staticPublishPath: dist/frontend/browser
