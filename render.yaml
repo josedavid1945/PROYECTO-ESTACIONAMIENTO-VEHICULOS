@@ -1,28 +1,4 @@
-# ===========================================
-# RENDER BLUEPRINT - Sistema de Estacionamiento
-# ===========================================
-# Este archivo define todos los servicios para desplegar en Render
-# 
-# USO:
-# 1. Sube este archivo a tu repositorio GitHub
-# 2. En Render Dashboard → New → Blueprint
-# 3. Conecta tu repositorio
-# 4. Configura las variables secretas (sync: false)
-# 5. Click en Apply
-#
-# VARIABLES SECRETAS A CONFIGURAR MANUALMENTE:
-# - DB_PASSWORD: QWebos2023.
-# - JWT_ACCESS_SECRET: your-super-secret-access-key-change-in-production-2024
-# - JWT_REFRESH_SECRET: your-super-secret-refresh-key-change-in-production-2024
-# - DATABASE_URL: postgresql://postgres:QWebos2023.@db.jqqruzcbtcqcmzkogxqo.supabase.co:5432/postgres
-# - GEMINI_API_KEY: tu-api-key-de-gemini
-# - INTERNAL_SERVICE_KEY: internal-service-key-2024
-# ===========================================
-
 services:
-  # ===========================================
-  # AUTH SERVICE - Microservicio de Autenticación
-  # ===========================================
   - type: web
     name: parking-auth-service
     runtime: node
@@ -37,7 +13,6 @@ services:
         value: production
       - key: PORT
         value: 3002
-      # Database - Supabase
       - key: DB_HOST
         value: db.jqqruzcbtcqcmzkogxqo.supabase.co
       - key: DB_PORT
@@ -45,30 +20,24 @@ services:
       - key: DB_USERNAME
         value: postgres
       - key: DB_PASSWORD
-        sync: false  # Configurar manualmente: QWebos2023.
+        sync: false
       - key: DB_DATABASE
         value: postgres
-      # JWT Secrets
       - key: JWT_ACCESS_SECRET
-        sync: false  # Configurar manualmente
+        sync: false
       - key: JWT_REFRESH_SECRET
-        sync: false  # Configurar manualmente
+        sync: false
       - key: JWT_ACCESS_EXPIRATION
         value: 15m
       - key: JWT_REFRESH_EXPIRATION
         value: 7d
-      # Rate Limiting
       - key: RATE_LIMIT_TTL
         value: 60
       - key: RATE_LIMIT_MAX
         value: 100
-      # Internal Service Key
       - key: INTERNAL_SERVICE_KEY
         sync: false
 
-  # ===========================================
-  # BACKEND REST - API Principal (NestJS)
-  # ===========================================
   - type: web
     name: parking-backend-rest
     runtime: node
@@ -83,7 +52,6 @@ services:
         value: production
       - key: PORT
         value: 3000
-      # Database - Supabase
       - key: DB_HOST
         value: db.jqqruzcbtcqcmzkogxqo.supabase.co
       - key: DB_PORT
@@ -91,21 +59,17 @@ services:
       - key: DB_USERNAME
         value: postgres
       - key: DB_PASSWORD
-        sync: false  # Configurar manualmente: QWebos2023.
+        sync: false
       - key: DB_DATABASE
         value: postgres
       - key: DB_SSL
         value: true
-      # Auth Service URL - Se llena automáticamente
       - key: AUTH_SERVICE_URL
         fromService:
           name: parking-auth-service
           type: web
           property: hostport
 
-  # ===========================================
-  # B2B WEBHOOKS - Sistema de Webhooks y Chatbot
-  # ===========================================
   - type: web
     name: parking-b2b-webhooks
     runtime: node
@@ -120,29 +84,22 @@ services:
         value: production
       - key: PORT
         value: 3001
-      # Database URL completa para Prisma/TypeORM
       - key: DATABASE_URL
-        sync: false  # postgresql://postgres:QWebos2023.@db.jqqruzcbtcqcmzkogxqo.supabase.co:5432/postgres
-      # Gemini AI
+        sync: false
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_API_KEY_BACKUP
         sync: false
-      # Parking API URL - Se llena automáticamente
       - key: PARKING_API_URL
         fromService:
           name: parking-backend-rest
           type: web
           property: hostport
-      # Stripe (opcional)
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
 
-  # ===========================================
-  # GRAPHQL SERVICE - API GraphQL (Python/Strawberry)
-  # ===========================================
   - type: web
     name: parking-graphql
     runtime: python
@@ -154,7 +111,7 @@ services:
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        sync: false  # postgresql://postgres:QWebos2023.@db.jqqruzcbtcqcmzkogxqo.supabase.co:5432/postgres
+        sync: false
       - key: HOST
         value: 0.0.0.0
       - key: PORT
@@ -163,13 +120,9 @@ services:
         value: false
       - key: PYTHONUNBUFFERED
         value: 1
-      # CORS - Se actualizará con la URL del frontend
       - key: CORS_ORIGINS
         value: https://parking-frontend.onrender.com
 
-  # ===========================================
-  # WEBSOCKET SERVER - Tiempo Real (Go)
-  # ===========================================
   - type: web
     name: parking-websocket
     runtime: go
@@ -184,16 +137,12 @@ services:
         value: rest
       - key: PORT
         value: 8080
-      # REST API URL - Se llena automáticamente
       - key: REST_API_URL
         fromService:
           name: parking-backend-rest
           type: web
           property: hostport
 
-  # ===========================================
-  # FRONTEND - Aplicación Angular (Static Site)
-  # ===========================================
   - type: web
     name: parking-frontend
     runtime: static
@@ -206,7 +155,6 @@ services:
         name: Cache-Control
         value: no-cache
     routes:
-      # SPA - Todas las rutas redirigen a index.html
       - type: rewrite
         source: /*
         destination: /index.html
