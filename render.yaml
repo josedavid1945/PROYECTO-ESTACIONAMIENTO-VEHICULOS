@@ -148,7 +148,7 @@ services:
     runtime: static
     rootDir: frontend/Frontend
     buildCommand: npm ci && npm run build -- --configuration=production
-    staticPublishPath: dist/frontend/browser
+    staticPublishPath: dist/Frontend/browser
     headers:
       - path: /*
         name: Cache-Control
