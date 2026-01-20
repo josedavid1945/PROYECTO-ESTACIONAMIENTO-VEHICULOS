@@ -106,6 +106,8 @@ services:
     envVars:
       - key: DATABASE_URL
         sync: false
+      - key: API_URL
+        value: https://parking-backend-rest-g7vl.onrender.com
       - key: HOST
         value: 0.0.0.0
       - key: PORT
@@ -115,7 +117,7 @@ services:
       - key: PYTHONUNBUFFERED
         value: 1
       - key: CORS_ORIGINS
-        value: https://parking-frontend.onrender.com
+        value: https://parking-frontend-g7vl.onrender.com
 
   - type: web
     name: parking-websocket
