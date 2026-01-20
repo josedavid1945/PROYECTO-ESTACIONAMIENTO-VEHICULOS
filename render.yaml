@@ -5,8 +5,8 @@ services:
     region: oregon
     plan: free
     rootDir: auth-service
-    buildCommand: npm ci && npm run build
-    startCommand: npm run start:prod
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: node dist/main
     healthCheckPath: /auth/health
     envVars:
       - key: NODE_ENV
@@ -44,8 +44,8 @@ services:
     region: oregon
     plan: free
     rootDir: backend-rest/API - copia/alquiler-rest
-    buildCommand: npm ci && npm run build
-    startCommand: npm run start:prod
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: node dist/main
     healthCheckPath: /api
     envVars:
       - key: NODE_ENV
@@ -76,8 +76,8 @@ services:
     region: oregon
     plan: free
     rootDir: b2b-webhooks-system
-    buildCommand: npm ci && npm run build
-    startCommand: npm run start:prod
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: node dist/main
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
