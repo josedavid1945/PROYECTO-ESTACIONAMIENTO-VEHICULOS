@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, Subject, catchError, of, tap } from 'rxjs';
 import { AuthService } from '../auth/services/auth.service';
 import { TicketPdfService, TicketData } from './ticket-pdf.service';
+import { environment } from '../../../environments/environment';
 
 export interface ChatMessage {
   id: string;
@@ -41,7 +42,7 @@ export interface SendMessageResponse {
   providedIn: 'root'
 })
 export class ChatService {
-  private readonly apiUrl = 'http://localhost:3001/mcp';
+  private readonly apiUrl = `${environment.b2bApiUrl}/mcp`;
   private authService = inject(AuthService);
   private ticketPdfService = inject(TicketPdfService);
   
