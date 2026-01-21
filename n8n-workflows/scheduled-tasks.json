@@ -1,0 +1,296 @@
+{
+  "name": "Scheduled Tasks - Parking System",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "node-cron-daily-report",
+      "name": "1a. Cron Reporte Diario (8am)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 140]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/5 * * * *"
+            }
+          ]
+        }
+      },
+      "id": "node-cron-health",
+      "name": "1b. Health Check (cada 5 min)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 * * *"
+            }
+          ]
+        }
+      },
+      "id": "node-cron-cleanup",
+      "name": "1c. Limpieza Datos (2am)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 460]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */4 * * *"
+            }
+          ]
+        }
+      },
+      "id": "node-cron-reminder",
+      "name": "1d. Recordatorios (cada 4h)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 620]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://parking-backend-rest:3000/dashboard",
+        "options": {}
+      },
+      "id": "node-get-dashboard",
+      "name": "2a. Obtener Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 140]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generar reporte diario\nconst dashboard = $input.first().json;\nconst today = new Date().toISOString().split('T')[0];\n\nconst report = {\n  fecha: today,\n  resumen: {\n    espaciosTotales: dashboard.espaciosTotales || 0,\n    espaciosOcupados: dashboard.espaciosOcupados || 0,\n    espaciosDisponibles: dashboard.espaciosDisponibles || 0,\n    ocupacion: dashboard.porcentajeOcupacion || 0\n  },\n  ingresos: dashboard.ingresosHoy || 0,\n  ticketsHoy: dashboard.ticketsHoy || 0,\n  generadoEn: new Date().toISOString()\n};\n\nconsole.log('Reporte diario generado:', JSON.stringify(report));\n\nreturn { json: report };"
+      },
+      "id": "node-generate-report",
+      "name": "3a. Generar Reporte",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 140]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Health Check de todos los servicios\nconst services = [\n  { name: 'Backend REST', url: 'http://parking-backend-rest:3000' },\n  { name: 'GraphQL', url: 'http://parking-graphql:8000/health' },\n  { name: 'WebSocket', url: 'http://parking-websocket:8080/health' },\n  { name: 'B2B Service', url: 'http://parking-b2b-webhooks:3001/health' }\n];\n\nconst results = [];\nfor (const service of services) {\n  try {\n    // Solo registrar intención de check\n    results.push({\n      service: service.name,\n      url: service.url,\n      status: 'pending',\n      checkedAt: new Date().toISOString()\n    });\n  } catch (error) {\n    results.push({\n      service: service.name,\n      status: 'error',\n      error: error.message\n    });\n  }\n}\n\nreturn { json: { healthChecks: results, timestamp: new Date().toISOString() } };"
+      },
+      "id": "node-health-check",
+      "name": "2b. Preparar Health Checks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://parking-backend-rest:3000",
+        "options": {
+          "timeout": 5000
+        }
+      },
+      "id": "node-check-backend",
+      "name": "3b. Check Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "http://parking-backend-rest:3000/registro/vehiculos-ocupados",
+        "options": {}
+      },
+      "id": "node-get-long-parking",
+      "name": "2c. Obtener Vehículos Ocupados",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 460]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Limpiar tickets antiguos (más de 30 días)\nconst vehiculos = $input.first().json || [];\nconst now = new Date();\nconst oldTickets = [];\n\nif (Array.isArray(vehiculos)) {\n  for (const v of vehiculos) {\n    if (v.ticket && v.ticket.fechaIngreso) {\n      const ingreso = new Date(v.ticket.fechaIngreso);\n      const diffDays = (now - ingreso) / (1000 * 60 * 60 * 24);\n      if (diffDays > 30) {\n        oldTickets.push({\n          ticketId: v.ticket.id,\n          placa: v.vehiculo?.placa,\n          dias: Math.floor(diffDays)\n        });\n      }\n    }\n  }\n}\n\nconsole.log('Tickets antiguos encontrados:', oldTickets.length);\n\nreturn {\n  json: {\n    task: 'cleanup',\n    oldTicketsFound: oldTickets.length,\n    tickets: oldTickets,\n    executedAt: new Date().toISOString()\n  }\n};"
+      },
+      "id": "node-cleanup-old",
+      "name": "3c. Identificar Tickets Antiguos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [750, 460]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Verificar vehículos estacionados por más de 24 horas\nconst vehiculosOcupados = $input.first().json || [];\nconst now = new Date();\nconst reminders = [];\n\nif (Array.isArray(vehiculosOcupados)) {\n  for (const v of vehiculosOcupados) {\n    if (v.tiempoActual && v.tiempoActual.horas >= 24) {\n      reminders.push({\n        placa: v.vehiculo?.placa || 'N/A',\n        horas: v.tiempoActual.horas,\n        cliente: v.cliente?.nombre || 'Sin cliente',\n        montoEstimado: v.tiempoActual.montoEstimado || 0\n      });\n    }\n  }\n}\n\nconsole.log('Vehículos con más de 24h:', reminders.length);\n\nreturn {\n  json: {\n    task: 'reminders',\n    vehiculosLargaEstancia: reminders.length,\n    vehiculos: reminders,\n    executedAt: new Date().toISOString()\n  }\n};"
+      },
+      "id": "node-check-reminders",
+      "name": "2d. Verificar Larga Estancia",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 620]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log final de tareas programadas\nconst input = $input.first().json;\nconsole.log('Tarea programada completada:', JSON.stringify(input));\n\nreturn {\n  json: {\n    ...input,\n    logged: true,\n    completedAt: new Date().toISOString()\n  }\n};"
+      },
+      "id": "node-log-task",
+      "name": "4. Log Tarea",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 380]
+    }
+  ],
+  "connections": {
+    "1a. Cron Reporte Diario (8am)": {
+      "main": [
+        [
+          {
+            "node": "2a. Obtener Dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2a. Obtener Dashboard": {
+      "main": [
+        [
+          {
+            "node": "3a. Generar Reporte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3a. Generar Reporte": {
+      "main": [
+        [
+          {
+            "node": "4. Log Tarea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1b. Health Check (cada 5 min)": {
+      "main": [
+        [
+          {
+            "node": "2b. Preparar Health Checks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2b. Preparar Health Checks": {
+      "main": [
+        [
+          {
+            "node": "3b. Check Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3b. Check Backend": {
+      "main": [
+        [
+          {
+            "node": "4. Log Tarea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1c. Limpieza Datos (2am)": {
+      "main": [
+        [
+          {
+            "node": "2c. Obtener Vehículos Ocupados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2c. Obtener Vehículos Ocupados": {
+      "main": [
+        [
+          {
+            "node": "3c. Identificar Tickets Antiguos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3c. Identificar Tickets Antiguos": {
+      "main": [
+        [
+          {
+            "node": "4. Log Tarea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1d. Recordatorios (cada 4h)": {
+      "main": [
+        [
+          {
+            "node": "2d. Verificar Larga Estancia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2d. Verificar Larga Estancia": {
+      "main": [
+        [
+          {
+            "node": "4. Log Tarea",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "scheduled"
+    },
+    {
+      "name": "cron"
+    }
+  ]
+}

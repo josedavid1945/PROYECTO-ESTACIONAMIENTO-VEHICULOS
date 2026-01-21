@@ -480,14 +480,25 @@ export class RegistroService {
     });
 
     if (!vehiculo) {
-      return null;
+      throw new NotFoundException(`Vehículo con placa ${placa} no encontrado`);
     }
 
-    // Buscar ticket activo si existe
-    const ticketActivo = await this.ticketRepository.findOne({
-      where: { vehiculoId: vehiculo.id, fechaSalida: IsNull() },
-      relations: ['espacio']
-    });
+    // Buscar ticket activo usando raw query simple
+    let ticketActivo = null;
+    try {
+      const vehiculoUuid = vehiculo.id;
+      const tickets = await this.dataSource.query(`
+        SELECT id, "fechaIngreso", "fechaSalida", "vehiculoId", "espacioId"
+        FROM ticket 
+        WHERE "vehiculoId"::text = '${vehiculoUuid}' AND "fechaSalida" IS NULL 
+        LIMIT 1`
+      );
+      if (tickets.length > 0) {
+        ticketActivo = tickets[0];
+      }
+    } catch (error) {
+      console.error('Error buscando ticket activo:', error.message);
+    }
 
     return { ...vehiculo, ticketActivo };
   }

@@ -1,0 +1,308 @@
+{
+  "name": "Payment Handler - Parking B2B",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-payment-webhook",
+      "name": "1. Payment Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "payment-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// VALIDACIÓN DE PAYLOAD DE PAGO\n// ============================================\nconst body = $input.first().json.body || {};\nconst headers = $input.first().json.headers || {};\n\n// Validar campos requeridos\nconst requiredFields = ['paymentId', 'amount', 'status', 'ticketId'];\nconst missingFields = requiredFields.filter(f => !body[f]);\n\nif (missingFields.length > 0) {\n  throw new Error('Missing required fields: ' + missingFields.join(', '));\n}\n\n// Validar que el monto sea positivo\nif (body.amount <= 0) {\n  throw new Error('Invalid amount: must be positive');\n}\n\n// Validar estados permitidos\nconst validStatuses = ['completed', 'pending', 'failed', 'refunded'];\nif (!validStatuses.includes(body.status)) {\n  throw new Error('Invalid status: ' + body.status);\n}\n\nconsole.log('Payment validated:', body.paymentId, 'Status:', body.status);\n\nreturn {\n  json: {\n    valid: true,\n    paymentId: body.paymentId,\n    ticketId: body.ticketId,\n    amount: body.amount,\n    status: body.status,\n    method: body.method || 'card',\n    customerEmail: body.customerEmail,\n    metadata: body.metadata || {},\n    receivedAt: new Date().toISOString()\n  }\n};"
+      },
+      "id": "node-validate-payment",
+      "name": "2. Validar Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "completed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Completado"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "failed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Fallido"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "refunded",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Reembolso"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-switch-status",
+      "name": "3. Switch Status",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://parking-backend-rest:3000/pagos/confirmar",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ticketId\": \"{{ $json.ticketId }}\",\n  \"paymentId\": \"{{ $json.paymentId }}\",\n  \"amount\": {{ $json.amount }},\n  \"method\": \"{{ $json.method }}\"\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "node-confirm-payment",
+      "name": "4a. Confirmar Pago",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 140]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://parking-websocket:8080/notify",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"type\": \"payment_confirmed\",\n  \"ticketId\": \"{{ $('2. Validar Payload').item.json.ticketId }}\",\n  \"amount\": {{ $('2. Validar Payload').item.json.amount }},\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      },
+      "id": "node-notify-ws",
+      "name": "5a. Notificar WebSocket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1180, 140]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log de pago fallido\nconst payment = $input.first().json;\nconsole.error('Payment failed:', payment.paymentId);\n\nreturn {\n  json: {\n    success: false,\n    message: 'Payment failed',\n    paymentId: payment.paymentId,\n    ticketId: payment.ticketId,\n    processedAt: new Date().toISOString()\n  }\n};"
+      },
+      "id": "node-payment-failed",
+      "name": "4b. Log Pago Fallido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [950, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://parking-backend-rest:3000/pagos/reembolso",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"ticketId\": \"{{ $json.ticketId }}\",\n  \"paymentId\": \"{{ $json.paymentId }}\",\n  \"amount\": {{ $json.amount }}\n}",
+        "options": {}
+      },
+      "id": "node-refund",
+      "name": "4c. Procesar Reembolso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [950, 460]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://parking-b2b-webhooks:3001/webhooks/partner-notify",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"event\": \"payment.processed\",\n  \"paymentId\": \"{{ $('2. Validar Payload').item.json.paymentId }}\",\n  \"ticketId\": \"{{ $('2. Validar Payload').item.json.ticketId }}\",\n  \"status\": \"{{ $('2. Validar Payload').item.json.status }}\",\n  \"amount\": {{ $('2. Validar Payload').item.json.amount }},\n  \"processedAt\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      },
+      "id": "node-partner-webhook",
+      "name": "6. Notificar Partner",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1410, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Payment processed\",\n  \"paymentId\": \"{{ $('2. Validar Payload').item.json.paymentId }}\",\n  \"status\": \"{{ $('2. Validar Payload').item.json.status }}\",\n  \"processedAt\": \"{{ new Date().toISOString() }}\"\n}"
+      },
+      "id": "node-respond-ack",
+      "name": "7. Responder ACK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1640, 300]
+    }
+  ],
+  "connections": {
+    "1. Payment Webhook": {
+      "main": [
+        [
+          {
+            "node": "2. Validar Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Validar Payload": {
+      "main": [
+        [
+          {
+            "node": "3. Switch Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Switch Status": {
+      "main": [
+        [
+          {
+            "node": "4a. Confirmar Pago",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "4b. Log Pago Fallido",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "4c. Procesar Reembolso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4a. Confirmar Pago": {
+      "main": [
+        [
+          {
+            "node": "5a. Notificar WebSocket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5a. Notificar WebSocket": {
+      "main": [
+        [
+          {
+            "node": "6. Notificar Partner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4b. Log Pago Fallido": {
+      "main": [
+        [
+          {
+            "node": "6. Notificar Partner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4c. Procesar Reembolso": {
+      "main": [
+        [
+          {
+            "node": "6. Notificar Partner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Notificar Partner": {
+      "main": [
+        [
+          {
+            "node": "7. Responder ACK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "payments"
+    },
+    {
+      "name": "b2b"
+    }
+  ]
+}

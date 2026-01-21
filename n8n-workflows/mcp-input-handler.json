@@ -1,0 +1,232 @@
+{
+  "name": "MCP Input Handler - Chat AI",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mcp-input",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "node-mcp-webhook",
+      "name": "1. MCP Input Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "mcp-input-handler"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// EXTRACTOR DE CONTENIDO Y ADJUNTOS\n// ============================================\nconst body = $input.first().json.body || {};\nconst headers = $input.first().json.headers || {};\n\n// Detectar canal de origen\nconst channel = headers['x-channel'] || body.channel || 'api';\nconst supportedChannels = ['telegram', 'email', 'api', 'web'];\n\nif (!supportedChannels.includes(channel)) {\n  throw new Error('Unsupported channel: ' + channel);\n}\n\n// Extraer contenido según el canal\nlet message = '';\nlet attachments = [];\nlet sender = {};\n\nswitch(channel) {\n  case 'telegram':\n    message = body.message?.text || body.text || '';\n    sender = {\n      id: body.message?.from?.id || body.from?.id,\n      name: body.message?.from?.first_name || body.from?.first_name,\n      username: body.message?.from?.username || body.from?.username\n    };\n    if (body.message?.photo) attachments.push({ type: 'photo', data: body.message.photo });\n    if (body.message?.document) attachments.push({ type: 'document', data: body.message.document });\n    break;\n  case 'email':\n    message = body.text || body.body || '';\n    sender = {\n      email: body.from || body.sender,\n      name: body.fromName || ''\n    };\n    if (body.attachments) attachments = body.attachments;\n    break;\n  default:\n    message = body.message || body.query || body.text || '';\n    sender = body.user || { id: 'anonymous' };\n}\n\nif (!message) {\n  throw new Error('No message content found');\n}\n\nconsole.log('MCP Input received from:', channel);\n\nreturn {\n  json: {\n    channel: channel,\n    message: message,\n    sender: sender,\n    attachments: attachments,\n    hasAttachments: attachments.length > 0,\n    receivedAt: new Date().toISOString(),\n    originalPayload: body\n  }\n};"
+      },
+      "id": "node-extract-content",
+      "name": "2. Extraer Contenido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://parking-b2b-webhooks:3001/mcp/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"message\": \"{{ $json.message }}\",\n  \"channel\": \"{{ $json.channel }}\",\n  \"userId\": \"{{ $json.sender.id || $json.sender.email || 'anonymous' }}\",\n  \"context\": {\n    \"hasAttachments\": {{ $json.hasAttachments }},\n    \"attachmentCount\": {{ $json.attachments.length }}\n  }\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "node-ai-orchestrator",
+      "name": "3. Enviar a AI Orchestrator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('2. Extraer Contenido').item.json.channel }}",
+                    "rightValue": "telegram",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Telegram"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('2. Extraer Contenido').item.json.channel }}",
+                    "rightValue": "email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('2. Extraer Contenido').item.json.channel }}",
+                    "rightValue": "api",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "API"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "node-switch-channel",
+      "name": "4. Switch Canal",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Preparar respuesta para Telegram\nconst aiResponse = $input.first().json;\nconst originalInput = $('2. Extraer Contenido').item.json;\n\nreturn {\n  json: {\n    method: 'sendMessage',\n    chat_id: originalInput.sender.id,\n    text: aiResponse.response || aiResponse.message || 'No response from AI',\n    parse_mode: 'HTML'\n  }\n};"
+      },
+      "id": "node-telegram-response",
+      "name": "5a. Preparar Telegram",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 140]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Preparar respuesta para Email\nconst aiResponse = $input.first().json;\nconst originalInput = $('2. Extraer Contenido').item.json;\n\nreturn {\n  json: {\n    to: originalInput.sender.email,\n    subject: 'Re: Consulta Parking System',\n    body: aiResponse.response || aiResponse.message || 'No response from AI',\n    isHtml: false\n  }\n};"
+      },
+      "id": "node-email-response",
+      "name": "5b. Preparar Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"channel\": \"{{ $('2. Extraer Contenido').item.json.channel }}\",\n  \"response\": {{ JSON.stringify($('3. Enviar a AI Orchestrator').item.json) }},\n  \"processedAt\": \"{{ new Date().toISOString() }}\"\n}"
+      },
+      "id": "node-api-response",
+      "name": "5c. Responder API",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 460]
+    }
+  ],
+  "connections": {
+    "1. MCP Input Webhook": {
+      "main": [
+        [
+          {
+            "node": "2. Extraer Contenido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Extraer Contenido": {
+      "main": [
+        [
+          {
+            "node": "3. Enviar a AI Orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Enviar a AI Orchestrator": {
+      "main": [
+        [
+          {
+            "node": "4. Switch Canal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Switch Canal": {
+      "main": [
+        [
+          {
+            "node": "5a. Preparar Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5b. Preparar Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5c. Responder API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [
+    {
+      "name": "mcp"
+    },
+    {
+      "name": "ai"
+    },
+    {
+      "name": "chat"
+    }
+  ]
+}
