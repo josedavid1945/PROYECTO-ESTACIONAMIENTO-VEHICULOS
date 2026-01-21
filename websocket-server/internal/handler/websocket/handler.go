@@ -15,7 +15,7 @@ import (
 func getAllowedOrigins() []string {
 	origins := os.Getenv("ALLOWED_ORIGINS")
 	if origins == "" {
-		// Orígenes por defecto para desarrollo
+		// Orígenes por defecto para desarrollo y producción
 		return []string{
 			"http://localhost",
 			"http://localhost:80",
@@ -24,9 +24,25 @@ func getAllowedOrigins() []string {
 			"http://127.0.0.1",
 			"http://127.0.0.1:4200",
 			"http://127.0.0.1:80",
+			"https://parking-frontend-g7vl.onrender.com",
 		}
 	}
 	return strings.Split(origins, ",")
+}
+
+// isAllowedOrigin verifica si el origen está permitido (incluye .onrender.com)
+func isAllowedOrigin(origin string) bool {
+	// Permitir cualquier subdominio de onrender.com
+	if strings.HasSuffix(origin, ".onrender.com") {
+		return true
+	}
+	// Verificar contra orígenes permitidos explícitos
+	for _, allowed := range getAllowedOrigins() {
+		if strings.TrimSpace(allowed) == origin {
+			return true
+		}
+	}
+	return false
 }
 
 var upgrader = websocket.Upgrader{
@@ -38,11 +54,9 @@ var upgrader = websocket.Upgrader{
 		if origin == "" {
 			return true
 		}
-		// Verificar contra orígenes permitidos
-		for _, allowed := range getAllowedOrigins() {
-			if strings.TrimSpace(allowed) == origin {
-				return true
-			}
+		// Verificar con la función centralizada
+		if isAllowedOrigin(origin) {
+			return true
 		}
 		log.Printf("Origen WebSocket rechazado: %s", origin)
 		return false

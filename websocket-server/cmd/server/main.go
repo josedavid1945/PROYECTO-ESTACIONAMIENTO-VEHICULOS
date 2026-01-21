@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -151,12 +152,35 @@ func main() {
 	log.Println("👋 Servidor cerrado correctamente")
 }
 
-// corsMiddleware agrega headers CORS
-func corsMiddleware(next http.Handler, origin string) http.Handler {
+// corsMiddleware agrega headers CORS con soporte para múltiples orígenes
+func corsMiddleware(next http.Handler, defaultOrigin string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", origin)
+		origin := r.Header.Get("Origin")
+		
+		// Lista de orígenes permitidos
+		allowedOrigins := []string{
+			"http://localhost:4200",
+			"http://localhost:3000",
+			"https://parking-frontend-g7vl.onrender.com",
+		}
+		
+		// Verificar si el origen está permitido o es de onrender.com
+		allowOrigin := defaultOrigin
+		for _, allowed := range allowedOrigins {
+			if origin == allowed {
+				allowOrigin = origin
+				break
+			}
+		}
+		// Permitir cualquier subdominio de onrender.com
+		if strings.HasSuffix(origin, ".onrender.com") {
+			allowOrigin = origin
+		}
+		
+		w.Header().Set("Access-Control-Allow-Origin", allowOrigin)
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)

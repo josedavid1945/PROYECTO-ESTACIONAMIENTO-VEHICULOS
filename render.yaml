@@ -88,7 +88,7 @@ services:
       - key: GEMINI_API_KEY_BACKUP
         sync: false
       - key: PARKING_API_URL
-        value: https://parking-backend-rest.onrender.com
+        value: https://parking-backend-rest-g7vl.onrender.com
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
@@ -134,7 +134,9 @@ services:
       - key: PORT
         value: 8080
       - key: REST_API_URL
-        value: https://parking-backend-rest.onrender.com
+        value: https://parking-backend-rest-g7vl.onrender.com
+      - key: CORS_ORIGIN
+        value: https://parking-frontend-g7vl.onrender.com
 
   - type: web
     name: parking-frontend
