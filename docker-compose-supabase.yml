@@ -1,35 +1,13 @@
 # =====================================================
-# DOCKER COMPOSE - PRODUCCIÓN
+# DOCKER COMPOSE - CON SUPABASE (DB REMOTA)
 # =====================================================
-# Para deploy en cualquier servidor con Docker
+# Usa este archivo cuando tu base de datos está en Supabase
+# No incluye contenedor PostgreSQL local
 # =====================================================
-# Para usar Supabase, cambiar las variables DB_* a las
-# credenciales de Supabase y agregar DB_SSL: "true"
+# Uso: docker-compose -f docker-compose-supabase.yml up -d
 # =====================================================
 
 services:
-  # ==================== DATABASE ====================
-  postgres:
-    image: postgres:16-alpine
-    container_name: parking-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${DB_USERNAME:-parking_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-parking_secret}
-      POSTGRES_DB: ${DB_DATABASE:-parking_db}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/auth-init.sql:/docker-entrypoint-initdb.d/01-auth-init.sql
-    ports:
-      - "5433:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-parking_user} -d ${DB_DATABASE:-parking_db}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - parking-network
-
   # ==================== BACKEND REST API ====================
   backend-rest:
     build:
@@ -38,25 +16,22 @@ services:
     container_name: parking-backend-rest
     restart: unless-stopped
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3000
-      DB_HOST: ${DB_HOST:-postgres}
+      DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT:-5432}
-      DB_USERNAME: ${DB_USERNAME:-parking_user}
-      DB_PASSWORD: ${DB_PASSWORD:-parking_secret}
-      DB_DATABASE: ${DB_DATABASE:-parking_db}
-      DB_SSL: ${DB_SSL:-false}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_SSL: ${DB_SSL:-true}
     ports:
       - "3000:3000"
-    depends_on:
-      postgres:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/dashboard/health"]
-      interval: 10s
-      timeout: 5s
+      interval: 15s
+      timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 45s
     networks:
       - parking-network
 
@@ -68,27 +43,25 @@ services:
     container_name: parking-auth
     restart: unless-stopped
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3001
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-super_secret_access_jwt_key_change_in_production}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-super_secret_refresh_jwt_key_change_in_production}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USERNAME: ${DB_USERNAME:-parking_user}
-      DB_PASSWORD: ${DB_PASSWORD:-parking_secret}
-      DB_DATABASE: parking_auth
+      JWT_ACCESS_SECRET: ${JWT_SECRET:-super_secret_access_jwt_key_change_in_production}
+      JWT_REFRESH_SECRET: ${JWT_SECRET:-super_secret_refresh_jwt_key_change_in_production}
+      JWT_EXPIRES_IN: ${JWT_ACCESS_EXPIRATION:-24h}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_SSL: ${DB_SSL:-true}
     ports:
       - "3001:3001"
-    depends_on:
-      postgres:
-        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/health"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/auth/health"]
+      interval: 15s
+      timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 45s
     networks:
       - parking-network
 
@@ -103,19 +76,16 @@ services:
       HOST: 0.0.0.0
       PORT: 8000
       DEBUG: "false"
-      DATABASE_URL: postgresql://${DB_USERNAME:-parking_user}:${DB_PASSWORD:-parking_secret}@postgres:5432/${DB_DATABASE:-parking_db}
+      DATABASE_URL: ${DATABASE_URL}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4200,http://localhost}
     ports:
       - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 15s
+      timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 45s
     networks:
       - parking-network
 
@@ -131,20 +101,18 @@ services:
       MODE: rest
       REST_API_URL: http://backend-rest:3000
       ALLOWED_ORIGINS: http://localhost,http://localhost:80,http://localhost:4200,http://127.0.0.1
-      DATABASE_URL: postgresql://${DB_USERNAME:-parking_user}:${DB_PASSWORD:-parking_secret}@postgres:5432/${DB_DATABASE:-parking_db}
+      DATABASE_URL: ${DATABASE_URL}
     ports:
       - "8080:8080"
     depends_on:
-      postgres:
-        condition: service_healthy
       backend-rest:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 5s
+      interval: 15s
+      timeout: 10s
       retries: 5
-      start_period: 10s
+      start_period: 30s
     networks:
       - parking-network
 
@@ -156,23 +124,21 @@ services:
     container_name: parking-b2b
     restart: unless-stopped
     environment:
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV:-development}
       PORT: 3002
-      DATABASE_URL: postgresql://${DB_USERNAME:-parking_user}:${DB_PASSWORD:-parking_secret}@postgres:5432/${DB_DATABASE:-parking_db}
-      DB_SSL: "false"
+      DATABASE_URL: ${DATABASE_URL}
+      DB_SSL: ${DB_SSL:-true}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_API_KEY_BACKUP: ${GEMINI_API_KEY_BACKUP:-}
+      PARKING_API_URL: http://backend-rest:3000
     ports:
       - "3002:3002"
-    depends_on:
-      postgres:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3002/health"]
-      interval: 10s
-      timeout: 5s
+      interval: 15s
+      timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 45s
     networks:
       - parking-network
 
@@ -193,8 +159,29 @@ services:
     networks:
       - parking-network
 
-volumes:
-  postgres_data:
+  # ==================== N8N - EVENT BUS (PARTNER HANDLER) ====================
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: parking-n8n
+    restart: unless-stopped
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-parking2026}
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://n8n:5678/
+      - GENERIC_TIMEZONE=America/La_Paz
+      # Variables para conectar con el sistema
+      - B2B_API_URL=http://b2b-webhooks:3002
+      - BACKEND_API_URL=http://backend-rest:3000
+    ports:
+      - "5678:5678"
+    volumes:
+      - ./n8n-data:/home/node/.n8n
+    networks:
+      - parking-network
 
 networks:
   parking-network:

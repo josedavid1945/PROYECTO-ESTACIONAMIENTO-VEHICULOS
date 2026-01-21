@@ -1,0 +1,118 @@
+{
+  "name": "Partner Handler - Parking B2B",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "partner-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-1111-2222-3333-444455556666",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "partner-webhook-id"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraer headers y body del webhook\nconst headers = $input.first().json.headers || {};\nconst body = $input.first().json.body || {};\n\n// Obtener datos de autenticación HMAC\nconst apiKey = headers['x-api-key'] || '';\nconst signature = headers['x-signature'] || '';\nconst timestamp = headers['x-timestamp'] || '';\nconst nonce = headers['x-nonce'] || '';\nconst eventType = headers['x-webhook-event'] || 'unknown';\n\n// Log para debugging\nconsole.log('Webhook recibido:', eventType);\n\n// Validaciones básicas\nif (!apiKey || !signature || !timestamp) {\n  return { json: { error: 'Missing auth headers', valid: false } };\n}\n\nreturn {\n  json: {\n    valid: true,\n    eventType,\n    partnerId: apiKey,\n    payload: body,\n    auth: { apiKey, signature, timestamp, nonce },\n    receivedAt: new Date().toISOString()\n  }\n};"
+      },
+      "id": "a1b2c3d4-2222-3333-4444-555566667777",
+      "name": "Validar Headers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://parking-b2b:3002/webhooks/receive",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{ $json.auth.apiKey }}"
+            },
+            {
+              "name": "X-Signature",
+              "value": "={{ $json.auth.signature }}"
+            },
+            {
+              "name": "X-Timestamp",
+              "value": "={{ $json.auth.timestamp }}"
+            },
+            {
+              "name": "X-Webhook-Event",
+              "value": "={{ $json.eventType }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": {}
+      },
+      "id": "a1b2c3d4-3333-4444-5555-666677778888",
+      "name": "Enviar a B2B System",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Event processed', eventType: $json.eventType, processedAt: new Date().toISOString() }) }}"
+      },
+      "id": "a1b2c3d4-4444-5555-6666-777788889999",
+      "name": "Responder ACK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [920, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Validar Headers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Headers": {
+      "main": [
+        [
+          {
+            "node": "Enviar a B2B System",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar a B2B System": {
+      "main": [
+        [
+          {
+            "node": "Responder ACK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "1",
+  "triggerCount": 0
+}

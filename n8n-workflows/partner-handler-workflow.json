@@ -1,0 +1,477 @@
+{
+  "name": "Partner Handler - Parking B2B",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "partner-webhook",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Recibir de Partner",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraer headers y body del webhook\nconst headers = $input.first().json.headers || {};\nconst body = $input.first().json.body || {};\n\n// Obtener datos de autenticación HMAC\nconst apiKey = headers['x-api-key'] || '';\nconst signature = headers['x-signature'] || '';\nconst timestamp = headers['x-timestamp'] || '';\nconst nonce = headers['x-nonce'] || '';\nconst eventType = headers['x-webhook-event'] || 'unknown';\n\n// Log para debugging\nconsole.log('🔔 Webhook recibido:', eventType);\nconsole.log('📋 API Key:', apiKey.substring(0, 15) + '...');\n\n// Validaciones básicas\nif (!apiKey || !signature || !timestamp) {\n  throw new Error('Missing required authentication headers');\n}\n\n// Validar timestamp (máximo 5 minutos de diferencia)\nconst currentTime = Math.floor(Date.now() / 1000);\nconst requestTime = parseInt(timestamp, 10);\nconst timeDiff = Math.abs(currentTime - requestTime);\n\nif (timeDiff > 300) {\n  throw new Error(`Timestamp expired: ${timeDiff}s difference`);\n}\n\nreturn {\n  json: {\n    valid: true,\n    eventType,\n    partnerId: apiKey,\n    payload: body,\n    auth: {\n      apiKey,\n      signature,\n      timestamp,\n      nonce\n    },\n    receivedAt: new Date().toISOString()\n  }\n};"
+      },
+      "id": "validate-hmac",
+      "name": "Validar HMAC Headers",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "value": "parking.reserved",
+              "output": 0
+            },
+            {
+              "value": "parking.entered",
+              "output": 1
+            },
+            {
+              "value": "parking.exited",
+              "output": 2
+            },
+            {
+              "value": "payment.success",
+              "output": 3
+            },
+            {
+              "value": "payment.failed",
+              "output": 4
+            }
+          ],
+          "fallbackOutput": 5
+        },
+        "dataPropertyName": "={{$json.eventType}}"
+      },
+      "id": "switch-event",
+      "name": "Switch por Tipo de Evento",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://parking-b2b:3002/webhooks/receive",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{$json.auth.apiKey}}"
+            },
+            {
+              "name": "X-Signature",
+              "value": "={{$json.auth.signature}}"
+            },
+            {
+              "name": "X-Timestamp",
+              "value": "={{$json.auth.timestamp}}"
+            },
+            {
+              "name": "X-Nonce",
+              "value": "={{$json.auth.nonce}}"
+            },
+            {
+              "name": "X-Webhook-Event",
+              "value": "parking.reserved"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "={{$json.payload}}",
+              "value": ""
+            }
+          ]
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{JSON.stringify($json.payload)}}",
+        "options": {}
+      },
+      "id": "http-reserved",
+      "name": "Procesar - Reserva",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [950, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://parking-b2b:3002/webhooks/receive",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{$json.auth.apiKey}}"
+            },
+            {
+              "name": "X-Signature",
+              "value": "={{$json.auth.signature}}"
+            },
+            {
+              "name": "X-Timestamp",
+              "value": "={{$json.auth.timestamp}}"
+            },
+            {
+              "name": "X-Nonce",
+              "value": "={{$json.auth.nonce}}"
+            },
+            {
+              "name": "X-Webhook-Event",
+              "value": "parking.entered"
+            }
+          ]
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{JSON.stringify($json.payload)}}",
+        "options": {}
+      },
+      "id": "http-entered",
+      "name": "Procesar - Ingreso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [950, 220]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://parking-b2b:3002/webhooks/receive",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{$json.auth.apiKey}}"
+            },
+            {
+              "name": "X-Signature",
+              "value": "={{$json.auth.signature}}"
+            },
+            {
+              "name": "X-Timestamp",
+              "value": "={{$json.auth.timestamp}}"
+            },
+            {
+              "name": "X-Nonce",
+              "value": "={{$json.auth.nonce}}"
+            },
+            {
+              "name": "X-Webhook-Event",
+              "value": "parking.exited"
+            }
+          ]
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{JSON.stringify($json.payload)}}",
+        "options": {}
+      },
+      "id": "http-exited",
+      "name": "Procesar - Salida",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [950, 340]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://parking-b2b:3002/webhooks/receive",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{$json.auth.apiKey}}"
+            },
+            {
+              "name": "X-Signature",
+              "value": "={{$json.auth.signature}}"
+            },
+            {
+              "name": "X-Timestamp",
+              "value": "={{$json.auth.timestamp}}"
+            },
+            {
+              "name": "X-Nonce",
+              "value": "={{$json.auth.nonce}}"
+            },
+            {
+              "name": "X-Webhook-Event",
+              "value": "payment.success"
+            }
+          ]
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{JSON.stringify($json.payload)}}",
+        "options": {}
+      },
+      "id": "http-payment-success",
+      "name": "Procesar - Pago Exitoso",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [950, 460]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://parking-b2b:3002/webhooks/receive",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": "={{$json.auth.apiKey}}"
+            },
+            {
+              "name": "X-Signature",
+              "value": "={{$json.auth.signature}}"
+            },
+            {
+              "name": "X-Timestamp",
+              "value": "={{$json.auth.timestamp}}"
+            },
+            {
+              "name": "X-Nonce",
+              "value": "={{$json.auth.nonce}}"
+            },
+            {
+              "name": "X-Webhook-Event",
+              "value": "payment.failed"
+            }
+          ]
+        },
+        "specifyBody": "json",
+        "jsonBody": "={{JSON.stringify($json.payload)}}",
+        "options": {}
+      },
+      "id": "http-payment-failed",
+      "name": "Procesar - Pago Fallido",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [950, 580]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Evento no reconocido - log y procesar genéricamente\nconst eventType = $input.first().json.eventType;\nconsole.log('⚠️ Evento no reconocido:', eventType);\n\nreturn {\n  json: {\n    warning: 'Unknown event type',\n    eventType,\n    payload: $input.first().json.payload,\n    action: 'logged_only'\n  }\n};"
+      },
+      "id": "unknown-event",
+      "name": "Evento Desconocido",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [950, 700]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Preparar respuesta de éxito\nconst previousData = $input.first().json;\n\nreturn {\n  json: {\n    success: true,\n    message: 'Webhook processed successfully via n8n',\n    eventType: previousData.eventType || 'unknown',\n    processedAt: new Date().toISOString(),\n    systemResponse: previousData\n  }\n};"
+      },
+      "id": "prepare-response",
+      "name": "Preparar ACK Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "X-Processed-By",
+                "value": "n8n-partner-handler"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-webhook",
+      "name": "Responder al Partner",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1420, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Recibir de Partner": {
+      "main": [
+        [
+          {
+            "node": "Validar HMAC Headers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar HMAC Headers": {
+      "main": [
+        [
+          {
+            "node": "Switch por Tipo de Evento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch por Tipo de Evento": {
+      "main": [
+        [
+          {
+            "node": "Procesar - Reserva",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Procesar - Ingreso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Procesar - Salida",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Procesar - Pago Exitoso",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Procesar - Pago Fallido",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Evento Desconocido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar - Reserva": {
+      "main": [
+        [
+          {
+            "node": "Preparar ACK Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar - Ingreso": {
+      "main": [
+        [
+          {
+            "node": "Preparar ACK Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar - Salida": {
+      "main": [
+        [
+          {
+            "node": "Preparar ACK Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar - Pago Exitoso": {
+      "main": [
+        [
+          {
+            "node": "Preparar ACK Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar - Pago Fallido": {
+      "main": [
+        [
+          {
+            "node": "Preparar ACK Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evento Desconocido": {
+      "main": [
+        [
+          {
+            "node": "Preparar ACK Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar ACK Response": {
+      "main": [
+        [
+          {
+            "node": "Responder al Partner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "name": "B2B",
+      "createdAt": "2026-01-20T12:00:00.000Z",
+      "updatedAt": "2026-01-20T12:00:00.000Z"
+    },
+    {
+      "name": "Webhooks",
+      "createdAt": "2026-01-20T12:00:00.000Z",
+      "updatedAt": "2026-01-20T12:00:00.000Z"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-01-20T12:00:00.000Z",
+  "versionId": "1"
+}
