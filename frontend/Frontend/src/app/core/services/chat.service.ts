@@ -261,28 +261,28 @@ export class ChatService {
       id: 'welcome',
       role: 'assistant',
       content: isAdmin 
-        ? `¡Hola! 👋 Soy tu asistente de administración de estacionamiento.
+        ? `Hola, soy tu asistente de administración de estacionamiento.
 
 Puedo ayudarte con:
-• 🚗 **Reservar espacios** por placa de vehículo
-• 🔓 **Desocupar espacios** y registrar salidas
-• 📋 Ver y gestionar todos los tickets
-• 💳 Procesar pagos
-• 👤 Buscar información de clientes
-• 📊 Generar reportes operativos
-• 🖼️ Analizar imágenes de placas o tickets
-• 🚫 Registrar multas
+• **Reservar espacios** por placa de vehículo
+• **Desocupar espacios** y registrar salidas
+• Ver y gestionar todos los tickets
+• Procesar pagos
+• Buscar información de clientes
+• Generar reportes operativos
+• Analizar imágenes de placas o tickets
+• Registrar multas
 
-¿En qué puedo ayudarte hoy?`
-        : `¡Hola! 👋 Soy tu asistente de estacionamiento.
+¿En qué puedo ayudarte?`
+        : `Hola, soy tu asistente de estacionamiento.
 
 Puedo ayudarte con:
-• 🅿️ **Ver espacios disponibles**
-• 📋 **Ver tus reservas actuales**
-• 📜 **Consultar tu historial** de reservas anteriores
-• 💰 Consultar tarifas
+• **Ver espacios disponibles**
+• **Ver tus reservas actuales**
+• **Consultar tu historial** de reservas anteriores
+• Consultar tarifas
 
-¿En qué puedo ayudarte hoy?`,
+¿En qué puedo ayudarte?`,
       timestamp: new Date()
     };
     

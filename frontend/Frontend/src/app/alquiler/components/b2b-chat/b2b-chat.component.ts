@@ -22,12 +22,12 @@ export class B2bChatComponent implements OnInit {
   
   // Sugerencias rápidas para el usuario
   quickActions = [
-    { label: '🅿️ Ver espacios', prompt: '¿Cuántos espacios de estacionamiento hay disponibles?' },
-    { label: '📊 Recaudación', prompt: 'Dame un resumen de la recaudación de hoy' },
-    { label: '🎫 Tickets activos', prompt: '¿Cuántos tickets activos hay en el sistema?' },
-    { label: '🤝 Partners', prompt: 'Lista los partners B2B registrados' },
-    { label: '📈 Eventos', prompt: 'Muéstrame las estadísticas de eventos webhook' },
-    { label: '🔧 Herramientas', prompt: '¿Qué herramientas tienes disponibles?' },
+    { label: 'Espacios', prompt: '¿Cuántos espacios de estacionamiento hay disponibles?' },
+    { label: 'Recaudación', prompt: 'Dame un resumen de la recaudación de hoy' },
+    { label: 'Tickets activos', prompt: '¿Cuántos tickets activos hay en el sistema?' },
+    { label: 'Partners', prompt: 'Lista los partners B2B registrados' },
+    { label: 'Eventos', prompt: 'Muéstrame las estadísticas de eventos webhook' },
+    { label: 'Herramientas', prompt: '¿Qué herramientas tienes disponibles?' },
   ];
 
   hasMessages = computed(() => this.messages().length > 0);
@@ -38,19 +38,19 @@ export class B2bChatComponent implements OnInit {
     // Mensaje de bienvenida
     this.messages.update(msgs => [...msgs, {
       role: 'assistant',
-      content: `¡Hola! 👋 Soy el asistente del sistema B2B de estacionamiento.
+      content: `Hola, soy el asistente del sistema B2B de estacionamiento.
 
 Puedo ayudarte con:
-- **Consultar espacios** disponibles y ocupados
-- **Ver tickets** y información de vehículos
-- **Gestionar partners B2B** y sus webhooks
-- **Analizar recaudación** y estadísticas
-- **Simular eventos** para testing
-- **Diagnosticar webhooks** con problemas
+• **Consultar espacios** disponibles y ocupados
+• **Ver tickets** y información de vehículos
+• **Gestionar partners B2B** y sus webhooks
+• **Analizar recaudación** y estadísticas
+• **Simular eventos** para testing
+• **Diagnosticar webhooks** con problemas
 
 También puedo analizar **imágenes** (placas, tickets) y **documentos PDF**.
 
-¿En qué puedo ayudarte hoy?`,
+¿En qué puedo ayudarte?`,
       timestamp: new Date()
     }]);
   }
@@ -92,7 +92,7 @@ También puedo analizar **imágenes** (placas, tickets) y **documentos PDF**.
     } catch (error: any) {
       this.messages.update(msgs => [...msgs, {
         role: 'assistant',
-        content: `❌ Error: ${error.message || 'No se pudo procesar tu mensaje'}`,
+        content: `Error: ${error.message || 'No se pudo procesar tu mensaje'}`,
         timestamp: new Date(),
         isError: true
       }]);
