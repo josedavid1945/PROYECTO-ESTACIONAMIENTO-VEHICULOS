@@ -20,8 +20,8 @@ export const environment = {
   // URL del servidor WebSocket (Go) - Puerto 8080
   websocketUrl: 'ws://localhost:8080/ws',
   
-  // URL del servicio B2B Webhooks (Chatbot/MCP) - Puerto 3001
-  b2bApiUrl: 'http://localhost:3001',
+  // URL del servicio B2B Webhooks (Chatbot/MCP) - Puerto 3002
+  b2bApiUrl: 'http://localhost:3002',
   
   // Configuración adicional
   reconnectAttempts: 10,

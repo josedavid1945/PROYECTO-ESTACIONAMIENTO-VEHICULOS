@@ -21,7 +21,7 @@ export const environment = {
   websocketUrl: 'ws://localhost:8080/ws',
 
   // B2B Webhooks & MCP Chat Service (NestJS)
-  b2bApiUrl: 'http://localhost:3001',
+  b2bApiUrl: 'http://localhost:3002',
   
   // Configuración adicional
   reconnectAttempts: 5,

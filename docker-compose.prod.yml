@@ -163,6 +163,7 @@ services:
       DB_SSL: "true"
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_API_KEY_BACKUP: ${GEMINI_API_KEY_BACKUP:-}
+      PARKING_API_URL: http://parking-backend-rest:3000
     ports:
       - "3002:3002"
     depends_on:
