@@ -1,6 +1,7 @@
-import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger, Inject, forwardRef, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { McpToolsService } from './mcp-tools.service';
+import { N8nIntegrationService } from '../n8n/n8n-integration.service';
 
 /**
  * ParkingToolsService - Herramientas MCP específicas para gestión de estacionamiento
@@ -9,6 +10,7 @@ import { McpToolsService } from './mcp-tools.service';
  * - Consulta: Buscar clientes, ver tickets históricos
  * - Acción: Registrar ingreso/salida de vehículos
  * - Reporte: Resumen operativo diario
+ * - Integración con n8n para eventos
  */
 @Injectable()
 export class ParkingToolsService implements OnModuleInit {
@@ -18,6 +20,7 @@ export class ParkingToolsService implements OnModuleInit {
   constructor(
     private mcpTools: McpToolsService,
     private configService: ConfigService,
+    @Optional() private n8nService?: N8nIntegrationService,
   ) {
     this.parkingApiUrl = this.configService.get('PARKING_API_URL', 'http://localhost:3000');
   }
@@ -25,6 +28,29 @@ export class ParkingToolsService implements OnModuleInit {
   onModuleInit() {
     this.registerParkingTools();
     this.logger.log('Herramientas de estacionamiento MCP registradas');
+    if (this.n8nService) {
+      this.logger.log('🔗 Integración n8n habilitada para herramientas de parking');
+    }
+  }
+
+  /**
+   * Emite un evento a n8n de forma asíncrona (no bloquea la respuesta)
+   */
+  private async emitToN8n(eventType: string, payload: Record<string, any>): Promise<void> {
+    if (!this.n8nService) return;
+    
+    try {
+      // No esperamos la respuesta para no bloquear
+      this.n8nService.sendEvent(eventType, payload).then(result => {
+        if (result.success) {
+          this.logger.debug(`📤 Evento ${eventType} enviado a n8n`);
+        } else {
+          this.logger.warn(`⚠️ Error enviando evento a n8n: ${result.error}`);
+        }
+      });
+    } catch (error: any) {
+      this.logger.error(`❌ Error emitiendo evento n8n: ${error.message}`);
+    }
   }
 
   private registerParkingTools(): void {
@@ -474,6 +500,17 @@ export class ParkingToolsService implements OnModuleInit {
               }
             }
 
+            // 🔗 Emitir evento a n8n
+            this.emitToN8n('parking.entered', {
+              ticketId: resultado.ticket?.id,
+              vehiculoPlaca: params.placa,
+              espacioId: espacioId,
+              espacioNombre: nombreEspacio,
+              fechaEntrada: resultado.ticket?.fechaIngreso || new Date().toISOString(),
+              clienteId: resultado.cliente?.id,
+              clienteNombre: params.clienteNombre,
+            });
+
             return {
               success: true,
               mensaje: `✅ Vehículo ${params.placa} ingresado correctamente en el espacio ${nombreEspacio}`,
@@ -646,6 +683,17 @@ export class ParkingToolsService implements OnModuleInit {
 
           const resultado = await response.json();
 
+          // 🔗 Emitir evento a n8n
+          this.emitToN8n('parking.exited', {
+            ticketId: resultado.ticket?.id,
+            vehiculoPlaca: params.placa,
+            espacioId: resultado.espacio?.id,
+            fechaSalida: resultado.ticket?.fechaSalida || new Date().toISOString(),
+            duracionMinutos: Math.round(resultado.horasEstacionamiento * 60),
+            monto: resultado.montoTotal,
+            metodoPago: params.metodoPago || 'efectivo',
+          });
+
           return {
             success: true,
             mensaje: params.confirmarPago !== false 
@@ -753,7 +801,7 @@ export class ParkingToolsService implements OnModuleInit {
             return acc;
           }, {});
 
-          return {
+          const reporteData = {
             fecha: inicioDelDia.toISOString().split('T')[0],
             ocupacion: {
               total: totalEspacios,
@@ -783,6 +831,16 @@ export class ParkingToolsService implements OnModuleInit {
             },
             resumen: `Día ${params.fecha || 'de hoy'}: ${ticketsHoy.length} vehículos, $${ingresosTotales.toFixed(2)} recaudados, ${espaciosOcupados}/${totalEspacios} espacios ocupados`,
           };
+
+          // 🔗 Emitir evento a n8n
+          this.emitToN8n('report.generated', {
+            reportType: 'operativo',
+            fecha: inicioDelDia.toISOString().split('T')[0],
+            datos: reporteData,
+            solicitadoPor: 'chatbot',
+          });
+
+          return reporteData;
         } catch (error: any) {
           return { error: `Error al generar reporte: ${error.message}` };
         }
@@ -996,6 +1054,26 @@ export class ParkingToolsService implements OnModuleInit {
             });
             return acc;
           }, {});
+
+          // 🔗 Emitir evento a n8n solo para buscar_espacios
+          if (this.emitToN8n) {
+            this.emitToN8n('mcp.tool_executed', {
+              toolName: 'buscar_espacios',
+              input: params,
+              output: {
+                resumen: {
+                  totalEspacios: filtrados.length,
+                  disponibles: disponibles.length,
+                  ocupados: ocupados.length,
+                  porcentajeOcupacion: filtrados.length > 0 
+                    ? ((ocupados.length / filtrados.length) * 100).toFixed(1) + '%'
+                    : 'N/A',
+                },
+                espaciosDisponibles: porSeccion,
+              },
+              duration: 0,
+            });
+          }
 
           return {
             resumen: {

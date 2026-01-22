@@ -9,6 +9,7 @@ import { EventsModule } from './events/events.module';
 import { McpModule } from './mcp/mcp.module';
 import { AiModule } from './ai/ai.module';
 import { SharedModule } from './shared/shared.module';
+import { N8nModule } from './n8n/n8n.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { SharedModule } from './shared/shared.module';
 
     // Módulos de la aplicación
     SharedModule,
+    N8nModule,
     PartnersModule,
     WebhooksModule,
     PaymentsModule,

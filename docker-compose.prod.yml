@@ -73,11 +73,12 @@ services:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-super_secret_access_jwt_key_change_in_production}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-super_secret_refresh_jwt_key_change_in_production}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_USERNAME: ${DB_USERNAME:-parking_user}
-      DB_PASSWORD: ${DB_PASSWORD:-parking_secret}
-      DB_DATABASE: parking_auth
+      DB_HOST: ${DB_HOST:-aws-1-us-east-1.pooler.supabase.com}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USERNAME: ${DB_USERNAME:-postgres.jqqruzcbtcqcmzkogxqo}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE:-postgres}
+      DB_SSL: ${DB_SSL:-true}
     ports:
       - "3001:3001"
     depends_on:
@@ -103,7 +104,7 @@ services:
       HOST: 0.0.0.0
       PORT: 8000
       DEBUG: "false"
-      DATABASE_URL: postgresql://${DB_USERNAME:-parking_user}:${DB_PASSWORD:-parking_secret}@postgres:5432/${DB_DATABASE:-parking_db}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres.jqqruzcbtcqcmzkogxqo:${DB_PASSWORD}@aws-1-us-east-1.pooler.supabase.com:5432/postgres}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4200,http://localhost}
     ports:
       - "8000:8000"
@@ -131,7 +132,7 @@ services:
       MODE: rest
       REST_API_URL: http://backend-rest:3000
       ALLOWED_ORIGINS: http://localhost,http://localhost:80,http://localhost:4200,http://127.0.0.1
-      DATABASE_URL: postgresql://${DB_USERNAME:-parking_user}:${DB_PASSWORD:-parking_secret}@postgres:5432/${DB_DATABASE:-parking_db}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres.jqqruzcbtcqcmzkogxqo:${DB_PASSWORD}@aws-1-us-east-1.pooler.supabase.com:5432/postgres}
     ports:
       - "8080:8080"
     depends_on:
@@ -158,8 +159,8 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3002
-      DATABASE_URL: postgresql://${DB_USERNAME:-parking_user}:${DB_PASSWORD:-parking_secret}@postgres:5432/${DB_DATABASE:-parking_db}
-      DB_SSL: "false"
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres.jqqruzcbtcqcmzkogxqo:${DB_PASSWORD}@aws-1-us-east-1.pooler.supabase.com:5432/postgres}
+      DB_SSL: "true"
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_API_KEY_BACKUP: ${GEMINI_API_KEY_BACKUP:-}
     ports:

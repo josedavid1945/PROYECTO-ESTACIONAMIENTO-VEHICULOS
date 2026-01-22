@@ -1,0 +1,50 @@
+{
+  "name": "MCP Chat Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mcp-chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "1. Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "mcp-chat-final"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraer mensaje y llamar al AI\nconst body = $input.first().json.body || $input.first().json || {};\nconst message = body.message || body.query || body.text || '';\n\nif (!message) {\n  return { json: { error: 'No message provided' } };\n}\n\n// Llamar al servicio MCP\nconst response = await fetch('http://parking-b2b:3001/mcp/chat', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ message: message })\n});\n\nconst data = await response.json();\n\nreturn { json: data };"
+      },
+      "id": "code-1",
+      "name": "2. Llamar AI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "respond-1",
+      "name": "3. Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [750, 300]
+    }
+  ],
+  "connections": {
+    "1. Webhook": {
+      "main": [[{"node": "2. Llamar AI", "type": "main", "index": 0}]]
+    },
+    "2. Llamar AI": {
+      "main": [[{"node": "3. Responder", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"}
+}

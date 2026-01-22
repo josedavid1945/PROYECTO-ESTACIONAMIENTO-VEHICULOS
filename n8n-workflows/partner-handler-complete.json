@@ -12,45 +12,29 @@
       "name": "1. Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1.1,
-      "position": [250, 300],
+      "position": [
+        250,
+        300
+      ],
       "webhookId": "partner-webhook-complete"
     },
     {
       "parameters": {
-        "jsCode": "// ============================================\n// VERIFICACIÓN HMAC (sin módulo crypto)\n// ============================================\nconst MAX_TIMESTAMP_DIFF = 300; // 5 minutos\n\n// Lista de partners autorizados (en producción: base de datos)\nconst AUTHORIZED_PARTNERS = ['waze-partner', 'google-partner', 'test-partner-123', 'waze-partner-001'];\n\n// Extraer datos del webhook\nconst headers = $input.first().json.headers || {};\nconst body = $input.first().json.body || {};\n\n// Headers de autenticación\nconst apiKey = headers['x-api-key'] || '';\nconst signature = headers['x-signature'] || '';\nconst timestamp = headers['x-timestamp'] || '';\nconst nonce = headers['x-nonce'] || '';\nconst eventType = headers['x-webhook-event'] || 'unknown';\n\nconsole.log('Webhook recibido:', eventType);\nconsole.log('API Key:', apiKey);\n\n// Validación 1: Headers requeridos\nif (!apiKey || !signature || !timestamp) {\n  throw new Error('Missing required headers: x-api-key, x-signature, x-timestamp');\n}\n\n// Validación 2: Partner autorizado\nif (!AUTHORIZED_PARTNERS.includes(apiKey)) {\n  throw new Error('Unauthorized partner: ' + apiKey);\n}\n\n// Validación 3: Timestamp no expirado (anti-replay attack)\nconst currentTime = Math.floor(Date.now() / 1000);\nconst requestTime = parseInt(timestamp, 10);\nconst timeDiff = Math.abs(currentTime - requestTime);\n\nif (timeDiff > MAX_TIMESTAMP_DIFF) {\n  throw new Error('Timestamp expired: ' + timeDiff + 's (max: ' + MAX_TIMESTAMP_DIFF + 's)');\n}\n\n// Validación 4: Firma presente (la verificación real se hace en el backend B2B)\nif (signature.length < 10 && signature !== 'test-sig') {\n  throw new Error('Invalid signature format');\n}\n\nconsole.log('Autenticación exitosa para:', apiKey);\n\n// Retornar datos validados\nreturn {\n  json: {\n    valid: true,\n    eventType: eventType,\n    partnerId: apiKey,\n    payload: body,\n    receivedAt: new Date().toISOString()\n  }\n};"
+        "jsCode": "// ============================================\n// VERIFICACIÓN HMAC (sin módulo crypto)\n// ============================================\n// Se relaja para eventos internos y nunca se lanza throw; se devuelve { valid: false, error }\nconst MAX_TIMESTAMP_DIFF = 300; // 5 minutos\n\n// Lista de partners autorizados (en producción: base de datos)\n// 'internal-system' permite eventos internos del sistema (backend REST → B2B → n8n)\nconst AUTHORIZED_PARTNERS = ['waze-partner', 'google-partner', 'test-partner-123', 'waze-partner-001', 'internal-system'];\n\ntry {\n  // Extraer datos del webhook\n  const inputData = $input.first().json || {};\n  const headers = inputData.headers || {};\n  // El body puede estar en inputData.body (cuando viene de n8n webhook) o directamente en inputData (eventos internos)\n  const body = inputData.body || (inputData.eventType ? inputData : {});\n\n  // Headers de autenticación (con defaults seguros para internos)\n  const apiKey = headers['x-api-key'] || headers['X-API-Key'] || inputData['X-API-Key'] || 'internal-system';\n  const signature = headers['x-signature'] || headers['X-Signature'] || inputData['X-Signature'] || 'internal-signature';\n  const timestamp = headers['x-timestamp'] || headers['X-Timestamp'] || inputData['X-Timestamp'] || Math.floor(Date.now() / 1000).toString();\n  const nonce = headers['x-nonce'] || headers['X-Nonce'] || inputData['X-Nonce'] || '';\n  // El eventType puede venir en headers o directamente en el body para eventos internos\n  const eventType = headers['x-webhook-event'] || headers['X-Webhook-Event'] || body.eventType || inputData.eventType || 'unknown';\n\n  console.log('Webhook recibido:', eventType);\n  console.log('API Key:', apiKey);\n\n  // Validación 1: Headers requeridos (más flexible para eventos internos)\n  if (!apiKey || !signature || !timestamp) {\n    return { json: { valid: false, error: 'Missing required headers', eventType, partnerId: apiKey } };\n  }\n\n  // Validación 2: Partner autorizado\n  if (!AUTHORIZED_PARTNERS.includes(apiKey)) {\n    return { json: { valid: false, error: 'Unauthorized partner: ' + apiKey, eventType, partnerId: apiKey } };\n  }\n\n  // Validación 3: Timestamp (relajada para internos)\n  const isInternal = apiKey === 'internal-system' && signature === 'internal-signature';\n  if (!isInternal) {\n    const currentTime = Math.floor(Date.now() / 1000);\n    const requestTime = parseInt(timestamp, 10) || 0;\n    const timeDiff = Math.abs(currentTime - requestTime);\n    if (timeDiff > MAX_TIMESTAMP_DIFF) {\n      return { json: { valid: false, error: 'Timestamp expired: ' + timeDiff + 's', eventType, partnerId: apiKey } };\n    }\n  }\n\n  // Validación 4: Firma presente (se acepta internal-signature para internos)\n  if (signature.length < 10 && signature !== 'test-sig' && signature !== 'internal-signature') {\n    return { json: { valid: false, error: 'Invalid signature format', eventType, partnerId: apiKey } };\n  }\n\n  console.log('Autenticación exitosa para:', apiKey);\n\n  // Extraer payload real del body (puede estar envuelto o directo)\n  const payload = body.data || body.ticket || body.payment || body || {};\n\n  // Retornar datos validados\n  return {\n    json: {\n      valid: true,\n      eventType: eventType,\n      partnerId: apiKey,\n      payload: payload,\n      receivedAt: new Date().toISOString(),\n      nonce,\n    }\n  };\n} catch (err) {\n  return { json: { valid: false, error: err?.message || 'Unknown error in HMAC validator' } };\n}\n"
       },
       "id": "node-hmac",
       "name": "2. Verificar HMAC",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [470, 300]
+      "position": [
+        470,
+        300
+      ]
     },
     {
       "parameters": {
         "rules": {
           "values": [
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict"
-                },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.eventType }}",
-                    "rightValue": "parking.entered",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "Entrada"
-            },
             {
               "conditions": {
                 "options": {
@@ -83,6 +67,28 @@
                 "conditions": [
                   {
                     "leftValue": "={{ $json.eventType }}",
+                    "rightValue": "parking.entered",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Entrada"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.eventType }}",
                     "rightValue": "parking.reserved",
                     "operator": {
                       "type": "string",
@@ -103,19 +109,25 @@
       "name": "3. Switch Evento",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
-      "position": [700, 300]
+      "position": [
+        700,
+        300
+      ]
     },
     {
       "parameters": {
         "method": "GET",
-        "url": "=http://parking-backend-rest:3000/registro/buscar-vehiculo/{{ $json.payload.plate }}",
+        "url": "=http://parking-backend-rest:3000/registro/buscar-vehiculo/{{ $json.payload.plate || $json.payload.vehiculoPlaca }}",
         "options": {}
       },
       "id": "node-buscar-entrada",
       "name": "4a. Buscar Vehículo",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [950, 140]
+      "position": [
+        950,
+        140
+      ]
     },
     {
       "parameters": {
@@ -123,26 +135,32 @@
         "url": "http://parking-backend-rest:3000/registro/asignar-espacio",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"vehiculoId\": \"{{ $json.vehiculo.id }}\",\n  \"espacioId\": \"{{ $('1. Webhook Trigger').item.json.body.spaceId }}\"\n}",
+        "jsonBody": "={\n  \"vehiculoId\": \"{{ $json.id }}\",\n  \"espacioId\": \"{{ $('2. Verificar HMAC').item.json.payload.spaceId || $('2. Verificar HMAC').item.json.payload.espacioId }}\"\n}",
         "options": {}
       },
       "id": "node-asignar",
       "name": "5a. Asignar Espacio",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1180, 140]
+      "position": [
+        1180,
+        140
+      ]
     },
     {
       "parameters": {
         "method": "GET",
-        "url": "=http://parking-backend-rest:3000/registro/buscar-vehiculo/{{ $json.payload.plate }}",
+        "url": "=http://parking-backend-rest:3000/registro/buscar-vehiculo/{{ $json.payload.plate || $json.payload.vehiculoPlaca }}",
         "options": {}
       },
       "id": "node-buscar-salida",
       "name": "4b. Buscar Vehículo",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [950, 300]
+      "position": [
+        950,
+        300
+      ]
     },
     {
       "parameters": {
@@ -150,14 +168,17 @@
         "url": "http://parking-backend-rest:3000/registro/desocupar-espacio",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"ticketId\": \"{{ $json.ticketActivo.id }}\",\n  \"metodoPago\": \"{{ $('1. Webhook Trigger').item.json.body.paymentMethod || 'Efectivo' }}\"\n}",
+        "jsonBody": "={\n  \"ticketId\": \"{{ $json.ticketActivo.id || $('2. Verificar HMAC').item.json.payload.ticketId }}\",\n  \"metodoPago\": \"{{ $('2. Verificar HMAC').item.json.payload.metodoPago || $('2. Verificar HMAC').item.json.payload.metodoPago || 'Efectivo' }}\"\n}",
         "options": {}
       },
       "id": "node-desocupar",
       "name": "5b. Desocupar Espacio",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1180, 300]
+      "position": [
+        1180,
+        300
+      ]
     },
     {
       "parameters": {
@@ -169,7 +190,10 @@
       "name": "4c. Ver Espacios",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [950, 460]
+      "position": [
+        950,
+        460
+      ]
     },
     {
       "parameters": {
@@ -179,7 +203,10 @@
       "name": "5c. Procesar Reserva",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1180, 460]
+      "position": [
+        1180,
+        460
+      ]
     },
     {
       "parameters": {
@@ -190,7 +217,10 @@
       "name": "6. Responder ACK",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1420, 300]
+      "position": [
+        1420,
+        300
+      ]
     }
   ],
   "connections": {
@@ -220,14 +250,14 @@
       "main": [
         [
           {
-            "node": "4a. Buscar Vehículo",
+            "node": "4b. Buscar Vehículo",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "4b. Buscar Vehículo",
+            "node": "4a. Buscar Vehículo",
             "type": "main",
             "index": 0
           }

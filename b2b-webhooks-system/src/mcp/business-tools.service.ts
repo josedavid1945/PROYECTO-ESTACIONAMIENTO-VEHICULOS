@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { McpToolsService, McpTool } from './mcp-tools.service';
 import { PartnersService } from '../partners/partners.service';
@@ -6,6 +6,7 @@ import { EventsService } from '../events/events.service';
 import { PaymentService } from '../payments/payment.service';
 import { EventType } from '../events/entities/event.entity';
 import { PartnerType } from '../partners/entities/partner.entity';
+import { N8nIntegrationService } from '../n8n/n8n-integration.service';
 import * as pdf from 'pdf-parse';
 
 /**
@@ -22,6 +23,7 @@ export class BusinessToolsService implements OnModuleInit {
     private partnersService: PartnersService,
     private eventsService: EventsService,
     private paymentService: PaymentService,
+    @Optional() private n8nService?: N8nIntegrationService,
   ) {
     this.parkingApiUrl = this.configService.get('PARKING_API_URL', 'http://localhost:3000');
   }
@@ -29,6 +31,26 @@ export class BusinessToolsService implements OnModuleInit {
   onModuleInit() {
     this.registerAllTools();
     this.logger.log('Herramientas de negocio MCP registradas');
+    if (this.n8nService) {
+      this.logger.log('🔗 Integración n8n habilitada para herramientas de negocio');
+    }
+  }
+
+  /**
+   * Emite un evento a n8n de forma asíncrona
+   */
+  private async emitToN8n(eventType: string, payload: Record<string, any>): Promise<void> {
+    if (!this.n8nService) return;
+    
+    try {
+      this.n8nService.sendEvent(eventType, payload).then(result => {
+        if (result.success) {
+          this.logger.debug(`📤 Evento ${eventType} enviado a n8n`);
+        }
+      });
+    } catch (error: any) {
+      this.logger.error(`❌ Error emitiendo evento n8n: ${error.message}`);
+    }
   }
 
   private registerAllTools(): void {

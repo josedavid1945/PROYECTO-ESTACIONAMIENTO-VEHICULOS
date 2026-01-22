@@ -1,0 +1,218 @@
+{
+  "name": "Telegram Notifications - Parking",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram-notify",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 300],
+      "webhookId": "telegram-notify-parking"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-client-registered",
+              "leftValue": "={{ $json.body.eventType }}",
+              "rightValue": "client.registered",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-event-type",
+      "name": "Es Cliente Registrado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "chatId": "6315199816",
+        "text": "=🆕 <b>NUEVO CLIENTE REGISTRADO</b>\n\n👤 <b>Cliente:</b> {{ $json.body.nombre }}\n📧 <b>Email:</b> {{ $json.body.email }}\n📱 <b>Teléfono:</b> {{ $json.body.telefono }}\n🚗 <b>Vehículo:</b> {{ $json.body.placa }} ({{ $json.body.marca }} {{ $json.body.modelo }})\n📍 <b>Espacio:</b> {{ $json.body.espacioNumero }}\n🕐 <b>Fecha/Hora:</b> {{ $json.body.timestamp }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "telegram-client-registered",
+      "name": "Telegram: Cliente Registrado",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [700, 200],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-parking-exited",
+              "leftValue": "={{ $json.body.eventType }}",
+              "rightValue": "parking.exited",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-parking-exited",
+      "name": "Es Salida Vehiculo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [700, 400]
+    },
+    {
+      "parameters": {
+        "chatId": "6315199816",
+        "text": "=🚗 <b>SALIDA DE VEHÍCULO</b>\n\n🚙 <b>Placa:</b> {{ $json.body.placa }}\n👤 <b>Cliente:</b> {{ $json.body.clienteNombre }}\n📍 <b>Espacio:</b> {{ $json.body.espacioNumero }}\n⏱️ <b>Tiempo:</b> {{ $json.body.horasEstacionamiento }} horas\n💵 <b>Monto:</b> ${{ $json.body.montoTotal }}\n💳 <b>Método:</b> {{ $json.body.metodoPago }}\n🕐 <b>Fecha/Hora:</b> {{ $json.body.timestamp }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "telegram-parking-exited",
+      "name": "Telegram: Salida Vehiculo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [960, 400],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true, \"message\": \"Notification sent\" }",
+        "options": {}
+      },
+      "id": "response-success",
+      "name": "Respuesta OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Es Cliente Registrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es Cliente Registrado?": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Cliente Registrado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Es Salida Vehiculo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Cliente Registrado": {
+      "main": [
+        [
+          {
+            "node": "Respuesta OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es Salida Vehiculo?": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Salida Vehiculo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respuesta OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Salida Vehiculo": {
+      "main": [
+        [
+          {
+            "node": "Respuesta OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "parking-system"
+  },
+  "tags": [
+    {
+      "name": "parking",
+      "id": "1"
+    },
+    {
+      "name": "telegram",
+      "id": "2"
+    }
+  ]
+}

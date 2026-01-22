@@ -39,6 +39,71 @@ export class RegistroService {
   ) {}
 
   /**
+   * Envía notificación a Telegram
+   */
+  private async sendTelegramNotification(message: string): Promise<void> {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN || '8481248166:AAElOMd-6SlJG1kVaohQVxv5GKSxOovTjBA';
+    const chatId = process.env.TELEGRAM_CHAT_ID || '6315199816';
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          parse_mode: 'HTML',
+        }),
+      });
+      console.log('📱 Notificación Telegram enviada');
+    } catch (error: any) {
+      console.log(`⚠️ Error enviando Telegram: ${error.message}`);
+    }
+  }
+
+  /**
+   * Envía evento interno al sistema B2B para que n8n lo procese.
+   * No debe afectar el flujo principal si falla.
+   */
+  private async emitInternalEvent(
+    eventType:
+      | 'parking.entered'
+      | 'parking.exited'
+      | 'parking.reserved'
+      | 'space.updated'
+      | 'payment.completed'
+      | 'payment.failed'
+      | 'payment.refunded'
+      | 'client.registered',
+    data: Record<string, any>,
+  ): Promise<void> {
+    // parking-b2b es el nombre del contenedor en docker-compose, puerto 3002
+    const baseUrl = process.env.B2B_API_URL || 'http://parking-b2b:3002';
+    const url = `${baseUrl}/webhooks/internal/event`;
+
+    console.log(`📤 Emitiendo evento ${eventType} a ${url}`);
+
+    try {
+      // Usamos fetch global (Node 18+) para no añadir dependencias
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventType, data }),
+      });
+      
+      if (response.ok) {
+        console.log(`✅ Evento ${eventType} enviado correctamente`);
+      } else {
+        console.log(`⚠️ Evento ${eventType} respondió con status ${response.status}`);
+      }
+    } catch (error: any) {
+      console.log(`⚠️ Error enviando evento ${eventType}: ${error.message}`);
+      // Ignorar errores de red para no afectar la operación principal
+    }
+  }
+
+  /**
    * FLUJO 1: Registrar nuevo cliente con vehículo y generar ticket
    * - Usa transacción para garantizar atomicidad
    * - Busca cliente existente por email antes de crear
@@ -109,7 +174,7 @@ export class RegistroService {
       // Confirmar transacción
       await queryRunner.commitTransaction();
 
-      return {
+      const result = {
         success: true,
         message: clienteExistente ? 'Cliente existente vinculado con nuevo vehículo' : 'Cliente registrado exitosamente',
         data: {
@@ -119,6 +184,23 @@ export class RegistroService {
           espacio,
         },
       };
+
+      // Emitir evento a n8n para notificación de nuevo cliente
+      if (!clienteExistente) {
+        this.emitInternalEvent('client.registered', {
+          clienteId: cliente.id,
+          nombre: cliente.nombre,
+          email: cliente.email,
+          telefono: cliente.telefono || 'No registrado',
+          placa: vehiculoGuardado.placa,
+          marca: vehiculoGuardado.marca,
+          modelo: vehiculoGuardado.modelo,
+          espacioNumero: espacio.numero,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      return result;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -282,7 +364,7 @@ export class RegistroService {
 
       await queryRunner.commitTransaction();
 
-      return {
+      const result = {
         success: true,
         message: 'Espacio desocupado exitosamente',
         data: {
@@ -301,6 +383,19 @@ export class RegistroService {
           }
         },
       };
+
+      // Emitir evento a n8n para notificación de salida de vehículo
+      this.emitInternalEvent('parking.exited', {
+        placa: vehiculo?.placa || 'N/A',
+        clienteNombre: vehiculo?.cliente?.nombre || 'Desconocido',
+        espacioNumero: espacio?.numero || ticket.espacioId,
+        horasEstacionamiento: ticket.horasEstacionamiento?.toFixed(2),
+        montoTotal: ticket.montoCalculado?.toFixed(2),
+        metodoPago: dto.metodoPago,
+        timestamp: new Date().toISOString(),
+      });
+
+      return result;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;

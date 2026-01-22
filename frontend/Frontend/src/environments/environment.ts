@@ -12,7 +12,7 @@ export const environment = {
   apiUrl: 'http://localhost:3000',
   
   // Auth Service (NestJS) - Microservicio de autenticación
-  authUrl: 'http://localhost:3002',
+  authUrl: 'http://localhost:3001',
   
   // GraphQL Service (Python/FastAPI)
   graphqlUrl: 'http://localhost:8000/graphql',

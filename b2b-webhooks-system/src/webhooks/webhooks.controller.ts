@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiHeader, ApiQuery } from '@nestjs
 import { PartnersService } from '../partners/partners.service';
 import { EventsService } from '../events/events.service';
 import { EventType } from '../events/entities/event.entity';
+import { N8nIntegrationService } from '../n8n/n8n-integration.service';
 
 /**
  * WebhooksController - Recibe webhooks de partners externos
@@ -25,6 +26,7 @@ export class WebhooksController {
   constructor(
     private readonly partnersService: PartnersService,
     private readonly eventsService: EventsService,
+    private readonly n8nService: N8nIntegrationService,
   ) {}
 
   /**
@@ -305,6 +307,75 @@ export class WebhooksController {
       vehiclePlate: dto.vehiclePlate,
       steps: results,
     };
+  }
+
+  /**
+   * Endpoint interno para recibir eventos del backend REST y enviarlos a n8n
+   * Este endpoint debe ser llamado por el backend REST cuando ocurren eventos de parking
+   */
+  @Post('internal/event')
+  @HttpCode(200)
+  @ApiOperation({ 
+    summary: 'Endpoint interno para eventos del backend REST',
+    description: 'Recibe eventos del backend REST y los envía directamente a n8n. Usado internamente por el sistema.'
+  })
+  @ApiResponse({ status: 200, description: 'Evento enviado a n8n' })
+  @ApiResponse({ status: 400, description: 'Datos inválidos' })
+  async handleInternalEvent(@Body() dto: {
+    eventType: 'parking.entered' | 'parking.exited' | 'parking.reserved' | 'space.updated' | 'payment.completed' | 'payment.failed' | 'payment.refunded' | 'client.registered';
+    data: Record<string, any>;
+  }) {
+    this.logger.log(`📥 Evento interno recibido: ${dto.eventType}`);
+    
+    // Validar tipo de evento
+    const supportedEvents = [
+      'parking.entered',
+      'parking.exited', 
+      'parking.reserved',
+      'space.updated',
+      'payment.completed',
+      'payment.failed',
+      'payment.refunded',
+      'client.registered'
+    ];
+    
+    if (!supportedEvents.includes(dto.eventType)) {
+      return {
+        success: false,
+        error: `Tipo de evento no soportado: ${dto.eventType}`,
+      };
+    }
+
+    // Enviar evento directamente a n8n
+    try {
+      const result = await this.n8nService.sendEvent(dto.eventType, dto.data);
+      
+      if (result.success) {
+        this.logger.log(`✅ Evento ${dto.eventType} enviado exitosamente a n8n`);
+        return {
+          success: true,
+          eventType: dto.eventType,
+          sentToN8n: true,
+          n8nResponse: result.response,
+        };
+      } else {
+        this.logger.warn(`⚠️ Error enviando evento a n8n: ${result.error}`);
+        return {
+          success: false,
+          eventType: dto.eventType,
+          sentToN8n: false,
+          error: result.error,
+        };
+      }
+    } catch (error: any) {
+      this.logger.error(`❌ Error procesando evento interno: ${error.message}`);
+      return {
+        success: false,
+        eventType: dto.eventType,
+        sentToN8n: false,
+        error: error.message,
+      };
+    }
   }
 
   // Métodos privados

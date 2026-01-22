@@ -28,7 +28,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://parking-b2b-webhooks:3001/mcp/chat",
+        "url": "http://parking-b2b:3001/mcp/chat",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"message\": \"{{ $json.message }}\",\n  \"channel\": \"{{ $json.channel }}\",\n  \"userId\": \"{{ $json.sender.id || $json.sender.email || 'anonymous' }}\",\n  \"context\": {\n    \"hasAttachments\": {{ $json.hasAttachments }},\n    \"attachmentCount\": {{ $json.attachments.length }}\n  }\n}",

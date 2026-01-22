@@ -6,15 +6,11 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Configurar CORS
+  // Configurar CORS - Permitir todo en desarrollo
   app.enableCors({
-    origin: [
-      'http://localhost:4200', 
-      'http://localhost:3000',
-      'https://parking-frontend-g7vl.onrender.com',
-      /\.onrender\.com$/
-    ],
+    origin: true, // Permite cualquier origen
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
     credentials: true,
   });
 

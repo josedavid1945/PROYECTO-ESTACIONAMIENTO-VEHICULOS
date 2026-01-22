@@ -44,7 +44,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PORT: 3001
+      PORT: 3003
       JWT_ACCESS_SECRET: ${JWT_SECRET:-super_secret_access_jwt_key_change_in_production}
       JWT_REFRESH_SECRET: ${JWT_SECRET:-super_secret_refresh_jwt_key_change_in_production}
       JWT_EXPIRES_IN: ${JWT_ACCESS_EXPIRATION:-24h}
@@ -55,9 +55,9 @@ services:
       DB_DATABASE: ${DB_DATABASE}
       DB_SSL: ${DB_SSL:-true}
     ports:
-      - "3001:3001"
+      - "3003:3003"
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/auth/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3003/auth/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -125,16 +125,16 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      PORT: 3002
+      PORT: 3001
       DATABASE_URL: ${DATABASE_URL}
       DB_SSL: ${DB_SSL:-true}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_API_KEY_BACKUP: ${GEMINI_API_KEY_BACKUP:-}
-      PARKING_API_URL: http://backend-rest:3000
+      PARKING_API_URL: http://parking-backend-rest:3000
     ports:
-      - "3002:3002"
+      - "3001:3001"
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3002/health"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/health"]
       interval: 15s
       timeout: 10s
       retries: 5

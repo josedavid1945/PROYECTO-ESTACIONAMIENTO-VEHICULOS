@@ -2,10 +2,10 @@ const { Client } = require('pg');
 
 async function checkDatabase() {
   const client = new Client({
-    host: 'db.jqqruzcbtcqcmzkogxqo.supabase.co',
+    host: 'aws-1-us-east-1.pooler.supabase.com',
     port: 5432,
-    user: 'postgres',
-    password: 'QWebos2023.',
+    user: 'postgres.jqqruzcbtcqcmzkogxqo',
+    password: 'LBLvChbewiCvcb9m',
     database: 'postgres',
     ssl: { rejectUnauthorized: false }
   });

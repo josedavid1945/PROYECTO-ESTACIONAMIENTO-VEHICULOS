@@ -1,0 +1,163 @@
+{
+  "name": "Telegram Bot - Comandos",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message"]
+      },
+      "id": "telegram-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [220, 300],
+      "webhookId": "telegram-bot-commands",
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "check-reporte",
+              "leftValue": "={{ $json.message.text.toLowerCase() }}",
+              "rightValue": "reporte",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "check-command",
+      "name": "Es comando reporte?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://parking-backend-rest:3000/dashboard",
+        "options": {}
+      },
+      "id": "get-dashboard",
+      "name": "Obtener Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 200]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "=📊 <b>REPORTE - ESTACIONAMIENTO</b>\n📅 {{ $now.format('dd/MM/yyyy HH:mm') }}\n\n━━━━━━━━━━━━━━━━━━━━\n\n🅿️ <b>ESPACIOS</b>\n✅ Disponibles: {{ $json.espacios_disponibles }}\n🚗 Ocupados: {{ $json.espacios_ocupados }}\n📍 Total: {{ $json.total_espacios }}\n📈 Ocupación: {{ Math.round(($json.espacios_ocupados / $json.total_espacios) * 100) }}%\n\n━━━━━━━━━━━━━━━━━━━━\n\n💰 <b>INGRESOS</b>\n📆 Hoy: ${{ Number($json.dinero_recaudado_hoy).toFixed(2) }}\n📅 Este mes: ${{ Number($json.dinero_recaudado_mes).toFixed(2) }}\n\n━━━━━━━━━━━━━━━━━━━━\n\n🚙 <b>ACTIVIDAD</b>\n🔄 Vehículos activos: {{ $json.vehiculos_activos }}\n\n━━━━━━━━━━━━━━━━━━━━\n\n<i>Solicitado por {{ $('Telegram Trigger').item.json.message.from.first_name }}</i>",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "send-report",
+      "name": "Enviar Reporte",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [880, 200],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "=❓ No entendí tu mensaje.\n\nComandos disponibles:\n• <b>reporte</b> - Ver reporte actual del estacionamiento",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "send-help",
+      "name": "Enviar Ayuda",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [660, 400],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "Telegram Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Es comando reporte?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es comando reporte?": {
+      "main": [
+        [
+          {
+            "node": "Obtener Dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar Ayuda",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Dashboard": {
+      "main": [
+        [
+          {
+            "node": "Enviar Reporte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bogota"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "parking-system"
+  },
+  "tags": [
+    {
+      "name": "parking",
+      "id": "1"
+    },
+    {
+      "name": "telegram",
+      "id": "2"
+    }
+  ]
+}

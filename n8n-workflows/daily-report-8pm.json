@@ -1,0 +1,180 @@
+{
+  "name": "Reporte Diario 8PM - Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 20,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Cada día a las 8PM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://parking-backend-rest:3000/dashboard",
+        "options": {}
+      },
+      "id": "get-dashboard",
+      "name": "Obtener Dashboard",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://parking-backend-rest:3000/dashboard/tickets/activos",
+        "options": {}
+      },
+      "id": "get-tickets-activos",
+      "name": "Obtener Tickets Activos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 480]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": []
+        },
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "id": "merge-data",
+      "name": "Combinar Datos",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [660, 380]
+    },
+    {
+      "parameters": {
+        "chatId": "6315199816",
+        "text": "=📊 <b>REPORTE DIARIO - ESTACIONAMIENTO</b>\n📅 {{ $now.format('dd/MM/yyyy') }} - 8:00 PM\n\n━━━━━━━━━━━━━━━━━━━━\n\n🅿️ <b>ESPACIOS</b>\n✅ Disponibles: {{ $json.espacios_disponibles }}\n🚗 Ocupados: {{ $json.espacios_ocupados }}\n📍 Total: {{ $json.total_espacios }}\n📈 Ocupación: {{ Math.round(($json.espacios_ocupados / $json.total_espacios) * 100) }}%\n\n━━━━━━━━━━━━━━━━━━━━\n\n💰 <b>INGRESOS</b>\n📆 Hoy: ${{ Number($json.dinero_recaudado_hoy).toFixed(2) }}\n📅 Este mes: ${{ Number($json.dinero_recaudado_mes).toFixed(2) }}\n\n━━━━━━━━━━━━━━━━━━━━\n\n🚙 <b>ACTIVIDAD</b>\n🔄 Vehículos activos: {{ $json.vehiculos_activos }}\n\n━━━━━━━━━━━━━━━━━━━━\n\n<i>Reporte generado automáticamente por n8n</i>",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "telegram-report",
+      "name": "Enviar Reporte Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [880, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram-bot",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "report-manual",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-manual",
+      "name": "Trigger Manual",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 480],
+      "webhookId": "report-manual-parking"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true, \"message\": \"Report sent to Telegram\" }",
+        "options": {}
+      },
+      "id": "response-ok",
+      "name": "Respuesta OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1100, 300]
+    }
+  ],
+  "connections": {
+    "Cada día a las 8PM": {
+      "main": [
+        [
+          {
+            "node": "Obtener Dashboard",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Obtener Tickets Activos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Manual": {
+      "main": [
+        [
+          {
+            "node": "Obtener Dashboard",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Obtener Tickets Activos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Dashboard": {
+      "main": [
+        [
+          {
+            "node": "Enviar Reporte Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Reporte Telegram": {
+      "main": [
+        [
+          {
+            "node": "Respuesta OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bogota"
+  },
+  "versionId": "1",
+  "meta": {
+    "instanceId": "parking-system"
+  },
+  "tags": [
+    {
+      "name": "parking",
+      "id": "1"
+    },
+    {
+      "name": "reports",
+      "id": "3"
+    }
+  ]
+}

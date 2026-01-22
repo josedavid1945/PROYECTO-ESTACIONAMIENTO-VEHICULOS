@@ -53,6 +53,8 @@ services:
       - PARKING_API_URL=http://backend-rest:3000
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://parking-n8n:5678}
+      - N8N_INTEGRATION_ENABLED=${N8N_INTEGRATION_ENABLED:-true}
     depends_on:
       - backend-rest
     networks:
@@ -169,6 +171,31 @@ services:
     networks:
       - parking-network
     restart: unless-stopped
+
+  # ===========================================
+  # N8N - Event Bus (Partner Handler)
+  # ===========================================
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: parking-n8n
+    restart: unless-stopped
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-parking2026}
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://n8n:5678/
+      - GENERIC_TIMEZONE=America/La_Paz
+      - B2B_API_URL=http://b2b-webhooks:3001
+      - BACKEND_API_URL=http://backend-rest:3000
+    ports:
+      - "5678:5678"
+    volumes:
+      - ./n8n-data:/home/node/.n8n
+    networks:
+      - parking-network
 
 networks:
   parking-network:
